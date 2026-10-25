@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="432pt" height="540pt" viewBox="0 0 432 540" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-23T09:42:37.218143</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 540 
+L 432 540 
+L 432 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 86.4 399.6 
+L 367.2 399.6 
+L 367.2 118.8 
+L 86.4 118.8 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g clip-path="url(#pe05fdadeff)">
+    <image xlink:href="data:image/png;base64,
+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" id="imageab33a73c8a" transform="scale(1 -1) translate(0 -280.8)" x="86.4" y="-118.8" width="280.8" height="280.8"/>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1"/>
+     <g id="text_1">
+      <text style="font-weight: 300; font-size: 18px; font-family: 'Hiragino Sans GB'; text-anchor: middle" x="95.175" y="423.44" transform="rotate(-0 95.175 423.44)">0</text>
+     </g>
+    </g>
+    <g id="xtick_2">
+     <g id="line2d_2"/>
+     <g id="text_2">
+      <text style="font-weight: 300; font-size: 18px; font-family: 'Hiragino Sans GB'; text-anchor: middle" x="165.375" y="423.44" transform="rotate(-0 165.375 423.44)">4</text>
+     </g>
+    </g>
+    <g id="xtick_3">
+     <g id="line2d_3"/>
+     <g id="text_3">
+      <text style="font-weight: 300; font-size: 18px; font-family: 'Hiragino Sans GB'; text-anchor: middle" x="235.575" y="423.44" transform="rotate(-0 235.575 423.44)">8</text>
+     </g>
+    </g>
+    <g id="xtick_4">
+     <g id="line2d_4"/>
+     <g id="text_4">
+      <text style="font-weight: 300; font-size: 18px; font-family: 'Hiragino Sans GB'; text-anchor: middle" x="305.775" y="423.44" transform="rotate(-0 305.775 423.44)">12</text>
+     </g>
+    </g>
+    <g id="xtick_5">
+     <g id="line2d_5"/>
+     <g id="text_5">
+      <text style="font-weight: 300; font-size: 18px; font-family: 'Hiragino Sans GB'; text-anchor: middle" x="358.425" y="423.44" transform="rotate(-0 358.425 423.44)">15</text>
+     </g>
+    </g>
+    <g id="text_6">
+     <text style="font-size: 22px; font-family: 'Hiragino Sans GB'; text-anchor: middle; fill: #222a35" x="226.8" y="458.96" transform="rotate(-0 226.8 458.96)">被读取的位置 K</text>
+    </g>
+   </g>
+   <g id="matplotlib.axis_2">
+    <g id="ytick_1">
+     <g id="line2d_6"/>
+     <g id="text_7">
+      <text style="font-weight: 300; font-size: 18px; font-family: 'Hiragino Sans GB'; text-anchor: end" x="78.4" y="135.495" transform="rotate(-0 78.4 135.495)">0</text>
+     </g>
+    </g>
+    <g id="ytick_2">
+     <g id="line2d_7"/>
+     <g id="text_8">
+      <text style="font-weight: 300; font-size: 18px; font-family: 'Hiragino Sans GB'; text-anchor: end" x="78.4" y="205.695" transform="rotate(-0 78.4 205.695)">4</text>
+     </g>
+    </g>
+    <g id="ytick_3">
+     <g id="line2d_8"/>
+     <g id="text_9">
+      <text style="font-weight: 300; font-size: 18px; font-family: 'Hiragino Sans GB'; text-anchor: end" x="78.4" y="275.895" transform="rotate(-0 78.4 275.895)">8</text>
+     </g>
+    </g>
+    <g id="ytick_4">
+     <g id="line2d_9"/>
+     <g id="text_10">
+      <text style="font-weight: 300; font-size: 18px; font-family: 'Hiragino Sans GB'; text-anchor: end" x="78.4" y="346.095" transform="rotate(-0 78.4 346.095)">12</text>
+     </g>
+    </g>
+    <g id="ytick_5">
+     <g id="line2d_10"/>
+     <g id="text_11">
+      <text style="font-weight: 300; font-size: 18px; font-family: 'Hiragino Sans GB'; text-anchor: end" x="78.4" y="398.745" transform="rotate(-0 78.4 398.745)">15</text>
+     </g>
+    </g>
+    <g id="text_12">
+     <text style="font-size: 22px; font-family: 'Hiragino Sans GB'; text-anchor: middle; fill: #222a35" x="40.106875" y="259.2" transform="rotate(-90 40.106875 259.2)">查询位置 Q</text>
+    </g>
+   </g>
+   <g id="line2d_11">
+    <path d="M 86.4 382.05 
+L 367.2 382.05 
+" clip-path="url(#pe05fdadeff)" style="fill: none; stroke: #187b79; stroke-width: 1.5; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_12">
+    <path d="M 86.4 399.6 
+L 367.2 399.6 
+" clip-path="url(#pe05fdadeff)" style="fill: none; stroke: #187b79; stroke-width: 1.5; stroke-linecap: square"/>
+   </g>
+  </g>
+  <g id="axes_2">
+   <g id="patch_3">
+    <path d="M 388.8 367.2 
+L 398.736 367.2 
+L 398.736 183.6 
+L 388.8 183.6 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <image xlink:href="data:image/png;base64,
+iVBORw0KGgoAAAANSUhEUgAAABkAAAHLCAYAAAA9aDPzAAACd0lEQVR4nO2cQQ4kMQgDWcT/v7uHlWC/MD4QtUzVB6wkxpD0aP78/TcTy2Q8oPbXEa9WEvtLqTDarn3ygUZg4Q+eSTywV2Hhmymc6wrhFCv5QqRstquw8M1ppZyGu1kXyXWFMIuVfdJpuJt1kVxXCCwswplIVLx49hhSWAALX4364NnjaqzMukiuK4TZJWifwsIKWPjqnXG4MwqQwhJYWIIUliCFjw7cxSx8M4VzXyK4M2qQwhJYWIKolyCFJRi4r0Z9PxhXyme7huHugxaOddLnzjhslwAWlsDCV4uxbT4wj82ZDP1EAAsf/Y1EPoqV2RfpdYkw2q5cVwgs/NFpZZ8ysvDsi+S+RDj1k/ZxV7wQGZft6gci+UAjjGKlbdw1L34H2Tbb1TYWHpuVNM8eNy3cNrEyRmcS+yJjc/DNwZ98Rk+nYox1cl8inPpJ25zJ2Kykn/z0atY1gmePq7EyPu6aByJjc/DNwZ/8YlpOj8+zLpLrCmGWwrMukkZ/JzBs1+9g4aufyudJZ5x1jfDZrlxXCKvOODZn0nTGmyncNhYeYuXmdjUWFqAzfrEzBin8O1hYguFOgs4owXD3wWePsRnuhuFOgDORoBglKEYJilGCr3MS9HgJxlQJOqMEnVGCzihBMUpQjF/8SNM8e/wOFpagn0hw07pajMG78MlYKR8Lj81KgmI86a7CwjcPPtcVgpXcPfignwhQjB/sjIGFBbCwBMOdBMUoQTFKUIwSFKMExShR8Wa4a5ub1tispNdFcl0hOBMRDl6CYpQgICXYLgn6iQRRf3a7mjH1Yo8v7icK9JOzATk8e/wOsXLUwrmuEHRGEZ8U/g+KMxxS5Oe5UQAAAABJRU5ErkJggg==" id="imageeb68e3ce25" transform="scale(1 -1) translate(0 -183.6)" x="388.8" y="-183.6" width="10" height="183.6"/>
+   <g id="matplotlib.axis_3"/>
+   <g id="matplotlib.axis_4">
+    <g id="ytick_6">
+     <g id="line2d_13"/>
+     <g id="text_13">
+      <text style="font-weight: 300; font-size: 16px; font-family: 'Hiragino Sans GB'; text-anchor: start" x="402.236" y="374.24" transform="rotate(-0 402.236 374.24)">0.0</text>
+     </g>
+    </g>
+    <g id="ytick_7">
+     <g id="line2d_14"/>
+     <g id="text_14">
+      <text style="font-weight: 300; font-size: 16px; font-family: 'Hiragino Sans GB'; text-anchor: start" x="402.236" y="282.44" transform="rotate(-0 402.236 282.44)">0.5</text>
+     </g>
+    </g>
+    <g id="ytick_8">
+     <g id="line2d_15"/>
+     <g id="text_15">
+      <text style="font-weight: 300; font-size: 16px; font-family: 'Hiragino Sans GB'; text-anchor: start" x="402.236" y="190.64" transform="rotate(-0 402.236 190.64)">1.0</text>
+     </g>
+    </g>
+   </g>
+   <g id="LineCollection_1"/>
+   <g id="patch_4">
+    <path d="M 388.8 367.2 
+L 393.768 367.2 
+L 398.736 367.2 
+L 398.736 183.6 
+L 393.768 183.6 
+L 388.8 183.6 
+L 388.8 367.2 
+z
+" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+  </g>
+  <g id="text_16">
+   <text style="font-weight: 300; font-size: 24px; font-family: 'Hiragino Sans GB'; text-anchor: start; fill: #222a35" x="34.56" y="32.4" transform="rotate(-0 34.56 32.4)">公开权重的一次真实注意力</text>
+  </g>
+  <g id="text_17">
+   <text style="font-weight: 300; font-size: 20px; font-family: 'Hiragino Sans GB'; text-anchor: start; fill: #606c7b" x="34.56" y="67.5" transform="rotate(-0 34.56 67.5)">Qwen3-0.6B · 第1层，第1头</text>
+  </g>
+  <g id="text_18">
+   <text style="font-weight: 300; font-size: 19px; font-family: 'Hiragino Sans GB'; text-anchor: start; fill: #606c7b" x="34.56" y="499.5" transform="rotate(-0 34.56 499.5)">颜色越深，当前行分配的比例越大</text>
+  </g>
+  <g id="text_19">
+   <text style="font-weight: 300; font-size: 19px; font-family: 'Hiragino Sans GB'; text-anchor: start; fill: #606c7b" x="34.56" y="526.5" transform="rotate(-0 34.56 526.5)">右上角为 0：前面的位置不能读未来</text>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="pe05fdadeff">
+   <rect x="86.4" y="118.8" width="280.8" height="280.8"/>
+  </clipPath>
+ </defs>
+</svg>

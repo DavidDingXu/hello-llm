@@ -1,0 +1,27 @@
+/* Shared shell for the generated SVG experiments. The mathematical SVG stays intact. */
+body.demo-step{margin:0;overflow:hidden;background:#fff;color:#222a35}
+.demo-step main{height:100dvh;max-height:100dvh;max-width:1200px;padding:12px 18px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.demo-step header{flex-shrink:0;gap:12px;font-size:12px;line-height:1.4;min-height:20px}
+.demo-step h1{flex-shrink:0;font-size:20px;line-height:1.35;margin:0}
+.demo-step .layout{display:grid;grid-template-columns:minmax(0,1fr) 238px;flex:1;min-height:0;gap:18px;align-items:stretch}
+.demo-step .diagram-panel{display:flex;flex-direction:column;min-width:0;min-height:0;border:1px solid #dce3eb;border-radius:6px;background:#fafbfd;overflow:hidden}
+.demo-step .figure{flex:1;min-height:0;width:100%;overflow:auto;overscroll-behavior:contain;touch-action:pan-x pan-y pinch-zoom;background:white}
+.demo-step .figure svg{display:block;width:var(--figure-width,100%);height:var(--figure-height,auto);max-width:none;margin:auto;flex-shrink:0}
+.diagram-toolbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:7px 10px;border-top:1px solid #dce3eb;flex-shrink:0;background:#f7f9fb;font-size:11px;color:#606c7b}
+.diagram-toolbar button{font-size:12px;min-height:36px;padding:5px 10px;background:#fff;color:#222a35}
+.diagram-zoom{margin-left:auto;font:11px Menlo,Consolas,monospace}
+.diagram-toolbar>span:not(.diagram-zoom){font-size:10px}
+.diagram-scroll-hint[hidden]{display:none!important}
+.demo-step .controls{position:static;min-height:0;padding:10px 0;display:flex;flex-direction:column;gap:8px;overflow:auto}
+.demo-step .controls label{font-size:13px}.demo-step input[type=range]{min-height:28px;flex-shrink:0;margin:0}
+.demo-step #caption{min-height:0;margin:0;font-size:14px;line-height:1.65}
+.demo-step .buttons{display:flex;gap:7px;margin:0;flex-wrap:wrap;flex-shrink:0}.demo-step .buttons button{font-size:13px;min-height:40px;padding:6px 10px}
+.experiment-note{font-size:11px;color:#606c7b;flex-shrink:0}.experiment-note summary{cursor:pointer;color:#187b79;padding:3px 0}.experiment-note .note{margin:3px 0;font-size:11px}
+@media(max-width:700px){.demo-step main{padding:9px 12px;gap:6px}.demo-step header{font-size:10px;gap:10px;flex-wrap:wrap}.demo-step h1{font-size:16px;line-height:1.35}.demo-step .layout{display:flex;flex-direction:column;gap:7px}.demo-step .diagram-panel{flex:1;min-height:80px}.demo-step .controls{flex-shrink:0;padding:0;gap:4px;overflow:visible}.demo-step .controls label{font-size:11px}.demo-step #caption{font-size:12px;line-height:1.5}.demo-step .buttons{gap:6px}.demo-step .buttons button{min-height:36px;font-size:12px;padding:5px 9px}.diagram-toolbar{padding:4px 7px;gap:6px}.diagram-toolbar button{min-height:32px;padding:4px 8px;font-size:11px}.demo-step input[type=range]{min-height:24px}.experiment-note summary{padding:0}.experiment-note[open] .note{max-height:15dvh;overflow:auto}}
+@media(max-height:520px) and (min-width:701px){.demo-step main{padding-top:8px;padding-bottom:8px;gap:5px}.demo-step h1{font-size:17px}.demo-step .controls{padding:0}.demo-step #caption{font-size:12px}.demo-step .buttons button{min-height:34px;font-size:12px}.experiment-note[open] .note{max-height:20dvh;overflow:auto}}
+@media(max-width:700px){.diagram-toolbar>span:not(.diagram-zoom){display:none}}
+@media(max-width:700px){.diagram-toolbar>.diagram-scroll-hint:not([hidden]){display:block;order:2;flex-basis:100%;font-size:11px}}
+
+/* The reading-page dialog already supplies the title and return action. */
+.embedded-three main>.top,.embedded-three main>header,.embedded-three main>h1,.embedded-three main>.lead{display:none}
+.embedded-three main{padding-top:8px}

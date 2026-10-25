@@ -1,0 +1,40 @@
+name: 代码或网页运行问题
+description: 报告运行失败、网页交互异常或与参考结果不一致。
+title: "[反馈] "
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 问题类型
+      options:
+        - 代码运行
+        - 数值或实验结果
+        - 网页演示
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: 位置与版本
+      description: 版本号、讲次或页面链接；运行代码时也可附 Git 提交编号。
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 具体问题与复现步骤
+      description: 写明实际结果、预期结果，以及最少需要执行的步骤。文字和图解问题请使用“内容勘误”表单。
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: 环境与输出
+      description: 网页问题请附浏览器和设备；本地代码问题请附系统、Python/PyTorch版本、执行命令和必要日志。去除个人信息、密钥和无关文件。
+  - type: checkboxes
+    id: security
+    attributes:
+      label: 提交前
+      options:
+        - label: 我没有在此公开敏感信息或安全漏洞的利用细节；安全漏洞请使用仓库 Security 页的私密报告入口。
+          required: true

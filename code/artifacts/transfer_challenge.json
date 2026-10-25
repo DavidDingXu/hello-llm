@@ -1,0 +1,158 @@
+{
+  "task": "new_character_transfer",
+  "dataset_sha256": "952c27413388d0701aec8f7474cd67000ffcb7d807cb22050ac7a32e5d27d3af",
+  "seed": 42,
+  "checks": {
+    "new_vocabulary": true,
+    "works_on_other_characters": true,
+    "shift_eos_padding": true,
+    "rejects_unknown_and_long_text": true,
+    "output_matches_vocabulary": true,
+    "future_invisible": true
+  },
+  "vocabulary_size": 67,
+  "train_records": 288,
+  "validation_records": 72,
+  "validation_characters_seen_in_train": true,
+  "full_sentence_overlap": 0,
+  "steps": 1000,
+  "learning_rate": 0.003,
+  "history": [
+    {
+      "step": 0,
+      "train_loss": 4.207453508350803,
+      "validation_loss": 4.207751906206067
+    },
+    {
+      "step": 50,
+      "train_loss": 0.4691984960048214,
+      "validation_loss": 1.2241720136237029
+    },
+    {
+      "step": 100,
+      "train_loss": 0.3914480324838006,
+      "validation_loss": 1.3661446610510637
+    },
+    {
+      "step": 150,
+      "train_loss": 0.3847449824309765,
+      "validation_loss": 1.4514087620564704
+    },
+    {
+      "step": 200,
+      "train_loss": 0.3838761391732209,
+      "validation_loss": 1.4980065803021048
+    },
+    {
+      "step": 250,
+      "train_loss": 0.3821146022408681,
+      "validation_loss": 1.53091409644067
+    },
+    {
+      "step": 300,
+      "train_loss": 0.4239886046974784,
+      "validation_loss": 1.5870637362705913
+    },
+    {
+      "step": 350,
+      "train_loss": 0.38514596548810587,
+      "validation_loss": 1.6001768062656052
+    },
+    {
+      "step": 400,
+      "train_loss": 0.3797795346590004,
+      "validation_loss": 1.684932833823605
+    },
+    {
+      "step": 450,
+      "train_loss": 0.38278437232730367,
+      "validation_loss": 1.7355169223702471
+    },
+    {
+      "step": 500,
+      "train_loss": 0.381442933180006,
+      "validation_loss": 1.7557120377314839
+    },
+    {
+      "step": 550,
+      "train_loss": 0.3804646002400677,
+      "validation_loss": 1.7461811533296743
+    },
+    {
+      "step": 600,
+      "train_loss": 0.38217499872705496,
+      "validation_loss": 1.8015895340177748
+    },
+    {
+      "step": 650,
+      "train_loss": 0.38030608556651546,
+      "validation_loss": 1.806586603957098
+    },
+    {
+      "step": 700,
+      "train_loss": 0.37828710619137856,
+      "validation_loss": 1.826270986524757
+    },
+    {
+      "step": 750,
+      "train_loss": 0.38036666339805525,
+      "validation_loss": 1.8385900366133539
+    },
+    {
+      "step": 800,
+      "train_loss": 0.37920382382866435,
+      "validation_loss": 1.852371101102967
+    },
+    {
+      "step": 850,
+      "train_loss": 0.38002355482268485,
+      "validation_loss": 1.9044320635173633
+    },
+    {
+      "step": 900,
+      "train_loss": 0.37834257674912336,
+      "validation_loss": 1.9133518943464123
+    },
+    {
+      "step": 950,
+      "train_loss": 0.37845698582595155,
+      "validation_loss": 1.9120889598044797
+    },
+    {
+      "step": 1000,
+      "train_loss": 0.37947031154995997,
+      "validation_loss": 1.9634795334028161
+    }
+  ],
+  "probes": [
+    {
+      "split": "familiar",
+      "prompt": "早上，小唐喜欢",
+      "expected": "橙色的橘子。",
+      "actual": "橙色的橘子。",
+      "stop_reason": "eos",
+      "matched": true
+    },
+    {
+      "split": "held_out",
+      "prompt": "早上，小唐爱吃",
+      "expected": "橙色的橘子。",
+      "actual": "橘子，小周拿着橙色的香蕉。",
+      "stop_reason": "eos",
+      "matched": false
+    },
+    {
+      "split": "held_out",
+      "prompt": "晚上，小周爱吃",
+      "expected": "黄色的香蕉。",
+      "actual": "香蕉，小周拿着黄色的香蕉。",
+      "stop_reason": "eos",
+      "matched": false
+    }
+  ],
+  "parameter_count": 90816,
+  "parameter_sha256": "d27ba2fe7036bf1478b0bf2d449f816be6fe9f6c7cae71c6a1a8f6f5b1bb3d4a",
+  "checkpoint_reloaded": true,
+  "checkpoint": "model.pt",
+  "torch": "2.9.1"
+}

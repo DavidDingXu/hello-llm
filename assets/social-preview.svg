@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-label="Hello LLM：手写小模型，看懂大模型。20讲图解、代码与交互实验。">
+<rect width="1280" height="640" fill="#f2f6f3"/>
+<path d="M0 0h16v640H0z" fill="#2f7d4a"/>
+<g font-family="Arial,'PingFang SC','Microsoft YaHei',sans-serif">
+<text x="64" y="88" font-size="30" letter-spacing="4" fill="#2f7d4a">HELLO LLM</text>
+<text x="64" y="205" font-size="72" font-weight="650" fill="#22322a">手写小模型，</text>
+<text x="64" y="302" font-size="72" font-weight="650" fill="#2f7d4a">看懂大模型。</text>
+<text x="64" y="374" font-size="27" fill="#596b60">从一个神经元，到预训练、生成与微调</text>
+<text x="64" y="440" font-size="25" fill="#22322a">20 讲 · 图解与代码 · 浏览器实验 · CPU 可运行</text>
+<path d="M64 507H1216" stroke="#ccdcd0"/>
+<text x="64" y="566" font-size="25" fill="#596b60">github.com/DavidDingXu/hello-llm</text>
+<rect x="744" y="100" width="472" height="338" rx="16" fill="#fff" stroke="#ccdcd0"/>
+<text x="780" y="151" font-size="22" fill="#596b60">一条输出，逐步看懂它的计算</text>
+<rect x="778" y="185" width="404" height="60" rx="8" fill="#edf3f7"/>
+<text x="803" y="226" font-size="32" fill="#3267a4">早上，小丁喜欢</text>
+<path d="M980 264v38m-7-7 7 7 7-7" fill="none" stroke="#2f7d4a" stroke-width="2"/>
+<text x="980" y="354" text-anchor="middle" font-size="40" font-weight="600" fill="#2f7d4a">红色的苹果。</text>
+<text x="980" y="400" text-anchor="middle" font-size="21" fill="#596b60">读取前文 → 计算分数 → 选择下一字</text>
+</g></svg>

@@ -1,0 +1,231 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<meta name="source-sha256" content="1122b6d9e0213eea09b1d7d274a893449a09104f4eaf75c280716a9765ebeb7c"><meta name="description" content="With the same negative gradient, a small update reduces error while a large one overshoots the target. Use a reproducible curve to understand local direction and learning rate."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/04.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="04 | Gradients: Why Can an Update in the Right Direction Make Things Worse? · Hello LLM"><meta property="og:description" content="With the same negative gradient, a small update reduces error while a large one overshoots the target. Use a reproducible curve to understand local direction and learning rate."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/04.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>04 | Gradients: Why Can an Update in the Right Direction Make Things Worse? · Hello LLM</title>
+<link rel="icon" href="../assets/favicon.png" type="image/png">
+<script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
+<script defer src="../code/visuals/reading_site/search-index.en.js?v=11db81a4dd60"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="04" data-alternate-sections="[&quot;离目标一样远分数也应该一样&quot;, &quot;不一下改很远只从-1-挪到-11&quot;, &quot;这串比例为什么越来越接近-16&quot;, &quot;回到开头同一个-16为什么得到两种结果&quot;, &quot;再加一个偏置这个办法还能用吗&quot;, &quot;把两个参数放到同一张图里&quot;, &quot;在程序里只换一个学习率重跑&quot;, &quot;两道题检查局部与步长&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="Open course contents" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></path></svg></button>
+<a class="brand" href="../index.en.html" aria-label="Hello LLM · 学习站首页">
+<img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>Build a Small Model, Understand Large Models</small></span></a>
+<nav class="header-nav" aria-label="Main navigation"><a href="../index.en.html#curriculum">Learning path</a><a href="../index.en.html#experiments">Experiments</a><a href="https://github.com/DavidDingXu/hello-llm" target="_blank" rel="noopener">GitHub <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a></nav>
+<div class="header-controls"><a class="language-switch" href="04.html" lang="zh-CN" aria-label="切换到中文">中文</a><button class="icon-button theme-toggle js-only" type="button" aria-label="Switch to dark theme" title="Switch to dark theme"><span class="theme-light-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A9 9 0 0 1 9.5 3.5a9 9 0 1 0 11 11Z"/></path></svg></span><span class="theme-dark-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/></circle><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></path></svg></span></button>
+<button class="search-trigger js-only" type="button" aria-label="Search course"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/></circle><path d="m16 16 4.5 4.5"/></path></svg><span>Search course</span><kbd>⌘ K</kbd></button>
+</div></div><div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div></header><div class="sidebar-scrim" hidden></div><div class="reader-layout"><aside class="course-sidebar" id="course-sidebar" aria-label="Course contents">
+<div class="sidebar-heading"><a href="../index.en.html">Course contents</a><button class="icon-button menu-close js-only" type="button" aria-label="Close course contents"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></div>
+<nav aria-label="All articles"><div class="sidebar-guides"><a class="lesson-link" data-lesson="intro" href="../course/intro.en.html"><span class="lesson-number">·</span><span>Course introduction</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="00" href="../course/00.en.html"><span class="lesson-number">·</span><span>Before we begin</span><span class="lesson-state" aria-hidden="true"></span></a></div><details class="sidebar-stage" open><summary><span class="stage-index">Part I</span>Make a numerical network learn</summary><a class="lesson-link" data-lesson="01" href="../course/01.en.html"><span class="lesson-number">01</span><span>Neurons</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="02" href="../course/02.en.html"><span class="lesson-number">02</span><span>Vectors and Matrices</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="03" href="../course/03.en.html"><span class="lesson-number">03</span><span>Multiple Layers and Nonlinearity</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="04" href="../course/04.en.html" aria-current="page"><span class="lesson-number">04</span><span>Gradients and Parameter Updates</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="05" href="../course/05.en.html"><span class="lesson-number">05</span><span>Backpropagation by Hand</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="06" href="../course/06.en.html"><span class="lesson-number">06</span><span>Making the Network Learn</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part II</span>Bring text into the network</summary><a class="lesson-link" data-lesson="07" href="../course/07.en.html"><span class="lesson-number">07</span><span>Text and Vectors</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="08" href="../course/08.en.html"><span class="lesson-number">08</span><span>Scores and Probabilities</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="09" href="../course/09.en.html"><span class="lesson-number">09</span><span>Text Training Problems</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part III</span>Read context and assemble the model</summary><a class="lesson-link" data-lesson="10" href="../course/10.en.html"><span class="lesson-number">10</span><span>Single-Head Attention</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="11" href="../course/11.en.html"><span class="lesson-number">11</span><span>Causal masks</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="12" href="../course/12.en.html"><span class="lesson-number">12</span><span>Multi-head attention</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="13" href="../course/13.en.html"><span class="lesson-number">13</span><span>Rotary position embeddings</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="14" href="../course/14.en.html"><span class="lesson-number">14</span><span>Positionwise feed-forward networks</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="15" href="../course/15.en.html"><span class="lesson-number">15</span><span>Residual connections and normalization</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="16" href="../course/16.en.html"><span class="lesson-number">16</span><span>The complete forward pass</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part IV</span>Pretrain, generate, and fine-tune</summary><a class="lesson-link" data-lesson="17" href="../course/17.en.html"><span class="lesson-number">17</span><span>The first pretraining run</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="18" href="../course/18.en.html"><span class="lesson-number">18</span><span>Character-by-character generation</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="19" href="../course/19.en.html"><span class="lesson-number">19</span><span>Question-answer fine-tuning</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="20" href="../course/20.en.html"><span class="lesson-number">20</span><span>The full workflow and checks of the principles</span><span class="lesson-state" aria-hidden="true"></span></a></details><a class="lesson-link" data-lesson="end" href="../course/end.en.html"><span class="lesson-number">·</span><span>Closing thoughts</span><span class="lesson-state" aria-hidden="true"></span></a></nav></aside><main class="reader-main" id="main-content"><div class="article-context"><span>Make a numerical network learn</span><div class="article-actions"><button type="button" class="copy-page-link js-only">Copy link</button><button type="button" class="focus-toggle js-only" aria-pressed="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></path></svg><span>Focus mode</span></button></div></div>
+<div class="mobile-context"><nav class="reading-route" aria-label="On this page"><details><summary>On this page</summary><div class="toc">
+<ul>
+<li><a href="#equal-distances-from-the-target-should-receive-equal-scores">Equal distances from the target should receive equal scores</a></li>
+<li><a href="#move-only-from-1-to-11">Move only from 1 to 1.1</a></li>
+<li><a href="#why-do-these-ratios-approach-16">Why do these ratios approach −16?</a></li>
+<li><a href="#back-to-the-opening-why-does-the-same-16-give-two-different-results">Back to the opening: why does the same −16 give two different results?</a></li>
+<li><a href="#does-the-method-still-work-if-we-add-a-bias">Does the method still work if we add a bias?</a></li>
+<li><a href="#put-both-parameters-in-the-same-plot">Put both parameters in the same plot</a></li>
+<li><a href="#in-code-rerun-with-just-one-learning-rate-changed">In code, rerun with just one learning rate changed</a></li>
+<li><a href="#two-exercises-on-locality-and-step-size">Two exercises on locality and step size</a></li>
+</ul>
+</div>
+</details></nav><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="Decrease text size">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="Increase text size">A+</button></div></div><article id="article-body"><h1 id="04-gradients-why-can-an-update-in-the-right-direction-make-things-worse">04 | Gradients: Why Can an Update in the Right Direction Make Things Worse?</h1>
+<p>Build a Small Model, Understand Large Models · Lesson 04</p>
+<p>The prediction is only 2, while the target is 6. We adjust the parameter in a direction that increases the prediction, but it reaches 11.6—farther from the target than before.</p>
+<p>The function is <code>prediction=2w</code>: the input stays fixed at 2, and only weight <code>w</code> changes. Trying again from the same starting point and in the same direction, but with a smaller step, leaves the prediction at 5.2.</p>
+<p>Why do identical directions produce such different results? First, we need a number that lets us compare how wrong a prediction is.</p>
+<h2 id="equal-distances-from-the-target-should-receive-equal-scores">Equal distances from the target should receive equal scores</h2>
+<p>Starting at <code>w=1</code>, the prediction is 2. Subtracting the target 6 gives −4. If the prediction becomes 10, the difference is 4. Both are equally far from the target, but their signs differ. Across several data points, positive and negative differences might even cancel.</p>
+<p>A simple solution is to square the difference:</p>
+<p><strong>L = (prediction−target)²</strong></p>
+<p><code>L</code> is called the <strong>loss</strong>. A larger difference produces a larger square; a prediction exactly equal to the target has loss 0. We can now use the same measure regardless of which side of the target the prediction falls on.</p>
+<p>This example has only one prediction, so:</p>
+<p><strong>L(w) = (2w−6)²</strong></p>
+<p>Substituting <code>w=1</code> gives <strong>L(1)=(2−6)²=16</strong>.</p>
+<p>Calculating the squared error for each of several predictions and taking their average gives the <strong>mean squared error</strong>, or MSE. With only one prediction here, the MSE is simply this square.</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/04-gradients/images/en/web/01-%E6%9C%BA%E5%88%B6.svg" width="1540" height="470"><img data-full-figure="../chapters/04-gradients/images/en/01-%E6%9C%BA%E5%88%B6.svg" alt="Input, weight, prediction, target, and squared loss form an explicit calculation chain" src="../chapters/04-gradients/images/en/01-%E6%9C%BA%E5%88%B6.svg"  width="1080" height="1830" loading="eager" decoding="async" /></picture></p>
+<p>The current loss in the diagram is 16. We will compare trial parameter changes against it.</p>
+<h2 id="move-only-from-1-to-11">Move only from 1 to 1.1</h2>
+<p>Increase only <code>w</code> from 1 to 1.1, keeping everything else fixed, and check whether the loss decreases.</p>
+<p>The prediction rises from 2 to 2.2, and the loss falls from 16 to <strong>(2.2−6)²=14.44</strong>. Increasing the weight has indeed brought this prediction closer to the target.</p>
+<p>But “a decrease of 1.56” does not yet describe the ratio between the parameter change and the loss change. Divide the change in loss by the change in the parameter:</p>
+<p><strong>(14.44−16) ÷ (1.1−1) = −15.6</strong></p>
+<p>Over this short interval, increasing the weight by 1 unit changes the loss by approximately −15.6 units on average. The actual weight increase was only 0.1, so the actual loss change is this rate multiplied by 0.1.</p>
+<p>Keep shrinking the trial step:</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Weight change</th>
+<th>New weight</th>
+<th>New loss</th>
+<th>Loss change ÷ weight change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>+0.1</td>
+<td>1.1</td>
+<td>14.44</td>
+<td>−15.6</td>
+</tr>
+<tr>
+<td>+0.01</td>
+<td>1.01</td>
+<td>15.8404</td>
+<td>−15.96</td>
+</tr>
+<tr>
+<td>+0.001</td>
+<td>1.001</td>
+<td>15.984004</td>
+<td>−15.996</td>
+</tr>
+</tbody>
+</table></div>
+<p>As the trial step shrinks, the ratio approaches <strong>−16</strong>, describing the behavior <strong>near</strong> <code>w=1</code> more closely.</p>
+<h2 id="why-do-these-ratios-approach-16">Why do these ratios approach −16?</h2>
+<p>This local rate of change at a particular point is called a <strong>derivative</strong>, written:</p>
+<p><strong>dL/dw = −16, at w=1</strong></p>
+<p>The whole expression <code>dL/dw</code> means “the local rate of change of loss with respect to weight.” <code>L</code> and <code>w</code> identify the two quantities being compared. The negative sign tells us that a small increase in <code>w</code> at this point decreases the loss.</p>
+<p>It also estimates sufficiently small changes: if <code>Δw</code> is small, the loss change is approximately <strong>−16×Δw</strong>. For an increase of 0.01, for example, the estimated loss change is −0.16. The actual change is −0.1596: close, but not identical.</p>
+<p>For this example, we can derive the rate directly. Let <code>δ</code> denote a small change in the weight:</p>
+<pre><code class="language-text">L(w+δ) = (2w−6+2δ)²
+       = (2w−6)² + 4(2w−6)δ + 4δ²
+
+[L(w+δ)−L(w)] / δ = 4(2w−6) + 4δ
+</code></pre>
+<p>As <code>δ</code> approaches 0, <code>4δ</code> on the right approaches 0, leaving:</p>
+<p><strong>dL/dw = 4(2w−6)</strong></p>
+<p>At <code>w=1</code>, this is <code>4×(2−6)=−16</code>. The expression applies to any <code>w</code> in this example, but the derivative's value varies by position. At <code>w=4</code>, it is 8; at <code>w=3</code>, where the prediction is exactly 6, it is 0.</p>
+<p>On a curve, the derivative is the local slope at the current point. It describes nearby changes; it does not promise that moving arbitrarily far in that direction will remain beneficial.</p>
+<h2 id="back-to-the-opening-why-does-the-same-16-give-two-different-results">Back to the opening: why does the same −16 give two different results?</h2>
+<p>We now know that a small increase in the weight helps when starting from <code>w=1</code>. But the derivative describes only the local neighborhood. Adding its full opposite, 16, to the weight would jump to <code>w=17</code>, far beyond the position that predicts 6.</p>
+<p>We need another positive multiplier to scale the update to a suitable size. This is the <strong>learning rate</strong>, denoted <code>η</code>. First, choose <code>η=0.1</code>:</p>
+<p><strong>new w = old w − learning rate×derivative</strong></p>
+<p><strong>w_new = 1−0.1×(−16)=2.6</strong></p>
+<p>The derivative is negative, so subtracting it increases the weight. Run the forward calculation again:</p>
+<p><strong>prediction = 2×2.6=5.2</strong></p>
+<p><strong>L = (5.2−6)²=0.64</strong></p>
+<p>The loss drops from 16 to 0.64. This update helps, although it has not yet reached this example's optimum, <code>w=3</code>.</p>
+<p><img alt="Local change on the loss curve and the outcomes of different update sizes" src="../chapters/04-gradients/images/en/02-%E9%AA%8C%E8%AF%81.svg"  width="1080" height="1950" loading="lazy" decoding="async" /></p>
+<p>The horizontal axis is weight <code>w</code>, and the vertical axis is loss <code>L(w)</code>. Find <code>w=1</code> on the curve, then compare where each update lands. The negative derivative sets the arrow's direction; the learning rate also determines its length.</p>
+<p>Start again at the original <code>w=1</code>, with the same derivative of −16, and change only the learning rate to 0.3. The new weight becomes <strong>5.8</strong>, the prediction becomes 11.6, and the loss becomes <strong>(11.6−6)²=31.36</strong>. This is how the opening update made things worse.</p>
+<p><strong>Even an update in the local downhill direction can increase the loss if the step is too large.</strong></p>
+<details class="motion-figure"><summary>Watch the animated walkthrough</summary><img alt="The local rate of change, update distance, and resulting loss on the loss curve" src="../chapters/04-gradients/images/en/%E8%BF%87%E7%A8%8B.gif"  width="648" height="1170" loading="lazy" decoding="async" /></details>
+<p>The animation connects the current point, local slope, and new landing point. In the <a href="../chapters/04-gradients/walkthrough.en.html">interactive demo</a>, pause at the result of each step size and compare where it lands on the curve.</p><details class="inline-experiment"><summary><span>Try it here · Step-by-step experiment</span><small>Step through the calculation, forwards or backwards.</small></summary><p><a href="../chapters/04-gradients/walkthrough.en.html" class="js-experiment inline-expand">Expand workspace ↗</a> · <a href="../chapters/04-gradients/walkthrough.en.html" target="_blank" rel="noopener">Open in a new tab ↗</a></p><dialog class="inline-workspace experiment-viewer" aria-label="Step-by-step experiment"><header><strong>Step-by-step experiment</strong><div><a href="../chapters/04-gradients/walkthrough.en.html" target="_blank" rel="noopener">Open in a new tab <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button inline-close" type="button" aria-label="Return to reading">Return to reading <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe data-src="../chapters/04-gradients/walkthrough.en.html" title="Step-by-step experiment" loading="lazy"></iframe></dialog></details>
+<section class="python-lab" id="python-lab" aria-labelledby="python-lab-title">
+<div class="lab-heading"><span>PYTHON · EDITABLE EXPERIMENT</span><h3 id="python-lab-title">Change it. Run it. See what happens.</h3></div>
+<p class="lab-challenge">Run one step, then change the learning rate from 0.1 to 0.3. Does the loss still fall?</p>
+<div class="lab-controls"><label for="lab-learning_rate">Learning rate<input id="lab-learning_rate" data-variable="learning_rate" type="number" value="0.1" min="0.001" max="1" step="0.001" required></label><label for="lab-steps">Update steps<input id="lab-steps" data-variable="steps" type="number" value="1" min="1" max="100" step="1" required></label></div>
+<details class="lab-editor"><summary>Edit Python code</summary>
+<label class="lab-editor-label" for="lab-code">Python code</label>
+<p class="lab-editor-help" id="lab-code-help">Tab indents; Shift + Tab unindents. Press Esc then Tab to leave the editor. Ctrl / ⌘ + Enter runs the code.</p>
+<textarea id="lab-code" class="lab-code" aria-describedby="lab-code-help" wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" rows="12">learning_rate = 0.1
+steps = 1
+x, target, weight = 2.0, 6.0, 1.0
+
+print(f&quot;start: weight={weight:.4f}, loss={(weight*x-target)**2:.4f}&quot;)
+for step in range(steps):
+    prediction = weight * x
+    gradient = 2 * (prediction - target) * x
+    weight -= learning_rate * gradient
+    loss = (weight * x - target) ** 2
+    print(f&quot;step {step+1}: weight={weight:.4f}, loss={loss:.4f}&quot;)
+</textarea>
+</details>
+<div class="lab-actions"><button type="button" class="button primary lab-run" disabled>Run code</button><button type="button" class="button lab-stop" disabled>Stop</button><button type="button" class="button lab-reset" disabled>Reset example</button><button type="button" class="button lab-download" disabled>Download code</button></div>
+<p class="lab-status" role="status">Run the code to see the result below.</p>
+<pre class="lab-output" tabindex="0" aria-label="Program output">Ready to run…</pre>
+<noscript>Enable JavaScript to run here, or copy the example and run locally.</noscript>
+</section><h2 id="does-the-method-still-work-if-we-add-a-bias">Does the method still work if we add a bias?</h2>
+<p>Add an adjustable bias to the prediction: <code>prediction=2w+b</code>. To inspect <code>w</code>'s effect, temporarily hold <code>b</code> fixed; to inspect <code>b</code>'s effect, hold <code>w</code> fixed.</p>
+<p>A rate of change that varies one parameter while keeping the others fixed is called a <strong>partial derivative</strong>, marked with <code>∂</code>:</p>
+<pre><code class="language-text">∂L/∂w = 4(prediction−6)
+∂L/∂b = 2(prediction−6)
+</code></pre>
+<p>At <code>w=1</code> and <code>b=0</code>, the two partial derivatives are −16 and −8. The weight affects the prediction through the input multiplier 2, while the bias is added directly, so their effects differ.</p>
+<p>Put these partial derivatives in their corresponding parameter positions, and we obtain the <strong>gradient</strong>, <code>[-16, -8]</code>.</p>
+<p>The earlier update experiment changed only <code>w</code>, keeping <code>b</code> at 0. If we train both parameters together, first calculate both partial derivatives at the same old parameter values, then update both together. The next lesson will develop this in a multilayer network.</p>
+<h2 id="put-both-parameters-in-the-same-plot">Put both parameters in the same plot</h2>
+<p>The loss is now <strong>L(w,b)=(2w+b−6)²</strong>. The two horizontal axes represent <code>w</code> and <code>b</code>, and the height represents loss. Each parameter pair corresponds to one point on the surface.</p>
+<p><img alt="The horizontal axes are weight w and bias b, and height is squared loss; the blue line fixes b at 0, while the teal line shows the path when both parameters are updated" src="../chapters/04-gradients/images/en/03-%E4%B8%A4%E4%B8%AA%E5%8F%82%E6%95%B0%E7%9A%84%E6%8D%9F%E5%A4%B1%E6%9B%B2%E9%9D%A2.svg"  width="1080" height="1140" loading="lazy" decoding="async" /></p>
+<p>The blue line fixes <code>b</code> at 0, giving the parabola from our earlier weight-only updates. Starting from <code>w=1</code> and <code>b=0</code>, with learning rate 0.1, applying the gradient <code>[-16,-8]</code> to both parameters reaches <code>w=2.6</code> and <code>b=0.8</code>: the prediction is 6 and the loss is 0. Both parameters jointly determine one height; they do not have separate, unrelated losses.</p>
+<p>In the <a href="../chapters/04-gradients/lab3d.en.html">3D demo</a>, rotate the view, adjust each parameter, and compare “update only w” with “update both.” The valley floor is not a single point: any pair satisfying <code>2w+b=6</code> has loss 0 on this problem. One training example is not enough to determine these two parameters uniquely.</p><details class="inline-experiment"><summary><span>Try it here · 3D loss surface</span><small>Change parameters and learning rate; inspect the update path on the loss surface.</small></summary><p><a href="../chapters/04-gradients/lab3d.en.html" class="js-experiment inline-expand">Expand workspace ↗</a> · <a href="../chapters/04-gradients/lab3d.en.html" target="_blank" rel="noopener">Open in a new tab ↗</a></p><dialog class="inline-workspace experiment-viewer" aria-label="3D loss surface"><header><strong>3D loss surface</strong><div><a href="../chapters/04-gradients/lab3d.en.html" target="_blank" rel="noopener">Open in a new tab <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button inline-close" type="button" aria-label="Return to reading">Return to reading <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe data-src="../chapters/04-gradients/lab3d.en.html" title="3D loss surface" loading="lazy"></iframe></dialog></details>
+<h2 id="in-code-rerun-with-just-one-learning-rate-changed">In code, rerun with just one learning rate changed</h2>
+<p>The following code uses only standard Python features. A central difference tries <code>w+ε</code> and <code>w−ε</code>, then estimates the derivative from the loss difference on the two sides. It is useful for checking hand calculations. Here, <code>ε</code> corresponds to <code>epsilon</code> in the code; the two trial weights are <code>2ε</code> apart, so divide the loss difference by <code>2ε</code>.</p>
+<pre><code class="language-python"># 输入与目标固定；本例只调整标量参数 w。
+x, target = 2.0, 6.0
+
+
+def loss_at(w):
+    &quot;&quot;&quot;用给定权重预测，返回它与目标之间的平方误差。&quot;&quot;&quot;
+    prediction = x * w
+    return (prediction - target) ** 2
+
+
+def central_difference(function, w, epsilon=1e-5):
+    &quot;&quot;&quot;在同一权重两侧各试一次，用损失差估计当前位置的导数。&quot;&quot;&quot;
+    return (function(w + epsilon) - function(w - epsilon)) / (2 * epsilon)
+
+
+w = 1.0
+print(&quot;输入、权重、目标：&quot;, x, w, target)
+print(&quot;当前预测与损失：&quot;, x * w, loss_at(w))
+for delta in [0.1, 0.01, 0.001]:
+    # 这里求小区间内的平均变化率，delta 越小越接近局部导数。
+    rate = (loss_at(w + delta) - loss_at(w)) / delta
+    print(&quot;试改幅度、变化比例：&quot;, delta, rate)
+
+# 平方误差对预测的导数，乘预测对 w 的导数 x。
+gradient = 2 * (x * w - target) * x
+print(&quot;公式与差分：&quot;, gradient, central_difference(loss_at, w))
+
+for learning_rate in [0.1, 0.3]:
+    # 两次都从原来的 w 出发，只比较步长，不把第一次结果接着更新。
+    new_w = w - learning_rate * gradient
+    print(&quot;学习率、新权重、新损失：&quot;, learning_rate, new_w, loss_at(new_w))
+</code></pre>
+<p>The derivative formula first takes the rate of change of squared error with respect to the difference, <code>2×(prediction−target)</code>, then multiplies it by the rate of change of the prediction with respect to the weight, <code>x</code>. The next lesson will explain why rates of change multiply along a chain of calculations.</p>
+<p>Both learning rates start from the original <code>w=1</code>. The code does not use the first update's result as the second update's starting point. Floating-point rounding may affect the final decimal digits, so compare to an appropriate precision.</p>
+<p>Finite differences require two extra loss calculations per parameter. A network with 9000 parameters would need 18000 additional calculations for this input. In the next lesson, we will calculate these gradients with backpropagation.</p>
+<h2 id="two-exercises-on-locality-and-step-size">Two exercises on locality and step size</h2>
+<ol>
+<li>Change only the input from 2 to <code>x=1</code>, keeping <code>w=1</code>, target 6, and learning rate 0.1. What are the derivative, new weight, and loss after the update? Can you reuse the original derivative of −16?</li>
+<li>Return to the original input <code>x=2</code>, but start at <code>w=4</code>. Update only the weight, with learning rate 0.1. What are the derivative, new weight, and new loss?</li>
+</ol>
+<details class="answer">
+<summary>Reference answers</summary>
+<p>Answers: For the first exercise, the current prediction is 1, and the derivative is <code>2×(1−6)×1=−10</code>. The new weight is <strong>1−0.1×(−10)=2</strong>, giving a prediction of 2 and loss <strong>(2−6)²=16</strong>. Changing the input changes both the prediction and its rate of change with respect to the weight, so the original −16 cannot be reused. For the second, the derivative is <code>4×(8−6)=8</code>, the new weight is <strong>4−0.1×8=3.2</strong>, the prediction is 6.4, and the loss is <strong>0.16</strong>. This time the derivative is positive, so the update decreases the weight.</p>
+</details>
+<p>Run this from the <code>code</code> directory:</p>
+<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+python -m lessons.l04
+</code></pre>
+<p>Companion resources: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l04.py">Entry point</a> · <a href="../chapters/04-gradients/walkthrough.en.html">Interactive demo</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md">Environment setup</a></p>
+<p>Source navigation: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/experiments.py#L50">experiments.py · lesson04</a>.</p></article><details class="lesson-video video-ready" id="lesson-video"><summary><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></path></svg>Watch the companion video<span class="video-duration">5:14</span><span class="video-language">Chinese audio</span></summary><div class="bilibili-embed"><iframe data-src="https://player.bilibili.com/player.html?bvid=BV1EhHg6EEhy&amp;p=1&amp;autoplay=0&amp;danmaku=0" title="04 | Gradients: Why Can an Update in the Right Direction Make Things Worse? · B站视频" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><p class="video-actions"><a href="https://www.bilibili.com/video/BV1EhHg6EEhy/?p=1" target="_blank" rel="noopener">Watch in HD on Bilibili ↗</a></p></div></details>
+<div class="reader-feedback"><span>Questions about this chapter?</span><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=question.yml&amp;title=%5B%E5%AD%A6%E4%B9%A0%5D+04+%7C+Gradients%3A+Why+Can+an+Update+in+the+Right+Direction+Make+Things+Worse%3F&amp;location=04+%7C+Gradients%3A+Why+Can+an+Update+in+the+Right+Direction+Make+Things+Worse%3F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F04.en.html" target="_blank" rel="noopener">Ask a question</a><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=content.yml&amp;title=%5B%E5%8B%98%E8%AF%AF%5D+04+%7C+Gradients%3A+Why+Can+an+Update+in+the+Right+Direction+Make+Things+Worse%3F&amp;location=04+%7C+Gradients%3A+Why+Can+an+Update+in+the+Right+Direction+Make+Things+Worse%3F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F04.en.html" target="_blank" rel="noopener">Suggest a correction</a></div><nav class="chapter-nav" aria-label="Previous and next articles"><a href="../course/03.en.html"><span>Previous <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></path></svg></span><strong>03 | Nonlinearity: Why Can Multiply-and-Add Not Express Four Simple Rules?</strong></a><a href="../course/05.en.html"><span>Next <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></path></svg></span><strong>05 | Backpropagation: Must We Test All 9 Parameters One by One?</strong></a></nav><footer class="reader-footer">Hello LLM · Build a Small Model, Understand Large Models<details class="community-mini"><summary>Stay in touch · 好好用 AI</summary><div class="community-section"><div><h2>Stay in touch · 好好用 AI</h2><p>Follow the WeChat account to discuss what you learn and build.</p><p>For bugs and corrections, <a href="https://github.com/DavidDingXu/hello-llm/issues" target="_blank" rel="noopener">open a GitHub issue</a>.</p></div><a class="qr-link" href="../code/assets/wechat-official-account.jpg" target="_blank" rel="noopener" aria-label="Open the 好好用 AI WeChat QR code"><img src="../code/assets/wechat-official-account.jpg" alt="好好用 AI WeChat official account QR code" width="130" height="130" loading="lazy"><p class="qr-caption">Scan in WeChat · Open full image</p></a></div></details></footer></main>
+<aside class="context-sidebar" aria-label="Article navigation and tools"><div class="context-inner"><nav class="reading-route" aria-label="On this page"><details open><summary>On this page</summary><div class="toc">
+<ul>
+<li><a href="#equal-distances-from-the-target-should-receive-equal-scores">Equal distances from the target should receive equal scores</a></li>
+<li><a href="#move-only-from-1-to-11">Move only from 1 to 1.1</a></li>
+<li><a href="#why-do-these-ratios-approach-16">Why do these ratios approach −16?</a></li>
+<li><a href="#back-to-the-opening-why-does-the-same-16-give-two-different-results">Back to the opening: why does the same −16 give two different results?</a></li>
+<li><a href="#does-the-method-still-work-if-we-add-a-bias">Does the method still work if we add a bias?</a></li>
+<li><a href="#put-both-parameters-in-the-same-plot">Put both parameters in the same plot</a></li>
+<li><a href="#in-code-rerun-with-just-one-learning-rate-changed">In code, rerun with just one learning rate changed</a></li>
+<li><a href="#two-exercises-on-locality-and-step-size">Two exercises on locality and step size</a></li>
+</ul>
+</div>
+</details></nav>
+<section class="reading-settings"><h2>Reading settings</h2><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="Decrease text size">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="Increase text size">A+</button></div><span>Allow about 40 minutes</span><p class="lesson-goal">Distinguish the local direction given by a gradient from the actual update step size.</p></section>
+</div></aside></div><dialog class="search-dialog" id="search-dialog" aria-labelledby="search-label">
+<form method="dialog" class="search-heading"><label for="course-search" id="search-label"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/></circle><path d="m16 16 4.5 4.5"/></path></svg>Search course</label><button class="icon-button" aria-label="Close search"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></form>
+<input id="course-search" type="search" placeholder="Search concepts, code, or questions…" autocomplete="off" spellcheck="false">
+<p class="search-status" id="search-status" role="status">Search all 23 articles by keyword.</p>
+<div class="search-results" id="search-results"></div><footer>↑ ↓ Select result <span>Enter Open · Esc Close</span></footer></dialog>
+<dialog class="experiment-viewer" id="experiment-viewer" aria-labelledby="experiment-title"><header><strong id="experiment-title">Experiments</strong><div><a id="experiment-standalone" target="_blank" rel="noopener">Open separately <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a><button class="button" id="close-experiment" type="button">Back to reading <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></div></header><iframe id="experiment-frame" title="Experiments" src="about:blank"></iframe></dialog>
+<dialog class="image-viewer" id="image-viewer" aria-label="Enlarge figure">
+<header><span>View figure</span><div class="image-actions"><button type="button" id="image-zoom-out" aria-label="Zoom out">−</button><output id="image-scale" aria-label="Zoom level">100%</output><button type="button" id="image-zoom-in" aria-label="Enlarge figure">＋</button><button type="button" id="image-size">Actual size</button><button type="button" id="close-image" autofocus>Close</button></div></header>
+<div class="image-canvas"><p id="image-status" role="status" hidden></p><img id="large-image" alt=""></div><footer><p id="image-description"></p><a id="original-image" target="_blank" rel="noopener">Open original image <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a></footer></dialog>
+<div class="toast" id="toast" role="status"></div></body></html>

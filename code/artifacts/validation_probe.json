@@ -1,0 +1,268 @@
+{
+  "kind": "post_hoc_validation_probe",
+  "post_hoc": true,
+  "template": "{scene}，{name}爱吃{color}的{fruit}。",
+  "limitation": "看到原实验结果后补选的探针，不能当作事先留出的独立泛化成绩。",
+  "scoring": "全词表下一字交叉熵，含 EOS，忽略 -100；按全体有效目标数平均。",
+  "environment": {
+    "torch": "2.9.1",
+    "device": "cpu",
+    "dtype": "float32",
+    "threads": 1
+  },
+  "checks": {
+    "record_count": 64,
+    "unique_record_count": 64,
+    "facts_coverage": {
+      "小丁": 8,
+      "小周": 8,
+      "小陈": 8,
+      "小李": 8,
+      "小王": 8,
+      "小赵": 8,
+      "小吴": 8,
+      "小何": 8
+    },
+    "unseen_characters": [],
+    "complete_sentence_overlap": [],
+    "original_heldout_unseen_characters": [
+      "前",
+      "在",
+      "面"
+    ]
+  },
+  "valid_tokens": {
+    "pretrain_train": 3872,
+    "original_heldout": 1048,
+    "probe": 920
+  },
+  "records": [
+    {
+      "text": "早上，小丁爱吃红色的苹果。"
+    },
+    {
+      "text": "早上，小周爱吃黄色的香蕉。"
+    },
+    {
+      "text": "早上，小陈爱吃紫色的葡萄。"
+    },
+    {
+      "text": "早上，小李爱吃绿色的梨子。"
+    },
+    {
+      "text": "早上，小王爱吃红色的草莓。"
+    },
+    {
+      "text": "早上，小赵爱吃黄色的柠檬。"
+    },
+    {
+      "text": "早上，小吴爱吃绿色的西瓜。"
+    },
+    {
+      "text": "早上，小何爱吃紫色的桑葚。"
+    },
+    {
+      "text": "中午，小丁爱吃红色的苹果。"
+    },
+    {
+      "text": "中午，小周爱吃黄色的香蕉。"
+    },
+    {
+      "text": "中午，小陈爱吃紫色的葡萄。"
+    },
+    {
+      "text": "中午，小李爱吃绿色的梨子。"
+    },
+    {
+      "text": "中午，小王爱吃红色的草莓。"
+    },
+    {
+      "text": "中午，小赵爱吃黄色的柠檬。"
+    },
+    {
+      "text": "中午，小吴爱吃绿色的西瓜。"
+    },
+    {
+      "text": "中午，小何爱吃紫色的桑葚。"
+    },
+    {
+      "text": "下午，小丁爱吃红色的苹果。"
+    },
+    {
+      "text": "下午，小周爱吃黄色的香蕉。"
+    },
+    {
+      "text": "下午，小陈爱吃紫色的葡萄。"
+    },
+    {
+      "text": "下午，小李爱吃绿色的梨子。"
+    },
+    {
+      "text": "下午，小王爱吃红色的草莓。"
+    },
+    {
+      "text": "下午，小赵爱吃黄色的柠檬。"
+    },
+    {
+      "text": "下午，小吴爱吃绿色的西瓜。"
+    },
+    {
+      "text": "下午，小何爱吃紫色的桑葚。"
+    },
+    {
+      "text": "晚上，小丁爱吃红色的苹果。"
+    },
+    {
+      "text": "晚上，小周爱吃黄色的香蕉。"
+    },
+    {
+      "text": "晚上，小陈爱吃紫色的葡萄。"
+    },
+    {
+      "text": "晚上，小李爱吃绿色的梨子。"
+    },
+    {
+      "text": "晚上，小王爱吃红色的草莓。"
+    },
+    {
+      "text": "晚上，小赵爱吃黄色的柠檬。"
+    },
+    {
+      "text": "晚上，小吴爱吃绿色的西瓜。"
+    },
+    {
+      "text": "晚上，小何爱吃紫色的桑葚。"
+    },
+    {
+      "text": "周末，小丁爱吃红色的苹果。"
+    },
+    {
+      "text": "周末，小周爱吃黄色的香蕉。"
+    },
+    {
+      "text": "周末，小陈爱吃紫色的葡萄。"
+    },
+    {
+      "text": "周末，小李爱吃绿色的梨子。"
+    },
+    {
+      "text": "周末，小王爱吃红色的草莓。"
+    },
+    {
+      "text": "周末，小赵爱吃黄色的柠檬。"
+    },
+    {
+      "text": "周末，小吴爱吃绿色的西瓜。"
+    },
+    {
+      "text": "周末，小何爱吃紫色的桑葚。"
+    },
+    {
+      "text": "放学后，小丁爱吃红色的苹果。"
+    },
+    {
+      "text": "放学后，小周爱吃黄色的香蕉。"
+    },
+    {
+      "text": "放学后，小陈爱吃紫色的葡萄。"
+    },
+    {
+      "text": "放学后，小李爱吃绿色的梨子。"
+    },
+    {
+      "text": "放学后，小王爱吃红色的草莓。"
+    },
+    {
+      "text": "放学后，小赵爱吃黄色的柠檬。"
+    },
+    {
+      "text": "放学后，小吴爱吃绿色的西瓜。"
+    },
+    {
+      "text": "放学后，小何爱吃紫色的桑葚。"
+    },
+    {
+      "text": "午饭后，小丁爱吃红色的苹果。"
+    },
+    {
+      "text": "午饭后，小周爱吃黄色的香蕉。"
+    },
+    {
+      "text": "午饭后，小陈爱吃紫色的葡萄。"
+    },
+    {
+      "text": "午饭后，小李爱吃绿色的梨子。"
+    },
+    {
+      "text": "午饭后，小王爱吃红色的草莓。"
+    },
+    {
+      "text": "午饭后，小赵爱吃黄色的柠檬。"
+    },
+    {
+      "text": "午饭后，小吴爱吃绿色的西瓜。"
+    },
+    {
+      "text": "午饭后，小何爱吃紫色的桑葚。"
+    },
+    {
+      "text": "散步时，小丁爱吃红色的苹果。"
+    },
+    {
+      "text": "散步时，小周爱吃黄色的香蕉。"
+    },
+    {
+      "text": "散步时，小陈爱吃紫色的葡萄。"
+    },
+    {
+      "text": "散步时，小李爱吃绿色的梨子。"
+    },
+    {
+      "text": "散步时，小王爱吃红色的草莓。"
+    },
+    {
+      "text": "散步时，小赵爱吃黄色的柠檬。"
+    },
+    {
+      "text": "散步时，小吴爱吃绿色的西瓜。"
+    },
+    {
+      "text": "散步时，小何爱吃紫色的桑葚。"
+    }
+  ],
+  "stages": {
+    "initial": {
+      "checkpoint": "artifacts/first_run/initial.pt",
+      "parameter_sha256_before": "82aaf35a1b52aa644e0eea910cc416ac2d06fb777252c3e183f397feb8a86500",
+      "parameter_sha256_after": "82aaf35a1b52aa644e0eea910cc416ac2d06fb777252c3e183f397feb8a86500",
+      "parameters_unchanged": true,
+      "losses": {
+        "pretrain_train": 4.382247286394608,
+        "original_heldout": 4.379959659722015,
+        "probe": 4.376142020847486
+      }
+    },
+    "pretrain": {
+      "checkpoint": "artifacts/first_run/pretrain.pt",
+      "parameter_sha256_before": "f944cbe2b5077affefcaee449bae06adfc32ad4464a519f128d756877b373c72",
+      "parameter_sha256_after": "f944cbe2b5077affefcaee449bae06adfc32ad4464a519f128d756877b373c72",
+      "parameters_unchanged": true,
+      "losses": {
+        "pretrain_train": 0.3726000118354135,
+        "original_heldout": 6.101809374248709,
+        "probe": 1.8942701049472974
+      }
+    },
+    "sft": {
+      "checkpoint": "artifacts/first_run/sft.pt",
+      "parameter_sha256_before": "1207da1c8ebd0f0a9ae0f5af1315e036d38582aca4672c81a0648926b3627da6",
+      "parameter_sha256_after": "1207da1c8ebd0f0a9ae0f5af1315e036d38582aca4672c81a0648926b3627da6",
+      "parameters_unchanged": true,
+      "losses": {
+        "pretrain_train": 0.6220696469969,
+        "original_heldout": 5.914707580595526,
+        "probe": 1.933178424835205
+      }
+    }
+  }
+}

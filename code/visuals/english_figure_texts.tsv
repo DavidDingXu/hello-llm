@@ -1,0 +1,638 @@
+# Exact, reviewed display-text translations. Chinese model tokens and samples
+# are deliberately preserved by build_english_figures.py, never translated.
+一句话，怎样接着写出来？	How does a sentence continue?
+生成：选中的字，接回输入	Generate: append the selected token
+模型 · 参数固定	Model · fixed parameters
+给候选算分，这次选中“红”	Score candidates; select “红”
+候选只画三项；实际词表有79项。	3 candidates shown; the real vocabulary has 79.
+训练：已知答案，用错误调参数	Train: use the known answer to adjust weights
+已知下一字：红	Known next token: 红
+模型算出预测	Model prediction
+计算错误	Measure error
+沿计算找影响，调整模型里的数	Trace the error; update the parameters
+早上，小丁喜欢红	早上，小丁喜欢红
+输入、参数与输出	Inputs, parameters, output
+输入 x	Input x
+参数 w、b	Parameters w, b
+按参数计算	Compute with w and b
+输出 y	Output y
+各自相乘，得到两个乘积	Multiply each input by its weight
+输入 x₁	Input x₁
+输入 x₂	Input x₂
+输出，成为下一个组件的输入	One output becomes the next input
+神经元 1：接收 [2, 1]	Neuron 1: input [2, 1]
+神经元 2：接收 [4]	Neuron 2: input [4]
+ReLU 后输出 4	After ReLU: 4
+ReLU 后输出 3	After ReLU: 3
+读取 4	Read 4
+把神经元按层连接	Connect neurons into layers
+输入层	Input
+隐藏层	Hidden layer
+输出层	Output
+神经元 A	Neuron A
+神经元 B	Neuron B
+神经元 C	Neuron C
+乘加	Affine
+A 输出	A output
+B 输出	B output
+每条输入连接：1 个权重	One weight per input connection
+每个计算节点：1 个偏置	One bias per neuron
+输入与参数	Inputs and parameters
+第一条乘法	First multiplication
+第二条乘法	Second multiplication
+两个乘积相加	Add the two products
+加上偏置	Add the bias
+经过 ReLU，得到输出	Apply ReLU to get the output
+读输入和参数，计算新的数值。	Read inputs and parameters.
+非负数保留，得到输出。	Nonnegative values pass through.
+负数归零，得到输出。	Set negative values to zero.
+输入	Input
+参数	Parameters
+输出	Output
+一行权重，算出一项输出	One weight row gives one output
+两组参数读取同一份输入，分别求和	Two weight rows read the same input.
+同一输入 x	Same input x
+W 第 1 行	W: row 1
+W 第 2 行	W: row 2
+×  对应位置相乘	×  Pairwise products
+乘积	Products
+输出 y1	Output y1
+输出 y2	Output y2
+多放一份样本，参数仍共用	More samples, the same parameters
+行列的位置与轴名一起读	Read each shape together with its axis names.
+X：样本按行放	X: one sample per row
+输入 1	Input 1
+输入 2	Input 2
+样本 1	Sample 1
+样本 2	Sample 2
+W.T：每列对应一项输出	W.T: one output per column
+输出 1	Output 1
+输出 2	Output 2
+同一组 b 加到每一行	Add the same b to every row
+B：样本数   D：输入项数   O：输出项数	B: samples   D: inputs   O: outputs
+先截去负半边，再把两支相加	Clip negatives, then add branches
+手工构造；每个节点保留前向数值	Constructed example; forward values stay visible.
+两个分支，满足四个目标	Two branches match four targets
+上图看两项输入，下图看它们的差值	Inputs above; their difference below.
+四条输入，四个目标	Four inputs, four targets
+圆点内是目标，网络输出与之相同	Targets inside circles match the outputs.
+两条分支怎样合成 |d|	Two branches combine into |d|
+差值 d	Difference d
+先有目标，才能算损失	A target makes loss measurable
+输入固定；观察权重怎样改变预测	Fixed input; vary the weight to change prediction.
+权重 w	Weight w
+预测 x×w	Prediction x×w
+差值	Error
+目标	Target
+平方	Square
+损失 L	Loss L
+方向相同，步长会改变结果	Same direction, different step size
+横轴是参数；箭头长度由学习率决定	Parameter on x-axis; step size sets arrow length.
+当前位置的切线	Tangent at current w
+同一局部方向，步长不同，落点不同	One local direction; step sizes reach different points.
+沿隐藏层算出输出 −1、损失 4	Hidden values give y=−1 and L=4
+固定输入与参数，沿箭头往下算	Fixed inputs and parameters; follow the arrows.
+输入 [1, 2]	Input [1, 2]
+权重 [1, 0]	Weights [1, 0]
+权重 [0, 1]	Weights [0, 1]
+两路相加，再加输出偏置0	Add both branches and output bias 0
+沿刚才的路径，反着乘回来	Multiply backward along the path
+前向数值保留；莓红箭头求局部变化率	Forward values stay; berry arrows show derivatives.
+其余项 1	Other terms: 1
+权重 1	Weight: 1
+一条权重路径，怎样得到 -8	One weight path gives −8
+灰色顺向算数值；莓红反向算梯度	Gray: forward values. Berry: backward gradients.
+全部梯度齐备，再统一更新	Compute all gradients, then update
+矩阵列对应输入，行对应本层输出	Columns: inputs. Rows: outputs of this layer.
+新参数 = 旧参数 − 0.01×梯度	New parameters = old − 0.01 × gradients
+一个数走两条路，梯度要相加	Two paths: add their gradients
+沿用文末第二题；此图不更新参数	Exercise 2; no parameter update in this diagram.
+y = h₁ − h₂ + h₁；目标仍为1	y = h₁ − h₂ + h₁; target = 1
+同一个 h₁	Same h₁
+损失 L = (0−1)² = 1	Loss L = (0−1)² = 1
+反向：从 y 收到 −2	Backward: receive −2 from y
+两个 +h₁ 的局部变化率都是1	Both +h₁ paths have local derivative 1.
+第一条路径	First path
+第二条路径	Second path
+更新参数后，四项预测靠近目标	Updates move predictions to targets
+真实 PyTorch 记录；固定参数作同轴对照	Real PyTorch run; fixed weights as a control.
+更新步数	Update steps
+更新参数	Updated weights
+固定参数	Fixed weights
+四项输出怎样移动	How all four outputs move
+预测	Prediction
+空心：初始；实心：500 步	Hollow: initial. Filled: step 500.
+一圈训练里，哪些数在变	What changes in a training step?
+前向算数值，反向算梯度，step 改参数	Forward: values. Backward: gradients. Step: weights.
+清空上一次梯度	Clear previous gradients
+本批 MSE	Batch MSE
+其余参数同样更新	Update the other parameters too
+四道题，被误算成了十六道	Four targets become sixteen pairs
+构造例：预测与正确目标都是 [0,1,1,0]	Example: predictions and targets both [0,1,1,0].
+列：一维目标被当成一行	Columns: 1-D targets treated as one row
+行：每行一个预测	Rows: one prediction each
+预测0=0	Pred 0=0
+预测1=1	Pred 1=1
+预测2=1	Pred 2=1
+预测3=0	Pred 3=0
+每格 = 该行预测与该列目标的平方误差	Each cell: squared error of that row / column pair
+蓝框：本来应当一一配对的四格	Blue outline: the four intended pairs
+错配后：8 ÷ 16 = 0.5	Wrong pairing: 8 ÷ 16 = 0.5
+正确配对：0 ÷ 4 = 0	Correct pairing: 0 ÷ 4 = 0
+预测没错，算损失时配错了题	Correct predictions, wrongly paired targets
+文字先编号，再查参数表	Text → IDs → embedding rows
+构造示例 · 输入编号与可训练向量分开	Example · IDs differ from trainable vectors.
+真实字符词表：79 项	Actual character vocabulary: 79 tokens
+独立手算表 E [4,2]	Separate toy table E [4,2]
+下表的 0—3 是演示项编号	IDs 0–3 below belong to this toy table.
+坐标0	Dim 0
+坐标1	Dim 1
+序列 [2,1,2] 逐位置取行	Read one row per ID in [2,1,2]
+三个索引，才能取到这一个数	Three indices locate one number
+仍用刚才的四行小表；每个向量仍为二维	Same four-row toy table; two values per vector.
+2条样本 × 3个位置 × 2个坐标	2 samples × 3 positions × 2 dimensions
+样本0：编号 [2, 1, 2]	Sample 0: IDs [2, 1, 2]
+样本1：编号 [1, 2, 1]	Sample 1: IDs [1, 2, 1]
+位置0 / ID2	Pos 0 / ID2
+位置1 / ID1	Pos 1 / ID1
+位置2 / ID2	Pos 2 / ID2
+位置0 / ID1	Pos 0 / ID1
+位置1 / ID2	Pos 1 / ID2
+位置2 / ID1	Pos 2 / ID1
+先选样本1，再选位置2、坐标0	Sample 1 → position 2 → dimension 0
+重复读取，梯度回到同一行	Repeated reads add to one gradient
+构造示例 · 编号不求导，参数表可求导	Example · Table gradients, no ID gradients.
+输入：[2,1,2]；L 为输出坐标之和	Input: [2,1,2]. L sums all output entries.
+每次读取的梯度贡献都是 [1,1]	Each read contributes a gradient of [1,1].
+同一参数行 E[2]	Same table row E[2]
+位置0：[1,1]	Pos 0: [1,1]
+位置2：[1,1]	Pos 2: [1,1]
+两条路径相加	Add both paths
+参数行 E[1]	Table row E[1]
+位置1：[1,1]	Pos 1: [1,1]
+E[0]、E[3] 未被读取	E[0], E[3] are not read
+梯度均为 [0,0]	Both gradients: [0,0]
+从分数到完整概率分布	Scores become a distribution
+构造示例 · 沿候选轴计算 Softmax	Example · Softmax across candidate tokens.
+词表候选	Candidates
+逐项 exp	Apply exp
+总和 = 1 + e + e² ≈ 11.10734	Sum = 1 + e + e² ≈ 11.10734
+每项除以同一个总和	Divide each value by the same sum
+概率	Probability
+三项非负，和为 1	All nonnegative; sum = 1
+分数没变，概率怎么降了？	Same score, lower probability?
+构造示例 · 分数差决定相对比例	Example · Score differences set relative weights.
+整体加 1000：相对差距没变	Add 1000 to all: same score gaps
+两行 Softmax 完全相同	Both Softmax rows are identical
+只把第三项 2 → 3	Only change the third score: 2 → 3
+蓝：原分布　青：第三项提高后	Blue: before. Teal: third score raised.
+分母也变了，前两项概率下降	The larger denominator lowers the first two.
+文字错一格，就给出了答案	Shift text by one to get targets
+构造示例 · 每个位置预测下一个字符	Example · Each position predicts the next character.
+短片段：苹果。	Text fragment: 苹果。
+完整序列	Full sequence
+x：去掉末项，再右侧填充	x: remove the last token; pad on the right
+y：去掉首项，同列就是答案	y: remove the first token; align target columns
+前四列：4 道有效训练题	First four columns: 4 valid targets
+EOS 计分；−100 不是词表项	Score EOS; −100 is not a vocabulary token.
+一段接续的概率，沿路径相乘	Multiply probabilities along a path
+构造概率；第二步以已接上“苹”为条件	Toy probabilities; step 2 is conditioned on “苹”.
+已有前文	Context
+接“苹”	Append “苹”
+接其他项	Other tokens
+沿“苹”这一支	Follow “苹”
+再预测“果”	Predict “果” next
+接“果”	Append “果”
+整条路径	Full path
+另一条路径	Another path
+整段占一半里的四分之一	A quarter of one half
+青色：0.5 × 0.25 = 0.125	Teal: 0.5 × 0.25 = 0.125
+整段负对数 = 两步负对数相加	Sequence NLL = sum of both step NLLs
+概率越低，负对数损失越大	Lower probability, greater loss
+构造示例 · 先逐位置计分，再平均有效项	Example · Score positions, then average valid targets.
+正确答案概率 p → 损失 −ln(p)	Target probability p → loss −ln(p)
+损失	Loss
+有效位置求平均，填充不参与	Average valid positions; exclude padding
+添加更多填充，平均值不变	Extra padding does not change the mean.
+一行注意力，完整算一次	Compute one full attention row
+构造示例 · 先允许读取全部三个位置	Example · All three positions are visible at first.
+Q 的位置0	Q at position 0
+K：三个位置	K: 3 positions
+点积 [1,0,1]，再除以 √2	Dot products [1,0,1], divided by √2
+沿 K 位置做 Softmax	Softmax across K positions
+分别乘对应的 V	Multiply by each matching V
+逐坐标相加	Sum each dimension
+比例不变，汇总内容可以变	Same weights, different content
+构造示例 · 比例来自 Q/K，内容来自 V	Example · Q/K give weights; V gives content.
+Q、K 固定：注意力比例不变	Fixed Q/K: same attention weights
+K：被读取位置	K positions
+只改 V 的位置2	Change only V at position 2
+修改前 output	Output before
+修改后 output	Output after
+位置0增量 = 0.4011 × [2,0]	Pos 0 change = 0.4011 × [2,0]
+先屏蔽未来，再归一化	Mask the future before Softmax
+构造示例 · 行为 Q，列为 K 的位置	Example · Rows: Q. Columns: K positions.
+缩放后的 scores	Scaled scores
+未来格先置 −∞	Set future scores to −∞
+Softmax 后：未来比例为 0	After Softmax: future weights = 0
+同一份 V	Same V
+因果汇总输出	Causal attention output
+改掉未来，检查前缀是否变化	Change the future; check the prefix
+构造示例 · 参数固定，不做反向或更新	Example · Fixed parameters; forward passes only.
+输入 X：仅替换最后一个位置	Input X: replace only the final position
+位置0	Pos 0
+位置1	Pos 1
+位置2	Pos 2
+因果约束下，前两行输出	Causal mask: first two output rows
+替换前	Before
+替换后	After
+前缀最大差 = 0	Max prefix difference = 0
+移除掩码：未来就能影响前缀	Without a mask, future tokens affect the prefix
+前缀最大差 ≈ 2.6922	Max prefix difference ≈ 2.6922
+同一套比例，满足不了两项要求	One set of weights cannot do both
+固定V的构造例子；实际各头还学习自己的投影	Toy V values; real heads also learn projections.
+固定 V₀=[1,0]，V₁=[0,2]	Fixed V₀=[1,0], V₁=[0,2]
+第1坐标	Dim 1
+第2坐标	Dim 2
+目标 [0.8,1.6]	Target [0.8,1.6]
+一套比例，只能落在蓝线上	One weight pair stays on the blue line
+要第1项为0.8，第2项只能为0.4	If dim 1 is 0.8, dim 2 must be 0.4
+两组坐标，各自选择比例	Each head chooses its own weights
+头0	Head 0
+头1	Head 1
+比例 [0.8,0.2]	Weights [0.8,0.2]
+比例 [0.2,0.8]	Weights [0.2,0.8]
+拼接得到 [0.8,1.6]	Concatenate → [0.8,1.6]
+各头读完，按位置拼回	Concatenate heads by position
+同一查询位置1；显示值经过舍入	Same query at position 1; displayed values rounded.
+投影后：Q位置1，列为K位置	After projection: Q at pos 1, columns are K
+按各头比例汇总 V	Each head computes a weighted sum of V
+拆头、独立汇总、拼回	Split heads, aggregate, concatenate
+构造示例 · 上半看索引，下半看真实投影值	Example · Indices above; projected values below.
+索引 X [B,T,D] = [1,3,4]	Index array X [B,T,D] = [1,3,4]
+头0：全部位置	Head 0: all positions
+头1：全部位置	Head 1: all positions
+批量计算与逐头计算对照	Batched vs. per-head calculation
+同一输入、同一参数，只改变计算组织	Same input and parameters; different organization.
+一次批量计算	One batched calculation
+[1,2,3,2] → 按位置拼接	[1,2,3,2] → concatenate by position
+同一数值，同一坐标	Same values, same coordinates
+逐头循环，再 stack	Loop over heads, then stack
+头0、头1各算完，再恢复头轴	Compute both heads, then restore the head axis
+最大差 = 0	Max difference = 0
+同乘 Wo 后，最终输出也一致	After the same Wo, final outputs match too.
+把特征分开，位置一个不少	Split features; keep every position
+只重排坐标；每个头都保留全部位置	Reorder only; each head keeps every position.
+旋转公式，来自两条箭头相加	Two arrows explain the rotation
+构造角：cosα=0.8，sinα=0.6	Example angle: cosα=0.8, sinα=0.6
+两条分量，转过同一个角	Rotate both components by the same angle
+横坐标	x coordinate
+纵坐标	y coordinate
+横向2转后	Rotated [2,0]
+纵向1转后	Rotated [0,1]
+虚线：把一条箭头接到另一条的末端	Dashed: place one arrow at the tip of the other.
+横向2的贡献	From [2,0]
+纵向1的贡献	From [0,1]
+合起来：[1.6−0.6, 1.2+0.8] = [1,2]	Sum: [1.6−0.6, 1.2+0.8] = [1,2]
+旋转后，每个坐标怎样算	Calculate the rotated coordinates
+构造示例 · 先认识旋转，再使用真实角度	Example · A simple rotation, then the actual angle.
+示意：四分之一圈	Illustration: quarter turn
+原向量 [1,0]	Original [1,0]
+π/2 弧度 → [0,1]	π/2 radians → [0,1]
+实际：位置1	Actual: position 1
+角度 = 1 × 1	Angle = 1 × 1
+= 1 弧度	= 1 radian
+1 弧度 ≈ 57.3°，并非 90°	1 radian ≈ 57.3°, not 90°
+位置1：cos(1)、sin(1)	Position 1: cos(1), sin(1)
+Q/K 旋转，V 不旋转	Rotate Q/K; leave V unchanged.
+交换前文，旋转后不再相同	Swap context; rotation changes it
+构造例子；最后一个查询仍在位置2	Example · The final query stays at position 2.
+上：原序；下：前两项内容交换	Top: original. Bottom: first two items swapped.
+0弧度	0 rad
+1弧度	1 rad
+2弧度	2 rad
+内容A	Item A
+内容B	Item B
+内容C	Item C
+K、V一起换位，位置角度不搬家	Swap K/V content; position angles stay in place
+不加位置旋转	Without positional rotation
+原序	Original
+换序	Swapped
+两次汇总仍然相同	Both weighted sums still match
+按所在位置旋转Q、K	Rotate Q/K at their own positions
+相同内容换了位置，汇总也变了	Same content, new positions, different output
+共同平移保留点积	Shift both; preserve the dot product
+构造示例 · 固定内容，只改变位置	Example · Fixed content, changing positions.
+位置 [0,1] → [7,8]	Positions [0,1] → [7,8]
+原位置	Original
+共同加7	Both +7
+夹角差仍为1弧度；长度仍为1	Angle gap = 1 radian; both lengths = 1
+两次点积 ≈ 0.540302	Both dot products ≈ 0.540302
+只改距离：点积并不单调下降	Larger gaps do not always lower the dot product
+距离	Gap
+固定 q=k=[1,0]：点积 = cos(距离)	Fixed q=k=[1,0]: dot product = cos(distance)
+四个乘数，四种数值变化	Four multipliers, four effects
+同次手算 · 先逐项相乘，再投影回两维	One example · Multiply, then project back to 2-D.
+up 投影	Up projection
+gate 投影	Gate projection
+产生内容 u	Content u
+SiLU 后产生乘数 g	SiLU gives multipliers g
+蓝：u　青：相乘后的 z	Blue: u. Teal: product z.
+变号	Flip sign
+归零	Zero
+幅度变小	Shrink
+幅度变大	Grow
+四行共用刻度；负值向左，正值向右	Shared scale; negative left, positive right.
+图中保留3位小数，计算使用完整精度	Shown to 3 decimals; computed at full precision.
+每个位置，独立经过同一FFN	The same FFN at every position
+逐位置计算 · 不读取另一个位置的输入	Position by position; no input from other positions.
+同一个样本的三个位置	Three positions in the same sample
+位置 0	Pos 0
+位置 1	Pos 1
+位置 2	Pos 2
+同一个FFN	Same FFN
+共享三组 W	Three shared W matrices
+只改位置2：[-1.0, 1.0] → [10.0, -3.0]	Only pos 2: [-1.0, 1.0] → [10.0, -3.0]
+位置0的输出仍为	Output at pos 0 is still
+正式模型：64 → 128 → 64	Course model: 64 → 128 → 64
+3 × 64 × 128 = 24,576 参数	3 × 64 × 128 = 24,576 parameters
+按均方根缩放，不减均值	Scale by RMS; do not center
+手算 · x=[3.0, 4.0] · eps=10⁻⁵ · g初值为1	Example · x=[3.0, 4.0], eps=10⁻⁵, initial g=1
+平均：(9+16)/2	Mean: (9+16)/2
+加 eps，再开方	Add eps; take √
+初值为1	Initial: 1
+两项比例仍为 3 : 4	Ratio stays 3 : 4
+平均值 ≈ 0.989949	Mean ≈ 0.989949
+残差保留了一条直路	A residual keeps a direct path
+手算：x+2x · 下半图：完整Pre-Norm块	Example: x+2x. Below: complete Pre-Norm block.
+直路 ×1	Direct ×1
+支路 ×2	Branch ×2
+L=y₁+y₂ 时，dL/dx=[3,3]	For L=y₁+y₂, dL/dx=[3,3]
+完整块：归一发生在支路入口	Full block: normalize each branch input
+文字进入，候选分数出来	Text in, candidate scores out
+真实前向 · pretrain · 1个样本 · 14个位置	Real forward pass · pretrain · 1 sample · 14 positions
+输入编号	Input IDs
+模型块1	Model block 1
+模型块2	Model block 2
+最后RMSNorm	Final RMSNorm
+输出投影 → logits	Output projection → logits
+每个位置保留一行79项候选分数	Each position gets 79 candidate scores
+同一个“欢”，两种前文	Same “欢”, two different contexts
+真实预训练权重；两次都只做前向	Real pretrained weights; two forward passes only.
+只把“丁”换成“周”	Replace only “丁” with “周”
+查表：取出完全相同的一行	Lookup: the same embedding row
+经过两个模型块后	After two model blocks
+小丁前文	Context: 小丁
+小周前文	Context: 小周
+青色为正，紫色为负；仍是同一输入位置	Teal: positive. Purple: negative. Same input position.
+最后RMSNorm → 词表投影 → Softmax	RMSNorm → vocabulary projection → Softmax
+候选“红”	Candidate “红”
+候选“黄”	Candidate “黄”
+同一份参数，前文改变了下一字分布	Same parameters; context changes the distribution
+还是同一个“欢”，64项数已改变	Same “欢”, new 64-D values
+真实预训练前向；两个面板使用共同色阶	Real pretrained forward pass; shared color scale.
+同一份预训练权重；每格是一个坐标	Same pretrained weights; one dimension per cell.
+查表后 · 64项	After lookup · 64 values
+第二块后 · 64项	After block 2 · 64 values
+紫色为负，青色为正；格内数字是索引	Purple: negative. Teal: positive. Cell numbers: indices.
+8×8仅为排版，仍是一条64维向量	8×8 is a layout; this is one 64-D vector.
+“红”的高分，来自64项乘加	The score for “红”: 64 products
+真实数值；正贡献在零线上方，负贡献在下方	Real values; positive above zero, negative below.
+64个坐标分别乘权重，再全部相加	Multiply 64 values by weights, then sum them
+一根柱 = 一项 hᵢ × W红,ᵢ	One bar = one hᵢ × W红,ᵢ
+横轴：坐标0—63；纵向：有符号贡献	x: dimensions 0–63. y: signed contributions.
+只展开第0项	Expand dimension 0
+这还是分数；79个分数一起做Softmax	Still a score; apply Softmax to all 79 scores
+被读取的位置 K	Key position K
+查询位置 Q	Query position Q
+公开权重的一次真实注意力	Real attention from open weights
+Qwen3-0.6B · 第1层，第1头	Qwen3-0.6B · layer 1, head 1
+颜色越深，当前行分配的比例越大	Darker = greater weight within the current row
+右上角为 0：前面的位置不能读未来	Upper-right = 0: earlier positions cannot see the future
+沿位置7，追踪真实数值	Trace real values at position 7
+“欢” · 只显示坐标0–3 · 全部64项参与计算	“欢” · Dimensions 0–3 shown; all 64 are computed.
+第一块	Block 1
+第二块	Block 2
+参数组成	Parameter counts
+两个块：2 × 41,088	Two blocks: 2 × 41,088
+输入表 + 输出头：2 × 5,056	Embedding + output head: 2 × 5,056
+最后归一：64	Final norm: 64
+合计 92,352	Total: 92,352
+一批数据，触发一次更新	One batch triggers one update
+实跑 · batch16 · lr0.003 · 单线程CPU	Real run · batch 16 · lr 0.003 · single-thread CPU
+训练：256条	Train: 256 texts
+4套句式	4 templates
+留出：64条	Held out: 64 texts
+另1套句式	1 other template
+随机取16条 → x,y	Sample 16 texts → x,y
+平均有效目标损失	Mean loss over valid targets
+反向 → 裁剪梯度≤1	Backward → clip norm ≤1
+AdamW → 参数更新	AdamW → update parameters
+1000次更新	1000 updates
+每50步：完整评估	Full evaluation every 50 steps
+评估只读，不修改参数	Evaluation keeps parameters fixed
+训练下降，留出却变差	Train loss falls; held-out loss rises
+真实原始点 · 每50次更新评估 · 未平滑	Raw points · evaluated every 50 updates · no smoothing
+训练	Train
+留出	Held out
+参数更新次数	Parameter updates
+第1000步：“小”行，第0项	Step 1000: row “小”, dimension 0
+更新前	Before
+更新后	After
+每次追加，再用同一组权重	Append tokens; reuse the weights
+真实轨迹 · pretrain · 贪心 · 最多新增8项	Real trace · pretrained · greedy · up to 8 new tokens
+起始前缀：早上，小丁喜欢	Starting prefix: 早上，小丁喜欢
+T含BOS；绿色文字是已生成部分	T includes BOS; teal text has already been generated.
+EOS → 停止，不显示为文字	EOS → stop; do not display it as text
+小概率藏在哪里？放大看一次	Zoom in on the tiny probabilities
+真实记录 · 放大区使用自己的横轴	Real trace · The zoomed panel has its own x-axis.
+当前前缀：早上，小丁喜欢	Current prefix: 早上，小丁喜欢
+局部放大：其余概率最高的4项	Zoom: next 4 most likely candidates
+放大区横轴仍是实际概率	Zoomed x-axis still shows actual probability
+同一权重，采样温度0.8	Same weights; sampling temperature 0.8
+不同种子，也可能选到同一串字	Different seeds can still produce the same text.
+新查询只算一行，旧 K/V 继续复用	One new Q row; reuse old K/V
+同一份公开权重，连续四次真实前向	Same open weights; four real forward passes.
+先读完整提示词	Read the full prompt first
+新 Q：16 行    K/V 缓存：16 行	New Q: 16 rows    K/V cache: 16 rows
+本次选中：天空	Selected token: 天空
+再输入一个新 token（第1次）	Feed one new token (step 1)
+新 Q：1 行    K/V 缓存：17 行	New Q: 1 row    K/V cache: 17 rows
+本次选中：的颜色	Selected token: 的颜色
+再输入一个新 token（第2次）	Feed one new token (step 2)
+新 Q：1 行    K/V 缓存：18 行	New Q: 1 row    K/V cache: 18 rows
+本次选中：通常	Selected token: 通常
+再输入一个新 token（第3次）	Feed one new token (step 3)
+新 Q：1 行    K/V 缓存：19 行	New Q: 1 row    K/V cache: 19 rows
+本次选中：被认为是	Selected token: 被认为是
+已算过的 K/V 留下，新的一行追加进来	Keep computed K/V; append one new row
+实际缓存：[1,8,位置数,128]	Actual cache: [1,8,positions,128]
+答案从哪一个标签开始	Where do answer targets start?
+真实SFT样本 · −100只屏蔽目标，不删除输入	Real SFT sample · −100 masks targets, not inputs.
+15项	15 tokens
+答案	Answer
+6项	6 tokens
+1项	1
+位置13–20：输入与标签错开一项	Positions 13–20: targets shifted one token
+完整前向 · 因果可见范围保留	Full forward pass; causal visibility stays
+忽略	Skip
+首个答案：L−1 = 14	First answer: L−1 = 14
+prompt目标忽略，输入仍参与计算	Ignore prompt targets; still compute prompt inputs
+7个目标 → 平均损失	7 targets → mean loss
+计分位置表示	Scored states
+从冒号位置起	From the colon
+prompt位置表示	Prompt states
+经注意力上下文路径	Via attention context
+Embedding参数可获梯度	Embedding receives gradients
+问答与续写，分别检查	Check Q&A and continuation separately
+真实答案损失 · 相同贪心设置 · 最多新增8项	Answer loss · same greedy setup · max 8 tokens
+本次留出题全部匹配；仍需检验新问法	All held-out records match; test new questions separately
+续写：早上，小丁喜欢	Continue: 早上，小丁喜欢
+预训练	Pretraining
+同一网络，两次训练	One network, two training stages
+下一段训练，接着使用上一段保存的参数。	Each stage reuses the previous saved weights.
+随机初值 · 92,352个参数	Random start · 92,352 parameters
+第17讲 · 文本预训练	Lesson 17 · text pretraining
+256条短句；给有效的下一字目标评分	256 short texts; score valid next-character targets
+评分	Score
+反向	Backward
+更新	Update
+反复更新1,000次	Repeat for 1,000 updates
+保存预训练权重	Save pretrained weights
+第19讲 · 监督微调	Lesson 19 · supervised fine-tuning
+24条问答；只给答案与EOS评分	24 Q&A pairs; score only the answer and EOS
+继续更新300次；本栏更新全部参数	300 more updates; all parameters are updated
+保存微调权重	Save fine-tuned weights
+第18讲 · 任取一份权重，固定参数生成	Lesson 18 · generate with either set of fixed weights
+给定前文	Context
+选下一项	Next token
+接回输入	Append
+网络结构没换；训练改参数，生成加文字。	Same architecture: training updates weights; generation adds text.
+四种过程，改变的数不同	Four processes, different changes
+前向 / 反向 / 更新 / 生成，分别追踪	Track forward, backward, update, and generation.
+1  前向：输入变成分数	1  Forward: inputs become scores
+2  反向：损失变成梯度	2  Backward: loss yields gradients
+3  更新：优化器改变参数	3  Update: the optimizer changes weights
+4  生成：权重固定，输入变长	4  Generate: fixed weights, longer input
+编号	IDs
+表示	States
+分数	Scores
+参数W参与计算，尚未修改	Use W for computation; leave W unchanged
+参数W	Weights W
+未修改	Unchanged
+参数梯度	Gradients
+沿前向计算的依赖关系回传	Follow the forward dependencies backward
+旧参数	Old weights
+新参数	New weights
+梯度 + 历史状态 → 实际更新	Gradient + optimizer state → actual update
+已有前缀	Prefix
+T项	T tokens
+相同W	Same W
+前向	Forward
+选一个字	Select token
+追加到输入，下次T+1	Append; next time T+1
+主动改条件，检查计算路径	Change conditions; test the path
+真实修改实验 · 随机参数 · seed=42	Real intervention · random parameters · seed=42
+① 只改未来位置8	① Change only future position 8
+比较logits的最大绝对差值	Compare the max absolute logit difference
+前缀0–7	Prefix 0–7
+后缀8–13	Suffix 8–13
+不可见未来变化，前缀保持相同	The prefix cannot see this change; it stays identical.
+② 把首个答案也忽略	② Ignore the first answer token too
+少算一道题，损失反而略高	One fewer scored target; slightly higher loss
+先检查标签，再解释曲线	Check the labels before explaining the curve
+改了数据，旧答案不会自动变	New data needs new training
+实际实验：同一初值，重做1000步预训练	Real test · same initial weights · 1000 pretrain steps
+两次都输入：早上，小丁喜欢	Both inputs: 早上，小丁喜欢
+原预训练权重	Original pretrained weights
+只改数据，已保存的参数不会跟着变	Editing data leaves saved parameters unchanged
+交换后的训练事实	Swapped training facts
+重新训练	Retrain
+新目标产生梯度	New targets give gradients
+优化器调整参数	Optimizer updates weights
+新预训练权重	New pretrained weights
+再用开头同一句输入，接续才改变	Now the same prompt gets a different continuation
+词表仍为79项，参数仍为92,352个	Still 79 vocabulary tokens and 92,352 parameters
+改变的是参数的数值，网络尺寸不变	Parameter values change; network size stays the same
+先看清：你想改变什么？	What do you want to change?
+把资料放进这次输入	Put information in the input
+产品手册	Product manual
+＋本次问题	+ this question
+模型	Model
+参数保持	Fixed weights
+改变本次能读到的材料	Change what the model can read this time
+拿样本继续微调	Fine-tune on examples
+问答样本	Q&A examples
+用于训练	For training
+参数更新	Update weights
+用训练目标引导参数改变	Training targets guide parameter updates
+改变的对象不同，排查方法也不同。	Different things change, so diagnosis differs too.
+最终，你会造出什么？	What will you build?
+同一个网络，经过两段训练。	One network, trained in two stages.
+预训练后：给半句话，接着写	After pretraining: continue a sentence
+你输入	You enter
+模型计算，再选下一个字	Compute scores, then choose a token
+每次选一项，接回输入，再继续	Select one token, append it, and repeat
+问答微调后：给问题，接着答	After Q&A fine-tuning: answer a question
+真实输出；换成新问法，仍可能答错。	Real outputs; unfamiliar wording can still fail.
+20讲，手写一个小语言模型	A language model in 20 lessons
+四个阶段，沿着同一个项目往前走。	Four stages, one continuous project.
+第一阶段	Stage 1
+01—06讲	Lessons 01–06
+让数值网络学起来	Make a numeric network learn
+神经元	Neuron
+向量与矩阵	Vectors / matrices
+非线性	Nonlinearity
+梯度	Gradients
+反向传播	Backpropagation
+训练循环	Training loop
+阶段成果	What you build
+手算梯度，更新网络参数	Compute gradients; update weights
+让小网络学会四条规则	Teach a small network four rules
+第二阶段	Stage 2
+07—09讲	Lessons 07–09
+把文字接进来	Connect text to the network
+训练目标	Training targets
+做出字符预测基线	Build a character-prediction baseline
+看见它读不到前文的限制	See its lack of access to context
+第三阶段	Stage 3
+10—16讲	Lessons 10–16
+读取前文，组装模型	Read context; assemble the model
+注意力	Attention
+因果掩码	Causal masking
+多头注意力	Multi-head attention
+残差与RMSNorm	Residuals / RMSNorm
+完整模型	Complete model
+手写各组件，组装完整模型	Implement and assemble each component
+追完一条真实前向计算	Trace one real forward pass
+第四阶段	Stage 4
+17—20讲	Lessons 17–20
+训练、生成与微调	Train, generate, and fine-tune
+生成	Generation
+监督微调	Supervised fine-tuning
+全流程	Full workflow
+从随机权重走到续写与问答	From random weights to text and Q&A
+完成排错对照和独立迁移	Debug with controls; transfer to new data
+原数组：3个位置，每处4个特征	Original: 3 positions, 4 features each
+沿特征轴分开，格子里的数不变	Split the feature axis; keep all values
+每个头仍然拥有位置0、1、2	Each head still has positions 0, 1, 2
+按位置拼回，恢复原来的顺序	Concatenate by position; restore order
+位置1：头0拿[4,5]，头1拿[6,7]	Position 1: head 0 [4,5], head 1 [6,7]
+位置	Pos
+这里只拆和拼：没有投影，也没有求和	Reshape only: no projection, no sum
+格子拆开，再按位置拼回	Split features; concatenate by position
+构造例 · 索引0—11 · 重排不增加参数	Example · indices 0–11 · no extra parameters
+先相差1格	Start one position apart
+两个位置一起后移3格	Shift both positions by 3
+只把K再往前移1格	Move only K back by 1
+Q在位置1，K在位置0	Q at position 1; K at position 0
+Q：1→4；K：0→3	Q: 1→4; K: 0→3
+Q在位置4，K在位置3	Q at position 4; K at position 3
+Q仍在4；K：3→2	Q stays at 4; K: 3→2
+Q在位置4，K在位置2	Q at position 4; K at position 2
+一起转动时，位置差和点积保持不变	Rotate both: gap and dot product stay fixed
+只改一个位置，位置差和点积一起改变	Move one: both gap and dot product change
+第一对频率为1；点积=cos(位置差)	First frequency = 1; dot product = cos(gap)
+尚未缩放或做Softmax；V没有参与旋转	Before scaling / Softmax; V is not rotated
+一起转动，为什么分数不变？	Why does rotating both preserve the score?
+构造例 · 旋转前Q、K都为[1,0]	Example · Q and K both start at [1,0]

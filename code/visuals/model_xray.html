@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>模型解剖台 · 从零手写大模型</title>
+<style>
+:root{color-scheme:light;--ink:#222a35;--muted:#606c7b;--blue:#3267a4;--purple:#8056a5;--teal:#187b79;--line:#dce3eb}
+*{box-sizing:border-box}body{margin:0;background:#f6f8fb;color:var(--ink);font-family:'Hiragino Sans GB','PingFang SC','Microsoft YaHei',Arial,sans-serif;line-height:1.7}button,select{font:inherit;color:inherit}button{cursor:pointer}button:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #3267a4;outline-offset:3px}a{color:var(--teal);text-underline-offset:4px}main{max-width:1320px;margin:auto;padding:42px 32px 64px}.eyebrow{font-size:13px;color:var(--teal);letter-spacing:.08em}h1{font-size:42px;line-height:1.3;margin:14px 0}h2{font-size:22px;margin:0 0 8px}h3{font-size:16px;margin:0 0 12px}p{margin:10px 0}.lead{max-width:790px;color:var(--muted);font-size:17px}.status{font-size:13px;color:var(--muted);margin:14px 0 28px}.status:before{content:'';display:inline-block;width:7px;height:7px;background:var(--teal);border-radius:50%;margin-right:8px}.sample{background:white;border:1px solid var(--line);padding:20px 24px;margin:25px 0}.sample-top{display:flex;justify-content:space-between;gap:18px;align-items:center;margin-bottom:12px}.sample-top span{font-size:13px;color:var(--muted)}.tokens{display:flex;gap:5px;flex-wrap:wrap}.token{border:1px solid var(--line);background:#fff;width:52px;min-height:64px;padding:5px 0;border-radius:3px;font-size:22px}.token small{display:block;font-size:11px;color:var(--muted)}.token.active{border-color:var(--blue);background:#edf3fb;color:var(--blue);box-shadow:inset 0 -3px var(--blue)}.token.future{color:#8f9ba8;background:repeating-linear-gradient(135deg,#f3f5f7,#f3f5f7 5px,#e9edf1 5px,#e9edf1 6px)}.sample-help{font-size:13px;color:var(--muted);margin-top:14px}.workspace{display:grid;grid-template-columns:220px minmax(0,1fr) 270px;gap:22px;align-items:start}.rail{display:flex;flex-direction:column;gap:0;padding:4px 0}.station{min-width:0;overflow-wrap:anywhere;position:relative;width:100%;padding:18px 15px;text-align:left;background:white;border:1px solid var(--line);border-left:3px solid #c7d0dc}.station span{display:block;font-size:12px;color:var(--muted);margin-top:3px}.station.active{border-color:var(--teal);border-left:4px solid var(--teal);background:#f0f8f6}.station.active strong{color:var(--teal)}.connector{height:24px;width:2px;background:#cbd4df;margin-left:26px}.station strong{font-size:16px}.instrument,.inspector{background:#fff;border:1px solid var(--line);padding:22px}.stage-info{min-height:84px}.stage-info p{font-size:14px;color:var(--muted)}.substeps{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 20px}.substeps button,.mode button,.step-controls button{background:#fff;border:1px solid var(--line);padding:7px 11px;border-radius:3px;font-size:13px}.substeps button[aria-pressed=true],.mode button[aria-pressed=true]{border-color:var(--teal);background:#eaf5f1;color:var(--teal)}.mode{display:flex;gap:8px;margin:12px 0}.grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:5px;margin-top:16px}.cell{position:relative;aspect-ratio:1;border:1px solid transparent;border-radius:2px;padding:0;font-size:12px;font-variant-numeric:tabular-nums}.cell small{display:block;font-size:10px;color:#434d5c}.cell.active{outline:3px solid #222a35;outline-offset:1px;z-index:1}.legend{display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:12px;color:var(--muted);margin-top:16px}.color-strip{width:110px;height:8px;background:linear-gradient(to right,#8056a5,#fff,#187b79)}.fineprint{font-size:12px;color:var(--muted)}.inspector .big{font:600 30px/1.4 Menlo,Consolas,monospace;letter-spacing:-.04em;margin:12px 0;color:var(--teal);overflow-wrap:anywhere}.inspector dl{font-size:13px;margin:18px 0}.inspector dt{color:var(--muted);margin-top:12px}.inspector dd{margin:2px 0;font-family:Menlo,Consolas,monospace;overflow-wrap:anywhere}.inspector .explain{font-size:14px;border-top:1px solid var(--line);padding-top:16px}.relation{margin-top:22px;padding:18px 20px;background:#eef4fa;border-left:3px solid var(--blue);font-size:14px}.relation code{display:block;white-space:pre-wrap;font:13px/1.9 Menlo,Consolas,monospace;margin-top:10px;overflow-wrap:anywhere}.step-controls{display:flex;justify-content:space-between;gap:12px;margin-top:18px}.step-controls button:disabled{opacity:.4;cursor:default}.attention{margin-top:24px;border-top:1px solid var(--line);padding-top:20px}.attention-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.attention-head select{font-size:13px;border:1px solid var(--line);background:white;padding:5px}.weights{display:flex;align-items:end;gap:4px;height:152px;padding-top:24px}.weight{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:end;height:100%;text-align:center}.weight .bar{background:var(--blue);min-height:2px;border-radius:2px 2px 0 0}.weight .blocked{background:repeating-linear-gradient(135deg,#e0e5ec,#e0e5ec 4px,#aeb9c5 4px,#aeb9c5 5px);height:12px!important}.weight b{font-size:12px;font-weight:400;height:28px}.weight small{font-size:9px;color:var(--muted)}.weight strong{font:10px Menlo,Consolas,monospace;color:var(--blue)}.candidates{display:grid;gap:10px;margin-top:18px}.candidate{display:grid;grid-template-columns:48px 1fr 68px;gap:10px;align-items:center;width:100%;border:1px solid var(--line);background:white;padding:10px;text-align:left}.candidate.active{border-color:var(--teal);background:#f1f8f6}.candidate .track{background:#eef2f6;height:10px}.candidate .fill{background:var(--teal);height:100%}.candidate small{text-align:right;font-size:12px;font-variant-numeric:tabular-nums}.projection{width:100%;height:170px;display:block;background:#fafbfd;border:1px solid var(--line);margin-top:15px}.projection rect{cursor:pointer}.candidate-picker{width:100%;margin-top:14px;padding:8px;border:1px solid var(--line);background:#fff}.live{font-size:13px;color:var(--muted);margin-top:14px}.bottom{margin-top:30px;border-top:1px solid var(--line);padding-top:20px;font-size:12px;color:var(--muted)}.bottom code{font-family:Menlo,Consolas,monospace;word-break:break-all}.hidden{display:none!important}
+@media(max-width:1040px){.workspace{grid-template-columns:190px minmax(0,1fr)}.inspector{grid-column:2}.rail{grid-row:1/3}}@media(max-width:650px){main{padding:25px 16px 40px}h1{font-size:32px}.lead{font-size:15px}.sample{padding:16px 12px}.sample-top{align-items:start}.sample-top span{font-size:11px}.token{width:38px;min-height:54px;font-size:18px}.workspace{display:block}.rail{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin-bottom:15px}.connector{display:none}.station{padding:10px 4px;text-align:center;border-left:1px solid var(--line);border-top:3px solid #c7d0dc;min-height:70px}.station.active{border-left:1px solid var(--teal);border-top:3px solid var(--teal)}.station strong{font-size:12px}.station span{font-size:9px}.instrument,.inspector{padding:16px}.inspector{margin-top:16px}.grid{gap:4px}.cell{font-size:10px}.cell small{font-size:8px}.stage-info{min-height:0}.legend{flex-wrap:wrap}.relation{padding:14px}.weights{gap:2px}.weight b{font-size:10px}.weight strong{font-size:8px}.weight small{font-size:8px}.sample-help{font-size:12px}}
+</style></head><body><main>
+<div class="eyebrow">从零手写大模型 / 一次真实前向</div>
+<h1>模型解剖台</h1>
+<p class="lead">盯住一个字，打开它经过的每一层。64个数怎样改变，“红”的高分又从哪里来，都能沿同一条记录核对。</p>
+<div class="status">已保存的预训练权重 · 92,352个参数 · 本页只查看记录，参数固定</div>
+<section class="sample"><div class="sample-top"><strong>先选要追踪的位置</strong><span>整句已给定；查看一次前向，不执行逐字生成</span></div><div class="tokens" id="tokens" aria-label="选择输入位置"></div><div class="sample-help" id="visibility"></div></section>
+<div class="workspace">
+<nav class="rail" id="rail" aria-label="模型层次"></nav>
+<section class="instrument" aria-label="中间数值与计算">
+<div class="stage-info"><h2 id="stage-title"></h2><p id="stage-description"></p></div>
+<div class="substeps" id="substeps"></div>
+<div id="vector-view"><div class="mode"><button id="index-mode" aria-pressed="true">看坐标编号</button><button id="number-mode" aria-pressed="false">看数值</button></div><div class="grid" id="grid" aria-label="64维向量坐标"></div><div class="legend"><span>负数</span><span class="color-strip"></span><span>正数</span><span id="range"></span></div><p class="fineprint">8×8仅为排版，仍是同一个位置的64维向量。色深按当前向量缩放，切换层时标尺会改变。</p></div>
+<div id="output-view" class="hidden"><p class="fineprint">沿完整79项归一化；下方先展示概率最高的5项。</p><div class="candidates" id="candidates"></div><select class="candidate-picker" id="candidate-picker" aria-label="选择词表候选"></select><h3 style="margin-top:22px">这个候选的64项贡献</h3><svg class="projection" id="projection" viewBox="0 0 640 170" role="img" aria-label="64个坐标对候选分数的有符号贡献"></svg><p class="fineprint">零线上方为正贡献，下方为负贡献。点柱子可查看乘法。</p></div>
+<div class="relation"><strong id="relation-title"></strong><code id="relation-code"></code></div>
+<div class="step-controls"><button id="previous">← 上一步</button><button id="next">下一步 →</button></div>
+<section class="attention hidden" id="attention"><div class="attention-head"><h3>这一头读取了哪些位置</h3><select id="head" aria-label="选择注意力头"><option value="0">头0</option><option value="1">头1</option></select></div><div class="weights" id="weights"></div><p class="fineprint">柱高是读取比例；斜纹项被因果掩码屏蔽。这些比例与V共同决定汇总结果，不能只凭高低解释“思考了什么”。</p></section>
+</section>
+<aside class="inspector" aria-label="所选坐标详情"><h3 id="coordinate-title"></h3><div class="big" id="coordinate-value"></div><dl id="coordinate-detail"></dl><p class="explain" id="coordinate-explain"></p><div class="live" id="live" role="status" aria-live="polite"></div></aside>
+</div>
+<footer class="bottom">来源：<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/artifacts/first_run/forward_trace.json">保存的前向记录</a>；本页还读取同一权重的输出矩阵以展开点积。<p>参数摘要 <code id="digest"></code></p><p>这里的颜色表示数值正负和大小，不为坐标预先指定“水果”“语法”等含义。</p></footer>
+</main><script id="model-data" type="application/json">__MODEL_DATA__</script><script>
+'use strict';
+// 所有状态仅控制“查看哪里”；没有优化器、训练循环或浏览器侧权重修改。
+const data=JSON.parse(document.getElementById('model-data').textContent);
+const trace=data.trace, ids=trace.ids[0], $=id=>document.getElementById(id);
+let position=7, stage=0, coordinate=0, numbers=false, head=0, candidate=data.tokens.indexOf('红');
+const stages=[
+ {title:'查表 · Embedding',group:0,description:'编号只负责选行。这64项来自字符自己的参数行，还没有读取前文。',values:p=>trace.embedding[0][p]},
+ {title:'第一块 · 注意力分支',group:1,block:0,description:'先归一化，再投影Q/K/V、旋转Q/K、计算因果注意力，最后混合各头结果。',values:p=>trace.blocks[0].output[0][p]},
+ {title:'第一块 · 第一次相加',group:1,block:0,description:'注意力分支的64项，与入口原向量逐坐标相加。',values:p=>trace.blocks[0].after_attention[0][p]},
+ {title:'第一块 · 前馈后相加',group:1,block:0,description:'前馈分支先归一化，再做SwiGLU。分支结果加回刚得到的表示。',values:p=>trace.blocks[0].block_output[0][p]},
+ {title:'第二块 · 注意力分支',group:2,block:1,description:'接收第一块的结果，使用第二块自己的参数，再次读取允许的前文。',values:p=>trace.blocks[1].output[0][p]},
+ {title:'第二块 · 第一次相加',group:2,block:1,description:'第二块入口的原表示，加上这一块的注意力结果。',values:p=>trace.blocks[1].after_attention[0][p]},
+ {title:'第二块 · 前馈后相加',group:2,block:1,description:'前馈处理各位置的坐标，再通过残差相加。位置数和64维宽度保持。',values:p=>trace.blocks[1].block_output[0][p]},
+ {title:'最后一次 RMSNorm',group:3,description:'每个位置独立计算均方根，除回尺度，再乘该坐标的可训练参数。',values:p=>trace.normalized[0][p]},
+ {title:'词表投影 · 79个候选',group:4,description:'64项表示分别与79行权重做点积，才得到候选分数。Softmax在完整79项间计算概率。',values:p=>trace.logits[0][p]}
+];
+const groupLabels=[['查表','ID → 64'],['第一块','64 → 64'],['第二块','64 → 64'],['最后归一','64 → 64'],['词表打分','64 → 79']];
+const signed=n=>(n>=0?'+':'')+n.toFixed(6);
+const visibleToken=t=>t==='\n'?'↵':t.startsWith('<')?t.slice(1,-1).toUpperCase():t;
+const probability=p=>p<.00001?'＜0.001%':(p*100).toFixed(3)+'%';
+function probabilities(scores){const m=Math.max(...scores), ex=scores.map(v=>Math.exp(v-m)), sum=ex.reduce((a,b)=>a+b,0);return ex.map(v=>v/sum);}
+function tint(value, maximum){const base=value>=0?[24,123,121]:[128,86,165], a=.08+.72*Math.min(1,Math.abs(value)/Math.max(maximum,1e-12));return 'rgb('+base.map(c=>Math.round(255+(c-255)*a)).join(',')+')';}
+function button(label,click){const b=document.createElement('button');b.type='button';b.textContent=label;b.addEventListener('click',click);return b;}
+function pair(label,value){const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value;$('coordinate-detail').append(dt,dd);}
+function showCoordinate(){
+ const current=stages[stage], values=current.values(position);$('coordinate-detail').replaceChildren();
+ if(stage===8){
+  const h=trace.normalized[0][position][coordinate], w=data.output_weights[candidate][coordinate], score=trace.logits[0][position][candidate];
+  $('coordinate-title').textContent='候选“'+visibleToken(data.tokens[candidate])+'” · 坐标'+coordinate;
+  $('coordinate-value').textContent=signed(h*w);pair('当前表示 h['+coordinate+']',signed(h));pair('输出参数 W['+candidate+','+coordinate+']',signed(w));pair('全部64项之和',signed(score));
+  $('coordinate-explain').textContent='大字是这一项乘积，不是总分或概率。其余63项也要参与求和。';
+ }else{
+  $('coordinate-title').textContent='位置'+position+' · 坐标'+coordinate;$('coordinate-value').textContent=signed(values[coordinate]);pair('读取地址','[样本0, 位置'+position+', 坐标'+coordinate+']');
+  if(stage===0){$('relation-code').textContent='E['+ids[position]+'] → 64项浮点数\n第'+coordinate+'项 = '+signed(values[coordinate]);pair('查到的参数行','E['+ids[position]+','+coordinate+']');$('coordinate-explain').textContent='这里直接读取参数表。同一个字符在不同位置查得同一行；上下文尚未参与。';}
+  else if([2,5].includes(stage)){
+   const block=trace.blocks[current.block];pair('相加前原值',signed(block.input[0][position][coordinate]));pair('注意力分支值',signed(block.output[0][position][coordinate]));$('coordinate-explain').textContent='大字是两项之和。保留原值的直路与注意力分支在这里合流。';
+  }else if([3,6].includes(stage)){
+   const block=trace.blocks[current.block], a=block.after_attention[0][position][coordinate];pair('相加前原值',signed(a));pair('前馈分支（由差值还原）',signed(values[coordinate]-a));$('coordinate-explain').textContent='前馈分支值由已保存的出口减去相加前值还原，末位会有浮点舍入差异。';
+  }else if(stage===7){pair('归一前',signed(trace.blocks[1].block_output[0][position][coordinate]));pair('该坐标的缩放参数 g',signed(data.final_scale[coordinate]));$('coordinate-explain').textContent='64项共享同一均方根分母，每项再乘自己的g。归一化不减均值。';}
+  else{$('coordinate-explain').textContent='这是注意力分支经过合头与输出投影后的一个坐标，尚未与直路相加。下方可查看这一块的真实读取比例。';}
+ }
+ $('live').textContent='正在查看“'+visibleToken(data.tokens[ids[position]])+'”的'+current.title+'。';
+ document.querySelectorAll('.cell').forEach((e,i)=>{e.classList.toggle('active',i===coordinate);e.setAttribute('aria-pressed',String(i===coordinate));});
+}
+function renderAttention(){
+ const block=stages[stage].block;$('attention').classList.toggle('hidden',block===undefined);if(block===undefined)return;
+ const weights=trace.blocks[block].weights[0][head][position];$('weights').replaceChildren();
+ weights.forEach((v,i)=>{const column=document.createElement('div');column.className='weight';const value=document.createElement('strong');value.textContent=i>position?'×':(100*v).toFixed(v<.01?1:0)+'%';const bar=document.createElement('div');bar.className='bar'+(i>position?' blocked':'');bar.style.height=Math.max(2,v*95)+'px';const name=document.createElement('b');name.textContent=visibleToken(data.tokens[ids[i]]);const index=document.createElement('small');index.textContent=i;column.title='位置'+i+'，比例'+v.toFixed(8);column.append(value,bar,name,index);$('weights').append(column);});
+}
+function renderOutput(){
+ const scores=trace.logits[0][position], ps=probabilities(scores);$('candidates').replaceChildren();
+ [...scores.keys()].sort((a,b)=>ps[b]-ps[a]).slice(0,5).forEach(i=>{const b=button('',()=>{candidate=i;render();});b.dataset.focus='candidate-'+i;b.className='candidate'+(i===candidate?' active':'');b.setAttribute('aria-label','查看候选'+visibleToken(data.tokens[i]));const label=document.createElement('strong');label.textContent=visibleToken(data.tokens[i]);const track=document.createElement('div');track.className='track';const fill=document.createElement('div');fill.className='fill';fill.style.width=(ps[i]*100)+'%';track.append(fill);const p=document.createElement('small');p.textContent=probability(ps[i]);b.append(label,track,p);$('candidates').append(b);});
+ $('candidate-picker').value=String(candidate);
+ const products=trace.normalized[0][position].map((v,i)=>v*data.output_weights[candidate][i]);const max=Math.max(...products.map(Math.abs));
+ // 所有柱子共用一根零线；正负贡献不会被转换为绝对值后混加。
+ const ns='http://www.w3.org/2000/svg', plot=$('projection');plot.replaceChildren();const zero=document.createElementNS(ns,'line');zero.setAttribute('x1','8');zero.setAttribute('x2','632');zero.setAttribute('y1','85');zero.setAttribute('y2','85');zero.setAttribute('stroke','#7f8a98');plot.append(zero);
+ products.forEach((v,i)=>{const b=document.createElementNS(ns,'rect'), height=Math.max(1,Math.abs(v)/max*70);b.setAttribute('x',8+i*9.75);b.setAttribute('y',v>=0?85-height:85);b.setAttribute('width',i===coordinate?'8.5':'7');b.setAttribute('height',height);b.setAttribute('fill',v>=0?'#187b79':'#8056a5');if(i===coordinate){b.setAttribute('stroke','#222a35');b.setAttribute('stroke-width','2');}const title=document.createElementNS(ns,'title');title.textContent='坐标'+i+'：'+signed(v);b.append(title);b.setAttribute('tabindex','0');b.setAttribute('role','button');b.setAttribute('aria-label','查看贡献坐标'+i);const select=()=>{coordinate=i;renderOutput();showCoordinate();$('projection').children[i+1]?.focus();};b.addEventListener('click',select);b.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select();}});plot.append(b);});
+ $('relation-title').textContent='候选“'+visibleToken(data.tokens[candidate])+'”的分数';
+ $('relation-code').textContent='Σ(64项 hᵢ × W['+candidate+',i]) = '+signed(scores[candidate])+'\n完整79项 Softmax 后：'+probability(ps[candidate]);
+}
+function render(){
+ const focusKey=document.activeElement?.dataset.focus;
+ const current=stages[stage], values=current.values(position);$('stage-title').textContent=current.title;$('stage-description').textContent=current.description;
+ $('tokens').replaceChildren();ids.forEach((id,p)=>{const b=button(visibleToken(data.tokens[id]),()=>{position=p;render();});b.dataset.focus='position-'+p;b.className='token'+(p===position?' active':'')+(p>position?' future':'');b.setAttribute('aria-label','位置'+p+' '+visibleToken(data.tokens[id]));b.setAttribute('aria-pressed',String(p===position));const small=document.createElement('small');small.textContent=p+' / '+id;b.append(small);$('tokens').append(b);});
+ $('visibility').textContent='当前查询位置'+position+'：只允许读取0—'+position+'。右侧斜纹位置不可读，点击它们会切换查询位置。';
+ $('rail').replaceChildren();groupLabels.forEach(([name,shape],g)=>{if(g){const c=document.createElement('div');c.className='connector';$('rail').append(c);}const b=button('',()=>{stage=stages.findIndex(s=>s.group===g);render();});b.dataset.focus='group-'+g;b.className='station'+(g===current.group?' active':'');b.setAttribute('aria-label',name);b.setAttribute('aria-pressed',String(g===current.group));const title=document.createElement('strong');title.textContent=name;const meta=document.createElement('span');meta.textContent=shape;b.append(title,meta);$('rail').append(b);});
+ $('substeps').replaceChildren();stages.forEach((s,i)=>{if(s.group===current.group&&[1,2].includes(s.group)){const b=button(s.title.split(' · ')[1],()=>{stage=i;render();});b.dataset.focus='stage-'+i;b.setAttribute('aria-pressed',String(stage===i));$('substeps').append(b);}});
+ $('vector-view').classList.toggle('hidden',stage===8);$('output-view').classList.toggle('hidden',stage!==8);
+ if(stage===8){renderOutput();}else{
+  const max=Math.max(...values.map(Math.abs));$('grid').replaceChildren();values.forEach((v,i)=>{const b=button(numbers?v.toFixed(2):String(i),()=>{coordinate=i;showCoordinate();});b.className='cell';b.style.background=tint(v,max);b.title='坐标'+i+'：'+signed(v);b.setAttribute('aria-label','坐标'+i+'，数值'+v.toFixed(6));$('grid').append(b);});$('range').textContent='标尺 ±'+max.toFixed(3);
+  if(stage===0){$('relation-title').textContent='编号负责选行';$('relation-code').textContent='E['+ids[position]+'] → 64项浮点数\n第'+coordinate+'项 = '+signed(values[coordinate]);}
+  else if(stage===7){$('relation-title').textContent='沿64项计算均方根';$('relation-code').textContent='x / sqrt(mean(x²) + '+data.norm_eps+') × g';}
+  else{const residual=[2,5].includes(stage), ffn=[3,6].includes(stage);$('relation-title').textContent=ffn?'第二次残差相加':residual?'第一次残差相加':'先归一化，再进入注意力';$('relation-code').textContent=ffn?'y = h + FFN(RMSNorm₂(h))':residual?'h = x + Attention(RMSNorm₁(x))':'Q/K/V投影 → 分头 → RoPE(Q,K)\n因果得分 → Softmax → 汇总V → 合头投影';}
+ }
+ $('index-mode').setAttribute('aria-pressed',String(!numbers));$('number-mode').setAttribute('aria-pressed',String(numbers));$('previous').disabled=stage===0;$('next').disabled=stage===stages.length-1;renderAttention();showCoordinate();
+ if(focusKey)document.querySelector('[data-focus="'+focusKey+'"]')?.focus({preventScroll:true});
+}
+data.tokens.forEach((t,i)=>{const o=document.createElement('option');o.value=i;o.textContent=i+' · '+visibleToken(t);$('candidate-picker').append(o);});
+$('candidate-picker').addEventListener('change',e=>{candidate=Number(e.target.value);render();});
+$('head').addEventListener('change',e=>{head=Number(e.target.value);renderAttention();});
+$('index-mode').addEventListener('click',()=>{numbers=false;render();});$('number-mode').addEventListener('click',()=>{numbers=true;render();});
+$('previous').addEventListener('click',()=>{if(stage>0){stage--;render();}});$('next').addEventListener('click',()=>{if(stage<stages.length-1){stage++;render();}});
+$('digest').textContent=data.parameter_sha256;render();
+</script></body></html>

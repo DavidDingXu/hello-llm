@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "description": "固定教学语法；按完整模板留出",
+  "files": {
+    "pretrain_train.jsonl": {
+      "records": 256,
+      "sha256": "d15089dbee5fa35ce937557894f820dc81604f6c89b0b042f013abafd1532574"
+    },
+    "pretrain_val.jsonl": {
+      "records": 64,
+      "sha256": "cf52c3822cdafcb0313876482604ca595f2f4250c9efd9f7742bb4aa6f9cf369"
+    },
+    "sft_train.jsonl": {
+      "records": 24,
+      "sha256": "82d34ebab4d2ad45f1975622dc30fab15b747f021dfbd3be77b9bb2b3c6bf56f"
+    },
+    "sft_val.jsonl": {
+      "records": 8,
+      "sha256": "568cac62b03d480bf6b934ff49ada9c874b0934b233dfce0587129aa8b30c82b"
+    }
+  }
+}

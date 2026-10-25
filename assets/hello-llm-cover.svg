@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="440" viewBox="0 0 1400 440" role="img" aria-label="Hello LLM：手写小模型，看懂大模型">
+<rect width="1400" height="440" rx="20" fill="#f4f7f6"/>
+<g font-family="Arial,'PingFang SC','Microsoft YaHei',sans-serif">
+<text x="60" y="70" font-size="24" letter-spacing="5" fill="#277548">HELLO LLM</text>
+<text x="60" y="151" font-size="56" font-weight="650" fill="#202d29">手写小模型，</text>
+<text x="60" y="225" font-size="56" font-weight="650" fill="#277548">看懂大模型。</text>
+<text x="60" y="292" font-size="26" fill="#61716a">看清计算 · 亲手实现 · 检验结果</text>
+<path d="M60 330H580" stroke="#cfded5"/>
+<text x="60" y="384" font-size="24" fill="#202d29">20 讲</text><text x="210" y="384" font-size="24" fill="#202d29">交互图解</text><text x="410" y="384" font-size="24" fill="#202d29">CPU 可运行</text>
+<rect x="710" y="48" width="630" height="344" rx="18" fill="#ffffff" stroke="#cfded5"/>
+<text x="746" y="93" font-size="22" fill="#61716a">从一个问题开始：模型怎样接着写？</text>
+<rect x="746" y="122" width="558" height="64" rx="8" fill="#f4f7f6"/>
+<text x="770" y="164" font-size="30" fill="#202d29">早上，小丁喜欢</text>
+<path d="M1024 200v28m-6-6 6 6 6-6" fill="none" stroke="#277548" stroke-width="2"/>
+<text x="1025" y="265" text-anchor="middle" font-size="24" fill="#61716a">读取前文 → 计算分数 → 选择下一字</text>
+<path d="M1024 282v25m-6-6 6 6 6-6" fill="none" stroke="#277548" stroke-width="2"/>
+<text x="1025" y="355" text-anchor="middle" font-size="34" font-weight="600" fill="#277548">红色的苹果。</text>
+</g></svg>

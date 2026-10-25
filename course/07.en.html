@@ -1,0 +1,268 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<meta name="source-sha256" content="680f7995f995f0a99a44f72a0ce6052db2dfaeac3db9cb454ac2d0b23949032d"><meta name="description" content="The ID 44 is not the meaning of “欢”. Give characters addresses, then retrieve vector rows from a trainable table to connect text to numerical computation."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/07.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="07 | Embedding: How Does Text Become a Network Input? · Hello LLM"><meta property="og:description" content="The ID 44 is not the meaning of “欢”. Give characters addresses, then retrieve vector rows from a trainable table to connect text to numerical computation."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/07.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>07 | Embedding: How Does Text Become a Network Input? · Hello LLM</title>
+<link rel="icon" href="../assets/favicon.png" type="image/png">
+<script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
+<script defer src="../code/visuals/reading_site/search-index.en.js?v=11db81a4dd60"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="07" data-alternate-sections="[&quot;先保证每个字都能找回来&quot;, &quot;编号能往返了乘加还是没接上&quot;, &quot;两条序列怎样排成三轴张量&quot;, &quot;一个字出现两次会不会更新错行&quot;, &quot;现在的词表从哪里来&quot;, &quot;三道改数题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="Open course contents" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></path></svg></button>
+<a class="brand" href="../index.en.html" aria-label="Hello LLM · 学习站首页">
+<img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>Build a Small Model, Understand Large Models</small></span></a>
+<nav class="header-nav" aria-label="Main navigation"><a href="../index.en.html#curriculum">Learning path</a><a href="../index.en.html#experiments">Experiments</a><a href="https://github.com/DavidDingXu/hello-llm" target="_blank" rel="noopener">GitHub <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a></nav>
+<div class="header-controls"><a class="language-switch" href="07.html" lang="zh-CN" aria-label="切换到中文">中文</a><button class="icon-button theme-toggle js-only" type="button" aria-label="Switch to dark theme" title="Switch to dark theme"><span class="theme-light-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A9 9 0 0 1 9.5 3.5a9 9 0 1 0 11 11Z"/></path></svg></span><span class="theme-dark-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/></circle><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></path></svg></span></button>
+<button class="search-trigger js-only" type="button" aria-label="Search course"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/></circle><path d="m16 16 4.5 4.5"/></path></svg><span>Search course</span><kbd>⌘ K</kbd></button>
+</div></div><div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div></header><div class="sidebar-scrim" hidden></div><div class="reader-layout"><aside class="course-sidebar" id="course-sidebar" aria-label="Course contents">
+<div class="sidebar-heading"><a href="../index.en.html">Course contents</a><button class="icon-button menu-close js-only" type="button" aria-label="Close course contents"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></div>
+<nav aria-label="All articles"><div class="sidebar-guides"><a class="lesson-link" data-lesson="intro" href="../course/intro.en.html"><span class="lesson-number">·</span><span>Course introduction</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="00" href="../course/00.en.html"><span class="lesson-number">·</span><span>Before we begin</span><span class="lesson-state" aria-hidden="true"></span></a></div><details class="sidebar-stage"><summary><span class="stage-index">Part I</span>Make a numerical network learn</summary><a class="lesson-link" data-lesson="01" href="../course/01.en.html"><span class="lesson-number">01</span><span>Neurons</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="02" href="../course/02.en.html"><span class="lesson-number">02</span><span>Vectors and Matrices</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="03" href="../course/03.en.html"><span class="lesson-number">03</span><span>Multiple Layers and Nonlinearity</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="04" href="../course/04.en.html"><span class="lesson-number">04</span><span>Gradients and Parameter Updates</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="05" href="../course/05.en.html"><span class="lesson-number">05</span><span>Backpropagation by Hand</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="06" href="../course/06.en.html"><span class="lesson-number">06</span><span>Making the Network Learn</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage" open><summary><span class="stage-index">Part II</span>Bring text into the network</summary><a class="lesson-link" data-lesson="07" href="../course/07.en.html" aria-current="page"><span class="lesson-number">07</span><span>Text and Vectors</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="08" href="../course/08.en.html"><span class="lesson-number">08</span><span>Scores and Probabilities</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="09" href="../course/09.en.html"><span class="lesson-number">09</span><span>Text Training Problems</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part III</span>Read context and assemble the model</summary><a class="lesson-link" data-lesson="10" href="../course/10.en.html"><span class="lesson-number">10</span><span>Single-Head Attention</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="11" href="../course/11.en.html"><span class="lesson-number">11</span><span>Causal masks</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="12" href="../course/12.en.html"><span class="lesson-number">12</span><span>Multi-head attention</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="13" href="../course/13.en.html"><span class="lesson-number">13</span><span>Rotary position embeddings</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="14" href="../course/14.en.html"><span class="lesson-number">14</span><span>Positionwise feed-forward networks</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="15" href="../course/15.en.html"><span class="lesson-number">15</span><span>Residual connections and normalization</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="16" href="../course/16.en.html"><span class="lesson-number">16</span><span>The complete forward pass</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part IV</span>Pretrain, generate, and fine-tune</summary><a class="lesson-link" data-lesson="17" href="../course/17.en.html"><span class="lesson-number">17</span><span>The first pretraining run</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="18" href="../course/18.en.html"><span class="lesson-number">18</span><span>Character-by-character generation</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="19" href="../course/19.en.html"><span class="lesson-number">19</span><span>Question-answer fine-tuning</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="20" href="../course/20.en.html"><span class="lesson-number">20</span><span>The full workflow and checks of the principles</span><span class="lesson-state" aria-hidden="true"></span></a></details><a class="lesson-link" data-lesson="end" href="../course/end.en.html"><span class="lesson-number">·</span><span>Closing thoughts</span><span class="lesson-state" aria-hidden="true"></span></a></nav></aside><main class="reader-main" id="main-content"><div class="article-context"><span>Bring text into the network</span><div class="article-actions"><button type="button" class="copy-page-link js-only">Copy link</button><button type="button" class="focus-toggle js-only" aria-pressed="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></path></svg><span>Focus mode</span></button></div></div>
+<div class="mobile-context"><nav class="reading-route" aria-label="On this page"><details><summary>On this page</summary><div class="toc">
+<ul>
+<li><a href="#first-make-sure-every-character-can-be-retrieved">First, make sure every character can be retrieved</a></li>
+<li><a href="#ids-round-trip-correctly-but-multiply-and-add-is-still-disconnected">IDs round-trip correctly, but multiply-and-add is still disconnected</a></li>
+<li><a href="#how-do-two-sequences-form-a-three-axis-tensor">How do two sequences form a three-axis tensor?</a></li>
+<li><a href="#if-a-character-appears-twice-will-the-wrong-row-be-updated">If a character appears twice, will the wrong row be updated?</a></li>
+<li><a href="#where-does-the-current-vocabulary-come-from">Where does the current vocabulary come from?</a></li>
+<li><a href="#three-exercises-with-changed-values">Three exercises with changed values</a></li>
+</ul>
+</div>
+</details></nav><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="Decrease text size">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="Increase text size">A+</button></div></div><article id="article-body"><h1 id="07-embedding-how-does-text-become-a-network-input">07 | Embedding: How Does Text Become a Network Input?</h1>
+<p>Build a Small Model, Understand Large Models · Lesson 07</p>
+<p>In Python, <code>"小" * 2</code> produces “小小”. But the networks in the first six lessons need numerical multiply-and-add operations, followed by parameter adjustments based on prediction errors. Repeating a string does not connect to that calculation.</p>
+<p>What if we assign each character a number? In the course vocabulary, “小” has ID 27, and “丁” has ID 6. Now <code>27×2=54</code> can be calculated, but ID 54 corresponds to “紫”. Multiplying “小” by 2 to get “紫” is clearly not the relationship between characters we want to establish.</p>
+<p>An ID lets the program locate a character without telling it how to calculate with that character. Let us feed in “小丁喜欢苹果。” (“Xiaoding likes apples.”) and identify where we need fixed IDs and where we need adjustable numbers.</p>
+<h2 id="first-make-sure-every-character-can-be-retrieved">First, make sure every character can be retrieved</h2>
+<p>Maintain a list of characters. A character's position in the list is its ID. This first step answers only “which character”; it does not interpret the size of an ID as meaning.</p>
+<p>Our small model uses a character-level representation: each Chinese character or punctuation mark is one item. These basic items supplied to a model are called <strong>tokens</strong>. This series splits text by character; other schemes can combine several characters into one item, so a token need not be one Chinese character.</p>
+<p>The fixed vocabulary has <strong>79 entries</strong>: 75 ordinary characters plus 4 special entries.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Entry</th>
+<th>Role in this course</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td><code>&lt;pad&gt;</code></td>
+<td>Pad samples to a common length</td>
+</tr>
+<tr>
+<td>1</td>
+<td><code>&lt;bos&gt;</code></td>
+<td>Mark the beginning of a text</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>&lt;eos&gt;</code></td>
+<td>Mark the end of a text</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>&lt;unk&gt;</code></td>
+<td>Represent a character absent from the vocabulary</td>
+</tr>
+</tbody>
+</table></div>
+<p>Ordinary characters start at 4, sorted in a fixed Unicode order. Looking up “小丁喜欢苹果。” in the actual course vocabulary gives:</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Character</th>
+<th>小</th>
+<th>丁</th>
+<th>喜</th>
+<th>欢</th>
+<th>苹</th>
+<th>果</th>
+<th>。</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ID</td>
+<td>27</td>
+<td>6</td>
+<td>22</td>
+<td>44</td>
+<td>58</td>
+<td>39</td>
+<td>5</td>
+</tr>
+</tbody>
+</table></div>
+<p>Converting text into a list of IDs is <strong>encoding</strong>; looking up the characters from that list is <strong>decoding</strong>. The component that performs these operations is the tokenizer.</p>
+<p>The same “小” must always map to 27, or the saved parameters will read the wrong location. Run the following standard Python code from the companion code directory to encode and decode a sentence, checking that the original text returns:</p>
+<pre><code class="language-python">import json
+from pathlib import Path
+
+# 列表位置就是固定编号；读取课程词表，保证与保存的模型使用同一套地址。
+tokens = json.loads(Path(&quot;data/vocab.json&quot;).read_text(
+    encoding=&quot;utf-8&quot;))[&quot;tokens&quot;]
+# 反向索引便于从字符查编号，编号本身不是要训练的浮点参数。
+to_id = {token: i for i, token in enumerate(tokens)}
+
+def encode(text):
+    &quot;&quot;&quot;逐字符编码成整数地址；查不到的字符使用 UNK 编号 3。&quot;&quot;&quot;
+    return [to_id.get(char, 3) for char in text]
+
+def decode(ids):
+    &quot;&quot;&quot;按编号取回普通字符，跳过 0—3 四个特殊项；不能恢复未知原字。&quot;&quot;&quot;
+    return &quot;&quot;.join(tokens[i] for i in ids if i &gt;= 4)
+
+text = &quot;小丁喜欢苹果。&quot;
+ids = encode(text)
+print(len(tokens), ids)
+print(decode(ids))
+assert len(tokens) == 79
+# 本例字符都在词表中，所以编码、解码后应回到原句。
+assert decode(ids) == text
+</code></pre>
+<p><code>enumerate</code> supplies both list positions and contents. <code>get(char, 3)</code> uses the UNK ID when a character is missing. The decoder above skips special entries by default, so an exact round trip requires every original character to be in the vocabulary. Once an unknown character is encoded as UNK, the original character is lost and cannot be recovered by decoding.</p>
+<p>For example, “龙” (“dragon”) is absent from the vocabulary, so it encodes as <code>[3]</code>. This represents an unknown item; the system has not inferred its meaning from its pronunciation or written shape.</p>
+<h2 id="ids-round-trip-correctly-but-multiply-and-add-is-still-disconnected">IDs round-trip correctly, but multiply-and-add is still disconnected</h2>
+<p>Printing the original sentence shows that the characters were located correctly. But if we next calculate <code>w×27+b</code>, changing the vocabulary to assign “小” ID 28 changes the output even though the text itself is unchanged. The calculation now depends on an arbitrary ordering.</p>
+<p>We need “小” to have a representation that can be adjusted through prediction errors. The parameters should learn how to distinguish it from “丁”. The fact that the ID of “丁” is 21 less than that of “小” should not force their numerical representations to be 21 apart.</p>
+<p>Keep the ID as an address and place a parameter row at each address: <strong>the input ID only selects a row; the selected numbers take part in multiply-and-add.</strong></p>
+<p>For a hand calculation, leave the real 79-entry vocabulary and use a separate four-entry demonstration vocabulary. Here, 0, 1, 2, and 3 are all ordinary demo entries; they do not carry the special meanings assigned above.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Demo ID</th>
+<th>Parameter column 0</th>
+<th>Parameter column 1</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>3</td>
+<td>−1</td>
+<td>2</td>
+</tr>
+</tbody>
+</table></div>
+<p>ID 2 retrieves <code>[1, 1]</code>; ID 1 retrieves <code>[0, 1]</code>. Input <code>[2, 1, 2]</code> produces:</p>
+<pre><code class="language-text">[[1, 1],
+ [0, 1],
+ [1, 1]]
+</code></pre>
+<p>This trainable parameter table is an <strong>embedding table</strong>. Turning an ID into a vector is the embedding lookup. Each row currently contains 2 numbers, so the representation has width 2. Neither coordinate has a predetermined meaning such as “color” or “fruit.”</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/07-embeddings/images/en/web/01-%E6%9C%BA%E5%88%B6.svg" width="1504" height="1077.2"><img alt="Characters first receive IDs from the real vocabulary, then IDs select parameter rows; the demo table yields three vectors" src="../chapters/07-embeddings/images/en/01-%E6%9C%BA%E5%88%B6.svg"  width="1080" height="2115" loading="eager" decoding="async" /></picture></p>
+<p>Trace one ID first: it points to just one row, without multiplying through the entire table. The selected rows are then placed in input order, preserving the order of positions.</p>
+<p>Call the table <code>E</code> and the ID <code>i</code>. The lookup is written <strong>output vector h=E[i]</strong>. This is indexed retrieval, not <code>i×E</code>.</p>
+<p>It also connects to our earlier matrix multiplication. Multiplying <code>[0, 0, 1, 0]</code> by this table keeps only row 2; all other rows are multiplied by 0, so the result is still <code>[1, 1]</code>. Actual code selects the row directly, avoiding multiply-and-add operations that must be zero.</p>
+<p>Training changes the floating-point numbers in the table while the ID scheme stays fixed. The retrieved vector is a result of this forward pass.</p>
+<h2 id="how-do-two-sequences-form-a-three-axis-tensor">How do two sequences form a three-axis tensor?</h2>
+<p>Using the same small table, process two ID sequences, <code>[2,1,2]</code> and <code>[1,2,1]</code>, together. Each has 3 positions, and each position retrieves 2 numbers, so the output shape is <strong>[2,3,2]</strong>. The axes select sample, position, and vector coordinate, denoted <code>B</code>, <code>T</code>, and <code>D</code>.</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/07-embeddings/images/en/web/03-%E4%B8%89%E4%B8%AA%E8%BD%B4%E6%80%8E%E6%A0%B7%E6%95%B0.svg" width="1504" height="794.2"><img alt="The same two-column parameter table serves two three-position sequences, producing two three-row, two-column arrays; select sample, then position, then coordinate" src="../chapters/07-embeddings/images/en/03-%E4%B8%89%E4%B8%AA%E8%BD%B4%E6%80%8E%E6%A0%B7%E6%95%B0.svg"  width="1080" height="1890" loading="lazy" decoding="async" /></picture></p>
+<p>To read <code>batch_vectors[1,2,0]</code>, first select the second sample, then its third position, then the vector's first coordinate, giving 0. <strong>A “two-dimensional vector” means 2 numbers per position; a “three-axis tensor” here means that 3 indices are needed to locate one number.</strong> These descriptions count different things.</p>
+<p>In the <a href="../chapters/07-embeddings/lab3d.en.html">3D lookup lab</a>, select a value along these three axes and trace it back to its parameter-table row. Change an input ID at one position to compare which outputs change. The lab uses the four-entry demo table above; changing an ID selects a different row without updating any parameters.</p><details class="inline-experiment"><summary><span>Try it here · 3D embedding lookup</span><small>Select a token ID and follow its embedding row into a batch tensor.</small></summary><p><a href="../chapters/07-embeddings/lab3d.en.html" class="js-experiment inline-expand">Expand workspace ↗</a> · <a href="../chapters/07-embeddings/lab3d.en.html" target="_blank" rel="noopener">Open in a new tab ↗</a></p><dialog class="inline-workspace experiment-viewer" aria-label="3D embedding lookup"><header><strong>3D embedding lookup</strong><div><a href="../chapters/07-embeddings/lab3d.en.html" target="_blank" rel="noopener">Open in a new tab <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button inline-close" type="button" aria-label="Return to reading">Return to reading <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe data-src="../chapters/07-embeddings/lab3d.en.html" title="3D embedding lookup" loading="lazy"></iframe></dialog></details>
+<p>Return now to the full model: each character is represented by 64 numbers, and the parameter table has shape <strong>[79,64]</strong>. The first axis selects a vocabulary entry; the second selects a feature coordinate. There are <code>79×64=5056</code> parameters.</p>
+<p>A sentence with 7 characters has input shape <code>[7]</code> and becomes <code>[7,64]</code> after lookup. If we pass <code>B</code> sentences, each padded to <code>T</code> positions, the IDs have shape <code>[B,T]</code> and the result is <code>[B,T,64]</code>. The lookup retrieves 64 coordinates per input position without changing the number of samples or positions.</p>
+<p>Adding BOS and EOS to this short sentence gives 9 positions and a lookup result of <code>[9, 64]</code>. One more input character retrieves one more row; changing each character to a 32-dimensional representation requires changing the parameter table's column count.</p>
+<p>Immediately after lookup, the same character receives the same vector at different positions. The table has not read the preceding text and does not know which sentence contains this occurrence of “小”. Later, we need a separate computation to mix in context.</p>
+<h2 id="if-a-character-appears-twice-will-the-wrong-row-be-updated">If a character appears twice, will the wrong row be updated?</h2>
+<p>ID 2 appears twice in <code>[2, 1, 2]</code>, so two retrieved vectors come from the same row. During backpropagation, gradients return from both occurrences. Will only the last one survive?</p>
+<p>Temporarily use “sum every output coordinate” as a demonstration loss. Each output coordinate then has gradient 1, making it easy to see where the two paths meet.</p>
+<p>ID 2 is read twice, so both contributions return to row 2, giving <code>[2, 2]</code>. ID 1 is read once and receives <code>[1, 1]</code>. The other two rows are not read and receive <code>[0, 0]</code>.</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/07-embeddings/images/en/web/02-%E9%AA%8C%E8%AF%81.svg" width="1504" height="647.2"><img alt="Repeated ID 2 sends two gradients back to the same parameter row; other rows accumulate contributions according to how often they were read" src="../chapters/07-embeddings/images/en/02-%E9%AA%8C%E8%AF%81.svg"  width="1080" height="1515" loading="lazy" decoding="async" /></picture></p>
+<p>The following standalone code checks row selection, gradient accumulation, and the update.</p>
+<pre><code class="language-python">import torch
+
+# 独立的四项演示表：0—3 在这里都是普通地址，不沿用课程特殊项含义。
+# 表内浮点数可求梯度，行号只是选行的整数。
+table = torch.tensor([[1., 0.], [0., 1.],
+                      [1., 1.], [-1., 2.]],
+                     requires_grad=True)
+indices = torch.tensor([2, 1, 2], dtype=torch.long)
+# 按位置依次取行，得到 [3,2]；编号 2 的两次读取共享同一行参数。
+vectors = table[indices]
+# 用求和作演示损失，使每个输出坐标收到的梯度都为 1。
+loss = vectors.sum()
+# 两次读取的贡献加回第 2 行；这里只算梯度，还没有修改表内数值。
+loss.backward()
+
+print(vectors)
+print(table.grad)
+assert table.grad.tolist() == [[0., 0.], [1., 1.],
+                               [2., 2.], [0., 0.]]
+
+# 两条序列仍查同一张表；三根轴依次选择样本、位置、向量坐标。
+batch_ids = torch.tensor([[2, 1, 2], [1, 2, 1]])
+batch_vectors = table[batch_ids]
+assert list(batch_vectors.shape) == [2, 3, 2]
+assert batch_vectors[1, 2, 0].item() == 0.0
+
+# 全部梯度算好后，再按学习率0.1更新；赋值过程不建立新的求导记录。
+with torch.no_grad():
+    table -= 0.1 * table.grad
+print(&quot;更新后的第2行：&quot;, table[2])  # 约 [0.8, 0.8]
+assert torch.allclose(table[2], torch.tensor([0.8, 0.8]))
+</code></pre>
+<p><code>long</code> is the integer type used to store IDs. Integer indices themselves do not receive gradients; the floating-point table with <code>requires_grad=True</code> does. <code>table[indices]</code> retrieves several rows, and automatic differentiation still tracks where each came from.</p>
+<p>The output confirms that row 2's gradient is <code>[2, 2]</code>. Both reads affect the same parameters, so their contributions add, exactly as in Lesson 05's branching-gradient rule. With learning rate 0.1, the row changes from <code>[1, 1]</code> to <code>[0.8, 0.8]</code>. The next time this ID appears, both occurrences retrieve the same updated row.</p>
+<p>The sum loss here only makes the gradients easy to inspect. In Lesson 09, incorrect next-character predictions will drive changes to this table. PyTorch's <code>nn.Embedding(79, 64)</code> stores exactly this kind of trainable parameter table.</p>
+<h2 id="where-does-the-current-vocabulary-come-from">Where does the current vocabulary come from?</h2>
+<p>This series declares eight people, fruits, colors, and a limited set of sentence patterns in advance, then fixes the allowed character set accordingly. Original records are split by whole templates before encoding: pretraining uses 256 training and 64 held-out examples; question answering uses 24 training and 8 held-out examples.</p>
+<p>The vocabulary declares allowed characters; the training split updates parameters; the held-out split checks performance. Records, the vocabulary, and file checksums are in the <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/data/manifest.json">data directory</a>, with the full generation rules in the <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/data.py">data source</a>.</p>
+<p>To answer “which character might come next?”, the model still needs to turn a position vector into scores for all 79 vocabulary candidates.</p>
+<h2 id="three-exercises-with-changed-values">Three exercises with changed values</h2>
+<ol>
+<li>Swap demo IDs 1 and 2, and also swap rows 1 and 2 of the parameter table. After encoding and lookup, will the vectors for an original symbol sequence change? What if only the IDs change and the table stays the same?</li>
+<li>Restart from this lesson's initial table and change the input to <code>[2, 2, 2]</code>. Keep the sum of all output coordinates as the loss. What is row 2's gradient? What does the row become after an update with learning rate 0.1?</li>
+<li>Add one ID to each of the two sequences in the diagram, still using the same two-column table. What is the new output shape? Do the vectors also become four-dimensional?</li>
+</ol>
+<details class="answer">
+<summary>Reference answers</summary>
+<p>For the first exercise, swapping both the ID scheme and the corresponding table rows leaves each symbol's retrieved vector unchanged. Changing only the scheme retrieves a different row and generally changes the result.</p>
+<p>For the second, row 2 has gradient <code>[3,3]</code> and becomes <code>[0.7,0.7]</code> after the update. All other rows have gradient 0. Repeating an ID does not automatically create three separate parameter copies.</p>
+<p>For the third, the output shape is <code>[2,4,2]</code>. The middle, position axis changes; each position still retrieves a vector of 2 numbers. The table's column count is unchanged.</p>
+</details>
+<p>From the companion code directory, run this using the course environment with PyTorch installed:</p>
+<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+python -m lessons.l07
+</code></pre>
+<p>Lesson entry point: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l07.py">Entry point</a> · Complete component: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/tokenizer.py">tokenizer.py</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md">Environment setup</a></p>
+<p>Source navigation: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/tokenizer.py#L8">tokenizer.py · CharTokenizer</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/experiments.py#L113">experiments.py · lesson07</a>.</p></article><details class="lesson-video video-ready" id="lesson-video"><summary><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></path></svg>Watch the companion video<span class="video-duration">4:23</span><span class="video-language">Chinese audio</span></summary><div class="bilibili-embed"><iframe data-src="https://player.bilibili.com/player.html?bvid=BV1ZaHg62E6N&amp;p=1&amp;autoplay=0&amp;danmaku=0" title="07 | Embedding: How Does Text Become a Network Input? · B站视频" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><p class="video-actions"><a href="https://www.bilibili.com/video/BV1ZaHg62E6N/?p=1" target="_blank" rel="noopener">Watch in HD on Bilibili ↗</a></p></div></details>
+<div class="reader-feedback"><span>Questions about this chapter?</span><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=question.yml&amp;title=%5B%E5%AD%A6%E4%B9%A0%5D+07+%7C+Embedding%3A+How+Does+Text+Become+a+Network+Input%3F&amp;location=07+%7C+Embedding%3A+How+Does+Text+Become+a+Network+Input%3F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F07.en.html" target="_blank" rel="noopener">Ask a question</a><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=content.yml&amp;title=%5B%E5%8B%98%E8%AF%AF%5D+07+%7C+Embedding%3A+How+Does+Text+Become+a+Network+Input%3F&amp;location=07+%7C+Embedding%3A+How+Does+Text+Become+a+Network+Input%3F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F07.en.html" target="_blank" rel="noopener">Suggest a correction</a></div><nav class="chapter-nav" aria-label="Previous and next articles"><a href="../course/06.en.html"><span>Previous <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></path></svg></span><strong>06 | The Training Loop: What Happens to Four Predictions After 500 Updates?</strong></a><a href="../course/08.en.html"><span>Next <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></path></svg></span><strong>08 | Softmax: How Do Scores Become Next-Character Probabilities?</strong></a></nav><footer class="reader-footer">Hello LLM · Build a Small Model, Understand Large Models<details class="community-mini"><summary>Stay in touch · 好好用 AI</summary><div class="community-section"><div><h2>Stay in touch · 好好用 AI</h2><p>Follow the WeChat account to discuss what you learn and build.</p><p>For bugs and corrections, <a href="https://github.com/DavidDingXu/hello-llm/issues" target="_blank" rel="noopener">open a GitHub issue</a>.</p></div><a class="qr-link" href="../code/assets/wechat-official-account.jpg" target="_blank" rel="noopener" aria-label="Open the 好好用 AI WeChat QR code"><img src="../code/assets/wechat-official-account.jpg" alt="好好用 AI WeChat official account QR code" width="130" height="130" loading="lazy"><p class="qr-caption">Scan in WeChat · Open full image</p></a></div></details></footer></main>
+<aside class="context-sidebar" aria-label="Article navigation and tools"><div class="context-inner"><nav class="reading-route" aria-label="On this page"><details open><summary>On this page</summary><div class="toc">
+<ul>
+<li><a href="#first-make-sure-every-character-can-be-retrieved">First, make sure every character can be retrieved</a></li>
+<li><a href="#ids-round-trip-correctly-but-multiply-and-add-is-still-disconnected">IDs round-trip correctly, but multiply-and-add is still disconnected</a></li>
+<li><a href="#how-do-two-sequences-form-a-three-axis-tensor">How do two sequences form a three-axis tensor?</a></li>
+<li><a href="#if-a-character-appears-twice-will-the-wrong-row-be-updated">If a character appears twice, will the wrong row be updated?</a></li>
+<li><a href="#where-does-the-current-vocabulary-come-from">Where does the current vocabulary come from?</a></li>
+<li><a href="#three-exercises-with-changed-values">Three exercises with changed values</a></li>
+</ul>
+</div>
+</details></nav>
+<section class="reading-settings"><h2>Reading settings</h2><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="Decrease text size">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="Increase text size">A+</button></div><span>Allow about 35 minutes</span><p class="lesson-goal">Distinguish character IDs, embedding vectors, and the three tensor axes.</p></section>
+</div></aside></div><dialog class="search-dialog" id="search-dialog" aria-labelledby="search-label">
+<form method="dialog" class="search-heading"><label for="course-search" id="search-label"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/></circle><path d="m16 16 4.5 4.5"/></path></svg>Search course</label><button class="icon-button" aria-label="Close search"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></form>
+<input id="course-search" type="search" placeholder="Search concepts, code, or questions…" autocomplete="off" spellcheck="false">
+<p class="search-status" id="search-status" role="status">Search all 23 articles by keyword.</p>
+<div class="search-results" id="search-results"></div><footer>↑ ↓ Select result <span>Enter Open · Esc Close</span></footer></dialog>
+<dialog class="experiment-viewer" id="experiment-viewer" aria-labelledby="experiment-title"><header><strong id="experiment-title">Experiments</strong><div><a id="experiment-standalone" target="_blank" rel="noopener">Open separately <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a><button class="button" id="close-experiment" type="button">Back to reading <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></div></header><iframe id="experiment-frame" title="Experiments" src="about:blank"></iframe></dialog>
+<dialog class="image-viewer" id="image-viewer" aria-label="Enlarge figure">
+<header><span>View figure</span><div class="image-actions"><button type="button" id="image-zoom-out" aria-label="Zoom out">−</button><output id="image-scale" aria-label="Zoom level">100%</output><button type="button" id="image-zoom-in" aria-label="Enlarge figure">＋</button><button type="button" id="image-size">Actual size</button><button type="button" id="close-image" autofocus>Close</button></div></header>
+<div class="image-canvas"><p id="image-status" role="status" hidden></p><img id="large-image" alt=""></div><footer><p id="image-description"></p><a id="original-image" target="_blank" rel="noopener">Open original image <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a></footer></dialog>
+<div class="toast" id="toast" role="status"></div></body></html>

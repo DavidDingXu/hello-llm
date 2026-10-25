@@ -1,0 +1,21 @@
+name: 内容勘误 / Content correction
+description: 报告错字、公式、解释、图解或翻译问题
+title: '[勘误] '
+body:
+  - type: input
+    id: location
+    attributes:
+      label: 版本与位置 / Version and location
+      description: 章节、段落；PDF 请附页码，EPUB 请附小节标题。
+    validations:
+      required: true
+  - type: textarea
+    id: issue
+    attributes:
+      label: 当前内容及问题 / Current content and the problem
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: 建议修正与依据 / Suggested correction and evidence

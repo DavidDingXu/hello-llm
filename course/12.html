@@ -1,0 +1,236 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<meta name="source-sha256" content="ee2cdf8ed61d01a66e1b392f8e40080480f79f73834f54d389d7024ccf8559ae"><meta name="description" content="同一句话可以有不同读法。先看一套比例的限制，再让数字格子实际拆头、各自汇总，最后按位置拼回。"><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/12.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="12｜多头注意力：各个头分别读向哪里？ · Hello LLM"><meta property="og:description" content="同一句话可以有不同读法。先看一套比例的限制，再让数字格子实际拆头、各自汇总，最后按位置拼回。"><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/12.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>12｜多头注意力：各个头分别读向哪里？ · Hello LLM</title>
+<link rel="icon" href="../assets/favicon.png" type="image/png">
+<script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
+<script defer src="../code/visuals/reading_site/search-index.js?v=ea96857fef58"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="12" data-alternate-sections="[&quot;where-does-a-single-set-of-weights-reach-its-limit&quot;, &quot;how-should-an-array-hold-two-sets-of-weights&quot;, &quot;splitting-into-two-pieces-does-not-automatically-create-two-reading-patterns&quot;, &quot;how-do-the-two-heads-pass-their-results-on&quot;, &quot;where-will-the-two-heads-read&quot;, &quot;do-more-heads-always-mean-more-parameters&quot;, &quot;two-check-questions&quot;]"><a class="skip-link" href="#main-content">跳到正文</a>
+<header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="打开课程目录" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+<a class="brand" href="../index.html" aria-label="Hello LLM · 学习站首页">
+<img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>手写小模型，看懂大模型</small></span></a>
+<nav class="header-nav" aria-label="主导航"><a href="../index.html#curriculum">学习路径</a><a href="../index.html#experiments">交互实验</a><a href="https://github.com/DavidDingXu/hello-llm" target="_blank" rel="noopener">GitHub <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a></nav>
+<div class="header-controls"><a class="language-switch" href="12.en.html" lang="en" aria-label="Switch to English">EN</a><button class="icon-button theme-toggle js-only" type="button" aria-label="切换到深色主题" title="切换到深色主题"><span class="theme-light-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A9 9 0 0 1 9.5 3.5a9 9 0 1 0 11 11Z"/></svg></span><span class="theme-dark-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></span></button>
+<button class="search-trigger js-only" type="button" aria-label="搜索课程"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><span>搜索课程</span><kbd>⌘ K</kbd></button>
+</div></div><div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div></header><div class="sidebar-scrim" hidden></div><div class="reader-layout"><aside class="course-sidebar" id="course-sidebar" aria-label="课程目录">
+<div class="sidebar-heading"><a href="../index.html">课程目录</a><button class="icon-button menu-close js-only" type="button" aria-label="关闭课程目录"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+<nav aria-label="全部文章"><div class="sidebar-guides"><a class="lesson-link" data-lesson="intro" href="../course/intro.html"><span class="lesson-number">·</span><span>专栏介绍</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="00" href="../course/00.html"><span class="lesson-number">·</span><span>开篇导学</span><span class="lesson-state" aria-hidden="true"></span></a></div><details class="sidebar-stage"><summary><span class="stage-index">第一部分</span>让数值网络学起来</summary><a class="lesson-link" data-lesson="01" href="../course/01.html"><span class="lesson-number">01</span><span>神经元</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="02" href="../course/02.html"><span class="lesson-number">02</span><span>向量与矩阵</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="03" href="../course/03.html"><span class="lesson-number">03</span><span>多层与非线性</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="04" href="../course/04.html"><span class="lesson-number">04</span><span>梯度与参数更新</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="05" href="../course/05.html"><span class="lesson-number">05</span><span>手写反向传播</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="06" href="../course/06.html"><span class="lesson-number">06</span><span>让网络学起来</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">第二部分</span>把文字接进来</summary><a class="lesson-link" data-lesson="07" href="../course/07.html"><span class="lesson-number">07</span><span>文字与向量</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="08" href="../course/08.html"><span class="lesson-number">08</span><span>分数与概率</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="09" href="../course/09.html"><span class="lesson-number">09</span><span>文本训练题</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage" open><summary><span class="stage-index">第三部分</span>读取前文，组装模型</summary><a class="lesson-link" data-lesson="10" href="../course/10.html"><span class="lesson-number">10</span><span>单头注意力</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="11" href="../course/11.html"><span class="lesson-number">11</span><span>因果掩码</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="12" href="../course/12.html" aria-current="page"><span class="lesson-number">12</span><span>多头注意力</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="13" href="../course/13.html"><span class="lesson-number">13</span><span>旋转位置</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="14" href="../course/14.html"><span class="lesson-number">14</span><span>逐位置前馈</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="15" href="../course/15.html"><span class="lesson-number">15</span><span>残差与归一化</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="16" href="../course/16.html"><span class="lesson-number">16</span><span>完整模型前向</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">第四部分</span>预训练、生成与微调</summary><a class="lesson-link" data-lesson="17" href="../course/17.html"><span class="lesson-number">17</span><span>第一次预训练</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="18" href="../course/18.html"><span class="lesson-number">18</span><span>逐字生成</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="19" href="../course/19.html"><span class="lesson-number">19</span><span>问答微调</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="20" href="../course/20.html"><span class="lesson-number">20</span><span>闭环与原理检验</span><span class="lesson-state" aria-hidden="true"></span></a></details><a class="lesson-link" data-lesson="end" href="../course/end.html"><span class="lesson-number">·</span><span>结束篇</span><span class="lesson-state" aria-hidden="true"></span></a></nav></aside><main class="reader-main" id="main-content"><div class="article-context"><span>读取前文，组装模型</span><div class="article-actions"><button type="button" class="copy-page-link js-only">复制链接</button><button type="button" class="focus-toggle js-only" aria-pressed="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg><span>专注阅读</span></button></div></div>
+<div class="mobile-context"><nav class="reading-route" aria-label="本篇路线"><details><summary>本篇目录</summary><div class="toc">
+<ul>
+<li><a href="#一套读取比例会卡在哪里">一套读取比例，会卡在哪里？</a></li>
+<li><a href="#两套比例数组该怎样摆">两套比例，数组该怎样摆？</a></li>
+<li><a href="#拆出两块还不会自动产生两套读法">拆出两块，还不会自动产生两套读法</a></li>
+<li><a href="#两个头分别读完结果怎样交给后面">两个头分别读完，结果怎样交给后面？</a></li>
+<li><a href="#两个头会读到哪里">两个头会读到哪里</a></li>
+<li><a href="#头越多参数一定越多吗">头越多，参数一定越多吗？</a></li>
+<li><a href="#两道检查题">两道检查题</a></li>
+</ul>
+</div>
+</details></nav><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="减小正文字号">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="增大正文字号">A+</button></div></div><article id="article-body"><h1 id="12多头注意力各个头分别读向哪里">12｜多头注意力：各个头分别读向哪里？</h1>
+<p>手写小模型，看懂大模型 · 第 12 讲</p>
+<p>读“小丁拿着红色的苹果。”，若分别找“谁拿着”“什么颜色”，该读的位置就不一样。一句话可以有不同的读法，模型能不能同时保留几种？</p>
+<p>上一讲每个查询只算一行比例，所有输出坐标共用它。<strong>多头注意力</strong>让多组表示分别计算读取比例，再把结果组合起来。这里的读句子例子只用来说明需求，各个头实际学到的用途要由训练结果来检查。</p>
+<h2 id="一套读取比例会卡在哪里">一套读取比例，会卡在哪里？</h2>
+<p>固定两行内容向量 V：<code>[1, 0]</code>、<code>[0, 2]</code>。现在希望汇总后第一项为 0.8、第二项为 1.6。先试着用一行比例完成它。</p>
+<p>把比例写成 <code>[a, 1−a]</code>，输出就是 <code>[a, 2(1−a)]</code>。第一项要求 <code>a=0.8</code>，第二项却要求 <code>a=0.2</code>，没法同时满足。</p>
+<p>注意力比例非负、总和为1，所以 <code>a</code> 只能在0到1之间变化。换遍所有合法的 <code>a</code>，输出也只能沿下图的蓝线移动，碰不到线外的目标点。</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/12-multi-head-attention/images/web/03-%E4%B8%80%E5%A5%97%E6%AF%94%E4%BE%8B%E7%9A%84%E9%99%90%E5%88%B6.svg" width="1504" height="893.8"><img alt="固定V时单套读取比例只能生成蓝色线段上的向量，目标0.8和1.6在线外；两组坐标分别采用不同配比后可以拼成目标" src="../chapters/12-multi-head-attention/images/03-%E4%B8%80%E5%A5%97%E6%AF%94%E4%BE%8B%E7%9A%84%E9%99%90%E5%88%B6.svg"  width="1080" height="2115" loading="eager" decoding="async" /></picture></p>
+<p>如果两组坐标各用一套比例：头0按 <code>[0.8,0.2]</code> 汇总第一组，得到 <code>0.8×1+0.2×0=0.8</code>；头1按 <code>[0.2,0.8]</code> 汇总第二组，得到 <code>0.2×0+0.8×2=1.6</code>。拼起来正好是目标 <code>[0.8,1.6]</code>。这两行比例由我们指定，尚未训练。</p>
+<p>这个比较固定了 V；实际模型还会为各头学习投影，改变投影也会改变单头的可达范围。这里要看清的是：结构可以同时保留多套读取方式。接下来先把这些头放进数组，再让它们各自计算。</p>
+<h2 id="两套比例数组该怎样摆">两套比例，数组该怎样摆？</h2>
+<p>把形状缩到能完整画出来：1 个样本、3 个位置、每位置 4 个特征。用 0 到 11 当坐标标签，填入数组：</p>
+<pre><code class="language-text">X[0] = [[0,  1,  2,  3],
+        [4,  5,  6,  7],
+        [8,  9, 10, 11]]
+</code></pre>
+<p>形状是 <code>[B, T, D]=[1, 3, 4]</code>。这些编号只用来追踪格子，暂不代表字符编号，也不是训练得到的语义特征。</p>
+<p>分成 2 个头，每头宽度 <code>d=D/H=4/2=2</code>。每个位置的前两项给头 0，后两项给头 1：</p>
+<pre><code class="language-text">头0：[[0, 1],       头1：[[ 2,  3],
+      [4, 5],             [ 6,  7],
+      [8, 9]]             [10, 11]]
+</code></pre>
+<p>注意每个头仍然拥有全部三个位置。我们拆的是特征轴，不能把三个位置拆成“头 0 看前两字，头 1 看后两字”。</p>
+<details class="motion-figure"><summary>展开观看动态过程</summary><img alt="索引0到11的格子沿特征轴移动到两个头，每个头保留三个位置，最后按原位置拼回；格子里的数始终不变" src="../chapters/12-multi-head-attention/images/%E8%BF%87%E7%A8%8B.gif"  width="648" height="1080" loading="lazy" decoding="async" /></details>
+<p>蓝格是每个位置的前两项，青格是后两项。先跟住4和5：它们一起移到头0的位置1；6和7则进入头1的同一位置。这里只拆分与拼回，没有投影或求和。要停下来核对，可看<a href="../chapters/12-multi-head-attention/images/04-%E5%8F%AA%E7%9C%8B%E6%A0%BC%E5%AD%90%E6%80%8E%E6%A0%B7%E6%8B%86.png">静态拆分图</a>。</p>
+<p>分头后的轴顺序为 <strong>[B,H,T,d]=[1,2,3,2]</strong>。沿头轴取出一个头，得到三个位置、每个位置两维，正好可以使用前两讲的注意力计算。</p>
+<p>也可以打开<a href="../chapters/12-multi-head-attention/lab3d.html">三维张量实验</a>，跟住数字4，逐步查看拆分特征轴、交换头与位置轴、再合头的过程。点选数字可核对每一步的索引；实验只重排这12个数，不执行投影或注意力计算。</p><details class="inline-experiment"><summary><span>动手实验 · 三维张量实验</span><small>跟住一个数字，查看拆头、交换轴与合头后的索引。</small></summary><p><a href="../chapters/12-multi-head-attention/lab3d.html" class="js-experiment inline-expand">展开大窗口 ↗</a> · <a href="../chapters/12-multi-head-attention/lab3d.html" target="_blank" rel="noopener">在新标签页打开 ↗</a></p><dialog class="inline-workspace experiment-viewer" aria-label="三维张量实验"><header><strong>三维张量实验</strong><div><a href="../chapters/12-multi-head-attention/lab3d.html" target="_blank" rel="noopener">在新标签页打开 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button inline-close" type="button" aria-label="返回阅读">返回阅读 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe data-src="../chapters/12-multi-head-attention/lab3d.html" title="三维张量实验" loading="lazy"></iframe></dialog></details>
+<p>这个重排本身没有增加参数，也没有改动数值。代码要分两步：先把最后一轴分成“头、头内坐标”，再把头轴移到位置轴前面。</p>
+<pre><code class="language-python">import torch
+
+def split_heads(x, heads):
+    &quot;&quot;&quot;把 [B,T,D] 的特征分为 H 组，返回 [B,H,T,d]，其中 d=D/H。&quot;&quot;&quot;
+    batch, positions, width = x.shape
+    if heads &lt;= 0 or width % heads != 0:
+        raise ValueError(&quot;表示宽度必须能被头数整除&quot;)
+    # 先得到 [B,T,H,d]，再交换位置轴与头轴；每个头仍保留全部位置。
+    return x.reshape(batch, positions, heads,
+                     width // heads).transpose(1, 2)
+
+def merge_heads(x):
+    &quot;&quot;&quot;逆转分头重排，将同一位置的各头结果拼成 [B,T,H*d]。&quot;&quot;&quot;
+    batch, heads, positions, width = x.shape
+    # contiguous 仅整理交换轴后的内存布局，不改变坐标对应的数值。
+    return x.transpose(1, 2).contiguous().reshape(
+        batch, positions, heads * width)
+
+# 0—11 用来追踪坐标，不是字符编号；一个样本、三个位置、四维表示。
+x = torch.arange(12, dtype=torch.float32).reshape(1, 3, 4)
+heads = split_heads(x, 2)
+print(heads)
+assert heads.shape == (1, 2, 3, 2)
+# 除了形状与往返，还要核对具体位置，防止两次错误重排恰好互相抵消。
+assert heads[0, 0, 1].tolist() == [4., 5.]
+assert heads[0, 1, 1].tolist() == [6., 7.]
+assert torch.equal(merge_heads(heads), x)
+</code></pre>
+<p><code>reshape</code> 先得到 <code>[B, T, H, d]</code>，<code>transpose(1, 2)</code> 交换位置轴和头轴。拼回时做反向动作。<code>contiguous()</code> 把交换轴后的数据整理成适合后续重排的连续布局；这里的整理不改变数组表达的数值关系。</p>
+<p>只验证“拆了还能拼回”还不够。两段代码如果恰好犯了相反的错，也可能通过往返；所以还检查头 0 的位置 1 是否真拿到 <code>[4, 5]</code>。</p>
+<h2 id="拆出两块还不会自动产生两套读法">拆出两块，还不会自动产生两套读法</h2>
+<p>刚才只是移动格子，还没决定各头如何读取。要回应开头那两种需求，必须先用各自的参数产生表示：对 X 执行三组可训练投影，得到 <code>[B, T, D]</code> 的 Q、K、V，再分别拆成 <code>[B, H, T, d]</code>。</p>
+<p>虽然代码把每组投影写成一个大矩阵，矩阵里分给不同头的参数行是不同的。某一头的 Q 坐标，可以是原始 D 个输入坐标的组合；它不必永远只读原始输入的前两项。</p>
+<p>这样，每个头都有自己的 <code>Q_h/K_h/V_h</code>，各算一张 <code>[T, T]</code> 的分数表，加同样的因果约束，再归一化、汇总。</p>
+<p><strong>头 h 的输出=Softmax(Q_h @ K_hᵀ / √d + 因果屏蔽) @ V_h。</strong></p>
+<p>本例有两个头，分数表合起来为 <code>[1, 2, 3, 3]</code>，最后两轴分别是查询位置、被读取位置，Softmax 沿最后的被读取位置轴计算。单头汇总结果为 <code>[1, 3, 2]</code>，所有头的汇总结果合起来为 <code>[1, 2, 3, 2]</code>，最后两轴是位置与头内特征。</p>
+<p>如果把完整宽度 4 拿去缩放，就用错了维度。每个头实际点积只有 2 项，因此本例除以 <code>√2</code>；正式模型 <code>D=64, H=2, d=32</code>，除以 <code>√32</code>。</p>
+<h2 id="两个头分别读完结果怎样交给后面">两个头分别读完，结果怎样交给后面？</h2>
+<p>假设某位置两个头的结果分别是 <code>[a, b]</code>、<code>[c, d]</code>，拼接得到 <code>[a, b, c, d]</code>。它不是相加成 <code>[a+c, b+d]</code>，也不是把位置 0 与位置 1 拼在一起。</p>
+<p>拼接只是把各头的结果收进同一个位置向量。接着再用一组 <strong>Wo 输出投影参数</strong>，让后续每个坐标能够组合不同头的结果。</p>
+<p>这是注意力内部的输出投影，把各头结果混合回 <code>D</code> 维位置表示。第08讲的词表投影还在后面，负责把位置表示变成79个候选分数；这里尚未决定下一字。</p>
+<p>例如输出投影的一行参数为 <code>[1, 0, 1, 0]</code>，就会从刚才的向量算出 <code>a+c</code>。这个跨头混合是可训练的，拼接动作本身则没有可训练参数。</p>
+<p>各头的结果经投影后回到 <code>[B, T, D]</code>，便于接到后续网络。</p>
+<h2 id="两个头会读到哪里">两个头会读到哪里</h2>
+<p>先用一组固定随机参数试算。位置1只能读位置0和自己，两个头会把比例分给谁？这次得到：</p>
+<ul>
+<li>头0约为 <code>[0.002978, 0.997022, 0]</code>，几乎都给位置1。</li>
+<li>头1约为 <code>[0.999998, 0.000002, 0]</code>，几乎都给位置0。</li>
+</ul>
+<p>同一份输入、同一个查询位置，两个头已经采用了不同的读取比例。它们得到各自的二维结果，再按位置拼回四维。</p>
+<p><img alt="两个头在同一位置采用各自的比例汇总V，将两项结果按位置拼成四维，再用Wo投影" src="../chapters/12-multi-head-attention/images/05-%E4%B8%A4%E5%A4%B4%E6%B1%87%E6%80%BB%E5%86%8D%E6%8B%BC%E5%9B%9E.svg"  width="1080" height="1230" loading="lazy" decoding="async" /></p>
+<p>下面用代码复算各头的汇总结果，并检查一次算全部头，是否与逐头循环相同。代码只打印结果形状；上面两行读取比例可在本讲完整入口输出的 <code>projected_weights</code> 中核对。位置旋转还没有加入，下一讲会把它接在 Q、K 分头之后。</p>
+<pre><code class="language-python">import math
+from torch import nn
+
+def attend(q, k, v):
+    &quot;&quot;&quot;对 [...,T,d] 做因果注意力；样本、头等前导轴各自独立计算。&quot;&quot;&quot;
+    # Q/K 分头后为 [B,H,T,d]，得分为 [B,H,T,T]；缩放用 d 而非总宽度。
+    scores = q @ k.transpose(-2, -1) / math.sqrt(q.shape[-1])
+    length = q.shape[-2]
+    # True 是可读位置；这张 [T,T] 掩码会广播到所有样本和头。
+    visible = torch.ones(length, length, dtype=torch.bool,
+                         device=q.device).tril()
+    # 沿最后的 K 位置轴归一化；未来先置 -inf，才会分到零比例。
+    weights = torch.softmax(
+        scores.masked_fill(~visible, float(&quot;-inf&quot;)), dim=-1)
+    return weights @ v
+
+torch.manual_seed(42)
+# 四个 Linear 保存各自的参数，前三个生成 Q/K/V，最后一个混合各头结果。
+q_proj = nn.Linear(4, 4, bias=False)
+k_proj = nn.Linear(4, 4, bias=False)
+v_proj = nn.Linear(4, 4, bias=False)
+out_proj = nn.Linear(4, 4, bias=False)
+
+# 投影 [1,3,4] 后再分头，每个 Q/K/V 均为 [1,2,3,2]。
+q = split_heads(q_proj(x), 2)
+k = split_heads(k_proj(x), 2)
+v = split_heads(v_proj(x), 2)
+context = attend(q, k, v)
+# 先按位置拼回四维，再经输出投影；不是把两个头逐项相加。
+output = out_proj(merge_heads(context))
+
+# 参考路径每次取一个头，输入形状变成 [B,T,d]。
+reference_heads = []
+for head in range(2):
+    reference_heads.append(attend(q[:, head], k[:, head],
+                                  v[:, head]))
+# stack 在轴 1 恢复头轴，与一次批量计算的 [B,H,T,d] 对齐。
+reference = torch.stack(reference_heads, dim=1)
+assert torch.allclose(context, reference)
+assert output.shape == x.shape
+print(context.shape, output.shape)
+</code></pre>
+<p>这段接在前一段之后运行。矩阵乘法只使用最后两个轴，前面的样本轴与头轴各自独立计算；同一张下三角掩码会应用到每个样本、每个头。</p>
+<p><code>stack(..., dim=1)</code> 把逐头结果收回头轴。断言核对的是：逐头调用与一次批量计算得到相同的汇总结果。</p>
+<p>正式模型使用64维、2个头，每头32维，仍按相同方式拆开和拼回。读形状时要看轴的含义：汇总结果最后一轴是特征，注意力分数最后一轴则是被读取的位置，不能因为数字碰巧相同就混用。</p>
+<p>回到代码里的两条检查：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>检查项</th>
+<th>本次结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>逐头计算与一次批量汇总</td>
+<td>相同，最大差值为0</td>
+</tr>
+<tr>
+<td>各头结果按位置拼回</td>
+<td>形状为 <code>[1,3,4]</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>需要逐格核对，可看<a href="../chapters/12-multi-head-attention/images/02-%E9%AA%8C%E8%AF%81.png">完整数值对照</a>。</p>
+<p>Q/K/V 由固定随机参数投影得到，目的是验证组织和计算。不能从这次输出给两个头分别贴上“语法头”“常识头”的标签。头的用途取决于训练后的整体行为，同一头也可能承担多种关系。</p>
+<p>反向传播时，输出投影把梯度传回拼接向量，拼接再把对应坐标的梯度送回各头。分头、合头虽然没有参数，仍然位于计算图里；它们负责保持坐标对应，不会让梯度在这里消失。更新的是三组输入投影与一组输出投影的参数。</p>
+<p>在<a href="../chapters/12-multi-head-attention/walkthrough.html">交互演示</a>里选定一个格子，沿着它的样本、位置、特征索引，追踪拆分和拼回后的去向。</p><details class="inline-experiment"><summary><span>动手实验 · 逐步演示</span><small>逐步核对计算过程，随时前进或后退。</small></summary><p><a href="../chapters/12-multi-head-attention/walkthrough.html" class="js-experiment inline-expand">展开大窗口 ↗</a> · <a href="../chapters/12-multi-head-attention/walkthrough.html" target="_blank" rel="noopener">在新标签页打开 ↗</a></p><dialog class="inline-workspace experiment-viewer" aria-label="逐步演示"><header><strong>逐步演示</strong><div><a href="../chapters/12-multi-head-attention/walkthrough.html" target="_blank" rel="noopener">在新标签页打开 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button inline-close" type="button" aria-label="返回阅读">返回阅读 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe data-src="../chapters/12-multi-head-attention/walkthrough.html" title="逐步演示" loading="lazy"></iframe></dialog></details>
+<h2 id="头越多参数一定越多吗">头越多，参数一定越多吗？</h2>
+<p>在本栏这种总宽度 D 固定、各头宽度均分的实现中，Q/K/V 与输出投影都是 <code>[D, D]</code>，无偏置，合计 <code>4D²</code> 个参数。把 2 个头改成 4 个头，主要改变每头宽度与分组方式，这四张矩阵的总参数量不变。</p>
+<p>但计算组织会改变：每头分数表仍有 <code>T×T</code> 项，头数增加时要保存更多这样的表；每头能使用的坐标则减少。更多头不自动等于更好的效果，需要和宽度、数据与训练一起看。</p>
+<p>总宽度也要能整除头数。比如 5 维分成 2 个等宽头就没有整数解，当前实现会直接报错，不会悄悄丢掉最后一个坐标。</p>
+<p>因果掩码已经规定禁止读取的范围，但点积里还没有显式的位置差。下一讲把它放进 Q/K 的旋转。</p>
+<h2 id="两道检查题">两道检查题</h2>
+<ol>
+<li>保持 <code>X</code> 的 0 到 11 不变，只分成 1 个头。形状是什么？头 0 的位置 1 包含哪些数？回到正式配置 64 维、2 个头，每头宽度和四个投影的参数总数各是多少？</li>
+<li>换成两个位置：<code>X[0]=[[0,1,2,3],[4,5,6,7]]</code>，仍分成 2 个头。省掉 <code>transpose(1, 2)</code> 后，形状仍是 <code>[1,2,2,2]</code>，能否据此认为拆头正确？分别写出正确与错误结果中“头 0、位置 1”的两个数。</li>
+</ol>
+<details class="answer">
+<summary>参考答案</summary>
+<p>答案：第一题，形状为 <code>[1, 1, 3, 4]</code>，位置 1 为 <code>[4, 5, 6, 7]</code>。正式每头宽度 32，四个投影共 <code>4×64×64=16384</code> 个参数。</p>
+<p>第二题不能。正确结果中，头 0 在两个位置分别拿到 <code>[0,1]</code>、<code>[4,5]</code>；漏掉交换轴后却是 <code>[0,1]</code>、<code>[2,3]</code>，把位置 0 的另一组特征当成了位置 1。两根轴的长度碰巧相同，形状检查发现不了这个错误。</p>
+<pre><code class="language-python"># 沿用前面的 split_heads；这次让位置数与头数都为2，避免只靠形状判定。
+short_x = torch.arange(8, dtype=torch.float32).reshape(1, 2, 4)
+correct = split_heads(short_x, 2)
+# 故意漏掉 transpose：轴的长度没变，头与位置的含义却被混淆了。
+wrong = short_x.reshape(1, 2, 2, 2)
+assert correct.shape == wrong.shape == (1, 2, 2, 2)
+print(&quot;头0、位置1：&quot;, correct[0, 0, 1], wrong[0, 0, 1])
+assert correct[0, 0, 1].tolist() == [4., 5.]
+assert wrong[0, 0, 1].tolist() == [2., 3.]
+</code></pre>
+<p>若在这里弄反，先在两根长度为 2 的轴旁写出“位置、头”，再按 <code>split_heads</code> 的顺序交换。形状中的数字告诉你有几格，轴的含义才告诉你格子里该放谁。</p>
+</details>
+<p>在配套代码目录运行：</p>
+<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+python -m lessons.l12
+</code></pre>
+<p>完整入口：<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l12.py">运行入口</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/attention.py">多头组件</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md">环境说明</a></p>
+<p>源码导航：<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/attention.py#L15">attention.py · split_heads</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/attention.py#L49">attention.py · CausalSelfAttention</a>。</p></article><details class="lesson-video video-ready" id="lesson-video"><summary><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></svg>观看配套视频<span class="video-duration">4:16</span></summary><div class="bilibili-embed"><iframe data-src="https://player.bilibili.com/player.html?bvid=BV1z5HV6dEPK&amp;p=1&amp;autoplay=0&amp;danmaku=0" title="12｜多头注意力：各个头分别读向哪里？ · B站视频" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><p class="video-actions"><a href="https://www.bilibili.com/video/BV1z5HV6dEPK/?p=1" target="_blank" rel="noopener">在 B 站高清观看 ↗</a></p></div></details>
+<div class="reader-feedback"><span>这一讲有疑问？</span><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=question.yml&amp;title=%5B%E5%AD%A6%E4%B9%A0%5D+12%EF%BD%9C%E5%A4%9A%E5%A4%B4%E6%B3%A8%E6%84%8F%E5%8A%9B%EF%BC%9A%E5%90%84%E4%B8%AA%E5%A4%B4%E5%88%86%E5%88%AB%E8%AF%BB%E5%90%91%E5%93%AA%E9%87%8C%EF%BC%9F&amp;location=12%EF%BD%9C%E5%A4%9A%E5%A4%B4%E6%B3%A8%E6%84%8F%E5%8A%9B%EF%BC%9A%E5%90%84%E4%B8%AA%E5%A4%B4%E5%88%86%E5%88%AB%E8%AF%BB%E5%90%91%E5%93%AA%E9%87%8C%EF%BC%9F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F12.html" target="_blank" rel="noopener">提出学习疑问</a><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=content.yml&amp;title=%5B%E5%8B%98%E8%AF%AF%5D+12%EF%BD%9C%E5%A4%9A%E5%A4%B4%E6%B3%A8%E6%84%8F%E5%8A%9B%EF%BC%9A%E5%90%84%E4%B8%AA%E5%A4%B4%E5%88%86%E5%88%AB%E8%AF%BB%E5%90%91%E5%93%AA%E9%87%8C%EF%BC%9F&amp;location=12%EF%BD%9C%E5%A4%9A%E5%A4%B4%E6%B3%A8%E6%84%8F%E5%8A%9B%EF%BC%9A%E5%90%84%E4%B8%AA%E5%A4%B4%E5%88%86%E5%88%AB%E8%AF%BB%E5%90%91%E5%93%AA%E9%87%8C%EF%BC%9F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F12.html" target="_blank" rel="noopener">反馈内容勘误</a></div><nav class="chapter-nav" aria-label="前后篇"><a href="../course/11.html"><span>上一篇 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg></span><strong>11｜因果掩码：并行训练为什么不算偷看答案？</strong></a><a href="../course/13.html"><span>下一篇 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><strong>13｜RoPE：模型怎样知道先后顺序？</strong></a></nav><footer class="reader-footer">Hello LLM · 手写小模型，看懂大模型<details class="community-mini"><summary>关注与交流 · 好好用 AI</summary><div class="community-section"><div><h2>关注与交流 · 好好用 AI</h2><p>交流学习中的问题与实践心得。</p><p>代码问题和勘误，欢迎在 <a href="https://github.com/DavidDingXu/hello-llm/issues" target="_blank" rel="noopener">GitHub 提交 Issue</a>。</p></div><a class="qr-link" href="../code/assets/wechat-official-account.jpg" target="_blank" rel="noopener" aria-label="查看好好用 AI 公众号二维码原图"><img src="../code/assets/wechat-official-account.jpg" alt="好好用 AI 微信公众号二维码" width="130" height="130" loading="lazy"><p class="qr-caption">微信扫码 · 点击查看原图</p></a></div></details></footer></main>
+<aside class="context-sidebar" aria-label="本篇辅助导航"><div class="context-inner"><nav class="reading-route" aria-label="本篇路线"><details open><summary>本篇路线</summary><div class="toc">
+<ul>
+<li><a href="#一套读取比例会卡在哪里">一套读取比例，会卡在哪里？</a></li>
+<li><a href="#两套比例数组该怎样摆">两套比例，数组该怎样摆？</a></li>
+<li><a href="#拆出两块还不会自动产生两套读法">拆出两块，还不会自动产生两套读法</a></li>
+<li><a href="#两个头分别读完结果怎样交给后面">两个头分别读完，结果怎样交给后面？</a></li>
+<li><a href="#两个头会读到哪里">两个头会读到哪里</a></li>
+<li><a href="#头越多参数一定越多吗">头越多，参数一定越多吗？</a></li>
+<li><a href="#两道检查题">两道检查题</a></li>
+</ul>
+</div>
+</details></nav>
+<section class="reading-settings"><h2>阅读设置</h2><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="减小正文字号">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="增大正文字号">A+</button></div><span>建议预留 45 分钟</span><p class="lesson-goal">解释分头、各头独立配比与拼回，识别同形状的错轴。</p></section>
+</div></aside></div><dialog class="search-dialog" id="search-dialog" aria-labelledby="search-label">
+<form method="dialog" class="search-heading"><label for="course-search" id="search-label"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg>搜索课程</label><button class="icon-button" aria-label="关闭搜索"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></form>
+<input id="course-search" type="search" placeholder="搜索概念、代码或问题…" autocomplete="off" spellcheck="false">
+<p class="search-status" id="search-status" role="status">输入关键词，搜索全部 23 篇文章。</p>
+<div class="search-results" id="search-results"></div><footer>↑ ↓ 选择结果 <span>Enter 打开 · Esc 关闭</span></footer></dialog>
+<dialog class="experiment-viewer" id="experiment-viewer" aria-labelledby="experiment-title"><header><strong id="experiment-title">交互实验</strong><div><a id="experiment-standalone" target="_blank" rel="noopener">独立打开 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button" id="close-experiment" type="button">返回阅读 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe id="experiment-frame" title="交互实验" src="about:blank"></iframe></dialog>
+<dialog class="image-viewer" id="image-viewer" aria-label="放大配图">
+<header><span>查看配图</span><div class="image-actions"><button type="button" id="image-zoom-out" aria-label="缩小配图">−</button><output id="image-scale" aria-label="缩放比例">100%</output><button type="button" id="image-zoom-in" aria-label="放大配图">＋</button><button type="button" id="image-size">原尺寸</button><button type="button" id="close-image" autofocus>关闭</button></div></header>
+<div class="image-canvas"><p id="image-status" role="status" hidden></p><img id="large-image" alt=""></div><footer><p id="image-description"></p><a id="original-image" target="_blank" rel="noopener">打开原图 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a></footer></dialog>
+<div class="toast" id="toast" role="status"></div></body></html>

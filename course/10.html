@@ -1,0 +1,212 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<meta name="source-sha256" content="bb6770e63f239be79e0758ca605f9be8fdceea662f56e003cb9e163a92dabacd"><meta name="description" content="前文放进了数组，却未必进入当前预测。先按比例读三个位置，再看读取比例怎样由Q、K算出。"><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/10.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="10｜注意力：预测下一字，怎样读到前文？ · Hello LLM"><meta property="og:description" content="前文放进了数组，却未必进入当前预测。先按比例读三个位置，再看读取比例怎样由Q、K算出。"><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/10.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>10｜注意力：预测下一字，怎样读到前文？ · Hello LLM</title>
+<link rel="icon" href="../assets/favicon.png" type="image/png">
+<script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
+<script defer src="../code/visuals/reading_site/search-index.js?v=ea96857fef58"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="10" data-alternate-sections="[&quot;averaging-lets-preceding-text-contribute&quot;, &quot;can-the-current-input-determine-the-proportions&quot;, &quot;calculate-just-the-first-row-to-find-the-proportions&quot;, &quot;use-this-row-of-proportions-to-combine-v-coordinate-by-coordinate&quot;, &quot;extend-one-row-to-every-position&quot;, &quot;does-changing-another-position-now-affect-the-current-one&quot;, &quot;two-exercises-with-changed-numbers&quot;]"><a class="skip-link" href="#main-content">跳到正文</a>
+<header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="打开课程目录" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+<a class="brand" href="../index.html" aria-label="Hello LLM · 学习站首页">
+<img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>手写小模型，看懂大模型</small></span></a>
+<nav class="header-nav" aria-label="主导航"><a href="../index.html#curriculum">学习路径</a><a href="../index.html#experiments">交互实验</a><a href="https://github.com/DavidDingXu/hello-llm" target="_blank" rel="noopener">GitHub <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a></nav>
+<div class="header-controls"><a class="language-switch" href="10.en.html" lang="en" aria-label="Switch to English">EN</a><button class="icon-button theme-toggle js-only" type="button" aria-label="切换到深色主题" title="切换到深色主题"><span class="theme-light-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A9 9 0 0 1 9.5 3.5a9 9 0 1 0 11 11Z"/></svg></span><span class="theme-dark-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></span></button>
+<button class="search-trigger js-only" type="button" aria-label="搜索课程"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><span>搜索课程</span><kbd>⌘ K</kbd></button>
+</div></div><div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div></header><div class="sidebar-scrim" hidden></div><div class="reader-layout"><aside class="course-sidebar" id="course-sidebar" aria-label="课程目录">
+<div class="sidebar-heading"><a href="../index.html">课程目录</a><button class="icon-button menu-close js-only" type="button" aria-label="关闭课程目录"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+<nav aria-label="全部文章"><div class="sidebar-guides"><a class="lesson-link" data-lesson="intro" href="../course/intro.html"><span class="lesson-number">·</span><span>专栏介绍</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="00" href="../course/00.html"><span class="lesson-number">·</span><span>开篇导学</span><span class="lesson-state" aria-hidden="true"></span></a></div><details class="sidebar-stage"><summary><span class="stage-index">第一部分</span>让数值网络学起来</summary><a class="lesson-link" data-lesson="01" href="../course/01.html"><span class="lesson-number">01</span><span>神经元</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="02" href="../course/02.html"><span class="lesson-number">02</span><span>向量与矩阵</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="03" href="../course/03.html"><span class="lesson-number">03</span><span>多层与非线性</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="04" href="../course/04.html"><span class="lesson-number">04</span><span>梯度与参数更新</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="05" href="../course/05.html"><span class="lesson-number">05</span><span>手写反向传播</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="06" href="../course/06.html"><span class="lesson-number">06</span><span>让网络学起来</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">第二部分</span>把文字接进来</summary><a class="lesson-link" data-lesson="07" href="../course/07.html"><span class="lesson-number">07</span><span>文字与向量</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="08" href="../course/08.html"><span class="lesson-number">08</span><span>分数与概率</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="09" href="../course/09.html"><span class="lesson-number">09</span><span>文本训练题</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage" open><summary><span class="stage-index">第三部分</span>读取前文，组装模型</summary><a class="lesson-link" data-lesson="10" href="../course/10.html" aria-current="page"><span class="lesson-number">10</span><span>单头注意力</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="11" href="../course/11.html"><span class="lesson-number">11</span><span>因果掩码</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="12" href="../course/12.html"><span class="lesson-number">12</span><span>多头注意力</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="13" href="../course/13.html"><span class="lesson-number">13</span><span>旋转位置</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="14" href="../course/14.html"><span class="lesson-number">14</span><span>逐位置前馈</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="15" href="../course/15.html"><span class="lesson-number">15</span><span>残差与归一化</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="16" href="../course/16.html"><span class="lesson-number">16</span><span>完整模型前向</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">第四部分</span>预训练、生成与微调</summary><a class="lesson-link" data-lesson="17" href="../course/17.html"><span class="lesson-number">17</span><span>第一次预训练</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="18" href="../course/18.html"><span class="lesson-number">18</span><span>逐字生成</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="19" href="../course/19.html"><span class="lesson-number">19</span><span>问答微调</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="20" href="../course/20.html"><span class="lesson-number">20</span><span>闭环与原理检验</span><span class="lesson-state" aria-hidden="true"></span></a></details><a class="lesson-link" data-lesson="end" href="../course/end.html"><span class="lesson-number">·</span><span>结束篇</span><span class="lesson-state" aria-hidden="true"></span></a></nav></aside><main class="reader-main" id="main-content"><div class="article-context"><span>读取前文，组装模型</span><div class="article-actions"><button type="button" class="copy-page-link js-only">复制链接</button><button type="button" class="focus-toggle js-only" aria-pressed="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg><span>专注阅读</span></button></div></div>
+<div class="mobile-context"><nav class="reading-route" aria-label="本篇路线"><details><summary>本篇目录</summary><div class="toc">
+<ul>
+<li><a href="#平均一下前文就能进来了">平均一下，前文就能进来了</a></li>
+<li><a href="#比例能不能由当前输入自己算">比例能不能由当前输入自己算？</a></li>
+<li><a href="#只算第一行看看比例从哪里来">只算第一行，看看比例从哪里来</a></li>
+<li><a href="#用这行比例逐坐标汇总-v">用这行比例，逐坐标汇总 V</a></li>
+<li><a href="#从一行推广到所有位置">从一行，推广到所有位置</a></li>
+<li><a href="#现在改动别的位置当前位置会变吗">现在改动别的位置，当前位置会变吗？</a></li>
+<li><a href="#两道改数题">两道改数题</a></li>
+</ul>
+</div>
+</details></nav><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="减小正文字号">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="增大正文字号">A+</button></div></div><article id="article-body"><h1 id="10注意力预测下一字怎样读到前文">10｜注意力：预测下一字，怎样读到前文？</h1>
+<p>手写小模型，看懂大模型 · 第 10 讲</p>
+<p>读到“早上，小丁喜欢”，我们希望接“红”；换成“早上，小周喜欢”，应接“黄”。上一讲的模型却把它们混在一起，因为它预测下一字时只使用最后那个“欢”的向量。</p>
+<p>人名虽然也在输入数组里，却没有传到最后位置的计算路径。现在补上这条连接，让“丁”和“周”能影响“欢”后面的预测。先试最直接的办法：把各位置的向量合起来。</p>
+<h2 id="平均一下前文就能进来了">平均一下，前文就能进来了</h2>
+<p>假设三个位置分别带来二维向量 <code>[1, 0]</code>、<code>[0, 2]</code>、<code>[1, 2]</code>。直接平均，可以得到 <code>[2/3, 4/3]</code>。</p>
+<p>现在改动任意一行，平均值都会变。其他位置的信息确实进来了。但无论哪个位置发起读取，拿到的总是同一个平均值，不能根据当前位置的输入换一种组合。</p>
+<p>如果手工规定比例 <code>[0.5, 0.25, 0.25]</code>，也能算出一个汇总：</p>
+<pre><code class="language-text">第0坐标：0.5×1 + 0.25×0 + 0.25×1 = 0.75
+第1坐标：0.5×0 + 0.25×2 + 0.25×2 = 1
+</code></pre>
+<p>这组比例给出了另一个结果 <code>[0.75, 1]</code>。如果比例也能根据当前输入算出来，就不必由我们逐句填写。</p>
+<h2 id="比例能不能由当前输入自己算">比例能不能由当前输入自己算？</h2>
+<p>当前位置先产生一条向量，其他可读位置也各自产生一条向量。把前者与后者分别做点积，就能得到一行分数，再用第08讲的 Softmax 变成比例。</p>
+<p>发起读取的向量叫 <strong>Q，查询向量</strong>；与它配对打分的向量叫 <strong>K，键向量</strong>；按比例汇总的内容向量叫 <strong>V，值向量</strong>。</p>
+<p>三组向量都从输入 <code>X</code> 经过各自的线性投影得到：</p>
+<p><strong>Q=X @ Wqᵀ，K=X @ Wkᵀ，V=X @ Wvᵀ。</strong></p>
+<p><code>X</code> 是这次的输入，<code>Wq/Wk/Wv</code> 是可训练参数，<code>Q/K/V</code> 是投影后的中间结果。训练改变参数；参数固定时，换输入也会改变 Q/K/V。</p>
+<p>三组投影把两个动作分开了：Q/K 决定匹配比例，V 决定汇总的内容。训练可以分别调整“如何决定比例”和“传递哪些数”，不用把两者绑定在同一组坐标上。</p>
+<p>点积并不会天生识别“丁”和“苹果”的关系。它只是把对应坐标相乘再相加，数值还会受向量方向和长度影响。后面用下一字的预测错误反向更新 <code>Wq/Wk/Wv</code>，才可能让有助于预测的前文得到合适的读取比例；训练中没有另给一张“这一头应该看谁”的标准答案。</p>
+<p>用三个位置、每个位置二维的构造例子，把内部数值全部展开：</p>
+<pre><code class="language-text">Q = K = [[1, 0],      V = [[1, 0],
+         [0, 1],           [0, 2],
+         [1, 1]]           [1, 2]]
+</code></pre>
+<p>三者形状均为 <code>[3, 2]</code>，前一轴是位置，后一轴是特征。它们可以由 <code>X=Q</code>、<code>Wq=Wk=单位矩阵</code>、<code>Wv=[[1, 0], [0, 2]]</code> 得到。单位矩阵的作用是保留原坐标；第三组参数把第二坐标乘 2。</p>
+<p>这些数不代表三个中文词的真实语义。这里暂时允许每个位置读取全部三个位置。</p>
+<h2 id="只算第一行看看比例从哪里来">只算第一行，看看比例从哪里来</h2>
+<p>选位置 0，它的查询向量是 <code>q₀=[1, 0]</code>。分别与三条 K 做点积：</p>
+<pre><code class="language-text">q₀·k₀ = 1×1 + 0×0 = 1
+q₀·k₁ = 1×0 + 0×1 = 0
+q₀·k₂ = 1×1 + 0×1 = 1
+</code></pre>
+<p>这三个数表示本例采用的匹配得分。负得分也是允许的，不必先改成 0。</p>
+<p>下面的展示值保留四位小数，代码用完整精度计算；手算若使用已四舍五入的数，最后一位可能略有差别。</p>
+<p>接着，每个数都除以 <code>√2</code>，得到约 <code>[0.7071, 0, 0.7071]</code>。根号 2 是“平方后等于 2 的正数”，约为 1.4142；这里的 2 来自查询向量的维度。</p>
+<p>为什么缩放？点积累加的项越多，分数波动通常也会增大。在坐标尺度相近、贡献没有强相关等条件下，除以维度的平方根可以缓和这种增长，避免 Softmax 过早集中到极少数项。具体比例仍由本次 Q、K 的数值决定。</p>
+<p>现在对这一行做 Softmax，得到：</p>
+<p><strong>a₀=[0.4011，0.1978，0.4011]。</strong></p>
+<p>具体地说，三个指数值约为 <code>[2.0281, 1, 2.0281]</code>，分母是它们的和 5.0562。第一项 <code>2.0281/5.0562</code>，正好得到约 0.4011。每个比例都由这一行的三个得分共同决定。</p>
+<p>三项都非负，总和约为 1。第一项和第三项比例相同，因为它们在这一行的得分相同。</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/10-attention/images/web/01-%E6%9C%BA%E5%88%B6.svg" width="1504" height="941"><img alt="第一行Q依次与三个K点积，缩放后做Softmax，再按比例读取三行V" src="../chapters/10-attention/images/01-%E6%9C%BA%E5%88%B6.svg"  width="1080" height="2100" loading="eager" decoding="async" /></picture></p>
+<p>图中横向的三个候选是<strong>可读取的位置</strong>。第08讲的 Softmax 沿词表候选归一化，这里的 Softmax 沿 K 的位置轴归一化；算法相同，候选对象已经换了。</p>
+<h2 id="用这行比例逐坐标汇总-v">用这行比例，逐坐标汇总 V</h2>
+<p>第一个输出坐标为：</p>
+<p><strong>0.4011×1 + 0.1978×0 + 0.4011×1 ≈ 0.8022。</strong></p>
+<p>第二个输出坐标为：</p>
+<p><strong>0.4011×0 + 0.1978×2 + 0.4011×2 ≈ 1.1978。</strong></p>
+<p>所以位置 0 得到新向量 <code>[0.8022, 1.1978]</code>。它已经与位置 1、2 的 V 有关。与开头只看自己的基线相比，跨位置的计算路径出现了；这个结果仍是位置表示，还要接到后续网络的词表投影，才能给下一字打分。</p>
+<p>在这个例子里，V 有两列，所以汇总也有两个坐标。即使可读取的位置从三个增加到十个，只要 V 仍为两列，输出宽度就仍然是 2。位置数决定有多少份内容可读，特征宽度决定每份内容包含多少坐标；注意力不会把这两个轴直接拼成六维或二十维。</p>
+<p>这里的三项比例分给的是输入位置，不能当作三个字符的生成概率。</p>
+<p>这组比例常被叫作<strong>注意力权重</strong>。这里“权重”一词容易混淆：<code>Wq/Wk/Wv</code> 是模型保存并更新的参数；<code>a₀</code> 是本次前向临时算出的系数。后者不会作为一份独立参数表被优化器长期保存。</p>
+<p>反向时，梯度经过 Softmax、点积和投影，传到三组参数。下一次前向再用更新后的参数重算读取比例。</p>
+<p>比例要和 V 一起看。某行 V 若全为 0，即使比例很高，当前也没有它的直接数值贡献；不同坐标还可能正负抵消。</p>
+<h2 id="从一行推广到所有位置">从一行，推广到所有位置</h2>
+<p>位置 1、2 各有自己的 Q，也分别得到一行比例。把全部行排起来：</p>
+<pre><code class="language-text">A ≈ [[0.4011, 0.1978, 0.4011],
+     [0.1978, 0.4011, 0.4011],
+     [0.2483, 0.2483, 0.5035]]
+</code></pre>
+<p>每一行有自己的分母，不是让整张矩阵的九项加起来等于 1。<code>A</code> 的形状是 <code>[3, 3]</code>：行选发起查询的位置，列选被读取的位置。</p>
+<p>把刚才的步骤压缩起来，就是：</p>
+<p><strong>scores=Q @ Kᵀ / √d；A=Softmax(scores)；output=A @ V。</strong></p>
+<p><code>Kᵀ</code> 交换行列，让 Q 的每一行与 K 的每一行配对。<code>[3, 3] @ [3, 2]</code> 得到 <code>[3, 2]</code>，输出仍有三个位置，每个位置两维。</p>
+<p>单独读取一行 Q 时，形状可以看成 <code>[1, 2]</code>，配同一份 K 就得到 <code>[1, 3]</code> 的分数。把三行 Q 一起送入，才扩成 <code>[3, 3]</code>。增加查询行数，只是多算几组独立的比例，并不是让原来的一行改用另一套参数。</p>
+<p>下面的核心代码同时保留参数、分数、比例和输出，能与手算逐项核对：</p>
+<pre><code class="language-python">import math
+import torch
+
+# 三个位置各有两个坐标；这是构造数值，不预先指定中文语义。
+x = torch.tensor([[1., 0.], [0., 1.], [1., 1.]])
+# 三组可训练投影参数：Q/K 在本例保留坐标，V 把第二坐标乘 2。
+wq = torch.eye(2, requires_grad=True)
+wk = torch.eye(2, requires_grad=True)
+wv = torch.tensor([[1., 0.], [0., 2.]], requires_grad=True)
+q, k, v = x @ wq.T, x @ wk.T, x @ wv.T
+
+def attention(q, k, v):
+    &quot;&quot;&quot;每行 Q 查询各行 K，再汇总 V；返回输出、匹配分数与读取比例。&quot;&quot;&quot;
+    # 行选查询位置，列选被读位置；除以查询宽度的平方根来缓和分数尺度。
+    scores = q @ k.transpose(-2, -1) / math.sqrt(q.shape[-1])
+    # 每行在被读位置之间分配比例；这里尚未加掩码，允许读取全部位置。
+    weights = torch.softmax(scores, dim=-1)
+    # [3,3] 比例乘 [3,2] 内容，得到 [3,2]；比例是本次算出的量，不是参数。
+    return weights @ v, scores, weights
+
+output, scores, weights = attention(q, k, v)
+# 单独重算第 0 个查询，与矩阵版第一行核对，使用同一份 K/V。
+first_scores = (q[0] @ k.T) / math.sqrt(2)
+first_weights = torch.softmax(first_scores, dim=-1)
+first_output = first_weights @ v
+
+print(scores)
+print(weights)
+print(output)
+assert torch.allclose(first_output, output[0])
+# 三个查询各自一行，分别沿被读位置求和，不能把九项一起归一化。
+assert torch.allclose(weights.sum(dim=-1), torch.ones(3))
+</code></pre>
+<p>矩阵版的第一行，与单独算第一行得到同样结果。完整输出约为：</p>
+<pre><code class="language-text">[[0.8022, 1.1978],
+ [0.5989, 1.6044],
+ [0.7517, 1.5035]]
+</code></pre>
+<details class="optional">
+<summary>再追问一步：Q、K能不能共用一张投影表？</summary>
+<p>可以这样构造模型，但会限制匹配分数。如果两边用同一张表，同一个位置得到的Q与K就相同。位置0与位置1做点积，交换先后只是把乘积换个顺序，因此两个方向的点积相等。</p>
+<p>若希望允许“位置0对位置1的匹配分数高，反方向低”，独立的两张投影表就能表达这种差别。先用两行输入<code>[[1,0],[0,1]]</code>构造一个例子，直接看尚未缩放和归一化的点积：</p>
+<pre><code class="language-python"># 这是单独的构造实验；两行输入、每行两个坐标，不代表具体词义。
+pair_x = torch.tensor([[1., 0.], [0., 1.]])
+pair_q = pair_x @ torch.eye(2).T  # 查询投影暂取单位矩阵。
+# 共用投影时，K与Q相同，两个方向的点积都是0。
+shared_scores = pair_q @ pair_q.T
+# 换一张键投影表，得到 K=[[0,0],[2,0]]，保持Q不变。
+key_projection = torch.tensor([[0., 2.], [0., 0.]])
+pair_k = pair_x @ key_projection.T
+separate_scores = pair_q @ pair_k.T
+print(shared_scores)    # [[1,0],[0,1]]
+print(separate_scores)  # [[0,2],[0,0]]
+assert shared_scores[0, 1].item() == shared_scores[1, 0].item() == 0.
+assert separate_scores[0, 1].item() == 2. and separate_scores[1, 0].item() == 0.
+</code></pre>
+<p>分开以后，两个方向可以得到2和0。本模型选择独立的Q/K投影，保留这种自由。这不是规定训练后必须出现某种关系，而是说明结构允许哪些关系。</p>
+<p>这里比较的是点积。Softmax还要除以各自行的总和，即使点积分数相同，两个方向最后的读取比例也不一定相同。</p>
+</details>
+<h2 id="现在改动别的位置当前位置会变吗">现在改动别的位置，当前位置会变吗？</h2>
+<p>固定 Q、K，把第三行 V 从 <code>[1, 2]</code> 改成 <code>[3, 2]</code>。分数与 Softmax 都没有用到 V，所以注意力比例不变；汇总时第三行的第 0 坐标多了 2，输出会随之改变。</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/10-attention/images/web/02-%E9%AA%8C%E8%AF%81.svg" width="1504" height="814"><img alt="固定Q和K只改变第三行V，注意力比例保持不变，汇总输出按相应系数改变" src="../chapters/10-attention/images/02-%E9%AA%8C%E8%AF%81.svg"  width="1080" height="1950" loading="lazy" decoding="async" /></picture></p>
+<p>位置 0 的第 0 坐标增加 <code>2×0.4011≈0.8022</code>，第 1 坐标不变。代码可以接着核对：</p>
+<pre><code class="language-python"># 沿用上段的 Q/K 与 attention；复制 V 的数值，本次只做固定比例的干预。
+changed_v = v.detach().clone()
+# 只改第三行的第 0 坐标，不重新生成 Q/K，因此匹配分数与比例应保持不变。
+changed_v[2, 0] = 3.
+changed_output, _, changed_weights = attention(q, k, changed_v)
+assert torch.allclose(changed_weights, weights)
+print(changed_output - output)
+</code></pre>
+<p>断言显示比例不变，汇总结果却变了：位置 2 的内容已经能影响位置 0。</p>
+<p>这个小实验特意固定 Q/K，只改 V，用来拆开两步的职责。实际修改输入时，三组投影结果通常会一起变化，读取比例也会跟着改变。</p>
+<details class="motion-figure"><summary>展开观看动态过程</summary><img alt="从点积到按比例汇总V的分步过程" src="../chapters/10-attention/images/%E8%BF%87%E7%A8%8B.gif"  width="648" height="1260" loading="lazy" decoding="async" /></details>
+<p>可以在<a href="../chapters/10-attention/walkthrough.html">交互演示</a>里停在点积、Softmax 或汇总阶段，与上面的静态算式逐项核对。</p><details class="inline-experiment"><summary><span>动手实验 · 逐步演示</span><small>逐步核对计算过程，随时前进或后退。</small></summary><p><a href="../chapters/10-attention/walkthrough.html" class="js-experiment inline-expand">展开大窗口 ↗</a> · <a href="../chapters/10-attention/walkthrough.html" target="_blank" rel="noopener">在新标签页打开 ↗</a></p><dialog class="inline-workspace experiment-viewer" aria-label="逐步演示"><header><strong>逐步演示</strong><div><a href="../chapters/10-attention/walkthrough.html" target="_blank" rel="noopener">在新标签页打开 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button inline-close" type="button" aria-label="返回阅读">返回阅读 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe data-src="../chapters/10-attention/walkthrough.html" title="逐步演示" loading="lazy"></iframe></dialog></details>
+<p>位置 0 现在也能读取位置 2，而后面的输入里可能就放着它要预测的答案。下一讲要给每个位置划定读取范围，堵住这条捷径。</p>
+<h2 id="两道改数题">两道改数题</h2>
+<ol>
+<li>固定 Q、K，只把第三行 V 改为 <code>[3, 2]</code>。位置 1 的第 0 坐标增加多少？注意力权重会改变吗？</li>
+<li>把 <code>q₀</code> 改成 <code>[0, 0]</code>，三行 K、V 保持原样。第一行比例和输出是什么？</li>
+</ol>
+<details class="answer">
+<summary>参考答案</summary>
+<p>答案：第一题，增加 <code>2×0.4011≈0.8022</code>，权重不变。第二题，三个点积都是 0，Softmax 得到 <code>[1/3, 1/3, 1/3]</code>，输出回到平均值 <code>[2/3, 4/3]</code>。</p>
+</details>
+<p>在配套代码目录运行：</p>
+<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+python -m lessons.l10
+</code></pre>
+<p>完整入口：<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l10.py">运行入口</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/attention.py">注意力组件</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md">环境说明</a></p>
+<p>源码导航：<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/attention.py#L30">attention.py · attention_2d</a>。</p></article><details class="lesson-video video-ready" id="lesson-video"><summary><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></svg>观看配套视频<span class="video-duration">4:37</span></summary><div class="bilibili-embed"><iframe data-src="https://player.bilibili.com/player.html?bvid=BV1J5HV6oEAE&amp;p=1&amp;autoplay=0&amp;danmaku=0" title="10｜注意力：预测下一字，怎样读到前文？ · B站视频" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><p class="video-actions"><a href="https://www.bilibili.com/video/BV1J5HV6oEAE/?p=1" target="_blank" rel="noopener">在 B 站高清观看 ↗</a></p></div></details>
+<div class="reader-feedback"><span>这一讲有疑问？</span><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=question.yml&amp;title=%5B%E5%AD%A6%E4%B9%A0%5D+10%EF%BD%9C%E6%B3%A8%E6%84%8F%E5%8A%9B%EF%BC%9A%E9%A2%84%E6%B5%8B%E4%B8%8B%E4%B8%80%E5%AD%97%EF%BC%8C%E6%80%8E%E6%A0%B7%E8%AF%BB%E5%88%B0%E5%89%8D%E6%96%87%EF%BC%9F&amp;location=10%EF%BD%9C%E6%B3%A8%E6%84%8F%E5%8A%9B%EF%BC%9A%E9%A2%84%E6%B5%8B%E4%B8%8B%E4%B8%80%E5%AD%97%EF%BC%8C%E6%80%8E%E6%A0%B7%E8%AF%BB%E5%88%B0%E5%89%8D%E6%96%87%EF%BC%9F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F10.html" target="_blank" rel="noopener">提出学习疑问</a><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=content.yml&amp;title=%5B%E5%8B%98%E8%AF%AF%5D+10%EF%BD%9C%E6%B3%A8%E6%84%8F%E5%8A%9B%EF%BC%9A%E9%A2%84%E6%B5%8B%E4%B8%8B%E4%B8%80%E5%AD%97%EF%BC%8C%E6%80%8E%E6%A0%B7%E8%AF%BB%E5%88%B0%E5%89%8D%E6%96%87%EF%BC%9F&amp;location=10%EF%BD%9C%E6%B3%A8%E6%84%8F%E5%8A%9B%EF%BC%9A%E9%A2%84%E6%B5%8B%E4%B8%8B%E4%B8%80%E5%AD%97%EF%BC%8C%E6%80%8E%E6%A0%B7%E8%AF%BB%E5%88%B0%E5%89%8D%E6%96%87%EF%BC%9F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F10.html" target="_blank" rel="noopener">反馈内容勘误</a></div><nav class="chapter-nav" aria-label="前后篇"><a href="../course/09.html"><span>上一篇 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg></span><strong>09｜训练目标：一句话怎样变成可学习的题？</strong></a><a href="../course/11.html"><span>下一篇 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><strong>11｜因果掩码：并行训练为什么不算偷看答案？</strong></a></nav><footer class="reader-footer">Hello LLM · 手写小模型，看懂大模型<details class="community-mini"><summary>关注与交流 · 好好用 AI</summary><div class="community-section"><div><h2>关注与交流 · 好好用 AI</h2><p>交流学习中的问题与实践心得。</p><p>代码问题和勘误，欢迎在 <a href="https://github.com/DavidDingXu/hello-llm/issues" target="_blank" rel="noopener">GitHub 提交 Issue</a>。</p></div><a class="qr-link" href="../code/assets/wechat-official-account.jpg" target="_blank" rel="noopener" aria-label="查看好好用 AI 公众号二维码原图"><img src="../code/assets/wechat-official-account.jpg" alt="好好用 AI 微信公众号二维码" width="130" height="130" loading="lazy"><p class="qr-caption">微信扫码 · 点击查看原图</p></a></div></details></footer></main>
+<aside class="context-sidebar" aria-label="本篇辅助导航"><div class="context-inner"><nav class="reading-route" aria-label="本篇路线"><details open><summary>本篇路线</summary><div class="toc">
+<ul>
+<li><a href="#平均一下前文就能进来了">平均一下，前文就能进来了</a></li>
+<li><a href="#比例能不能由当前输入自己算">比例能不能由当前输入自己算？</a></li>
+<li><a href="#只算第一行看看比例从哪里来">只算第一行，看看比例从哪里来</a></li>
+<li><a href="#用这行比例逐坐标汇总-v">用这行比例，逐坐标汇总 V</a></li>
+<li><a href="#从一行推广到所有位置">从一行，推广到所有位置</a></li>
+<li><a href="#现在改动别的位置当前位置会变吗">现在改动别的位置，当前位置会变吗？</a></li>
+<li><a href="#两道改数题">两道改数题</a></li>
+</ul>
+</div>
+</details></nav>
+<section class="reading-settings"><h2>阅读设置</h2><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="减小正文字号">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="增大正文字号">A+</button></div><span>建议预留 45 分钟</span><p class="lesson-goal">算清一行注意力，并区分比例与读出内容。</p></section>
+</div></aside></div><dialog class="search-dialog" id="search-dialog" aria-labelledby="search-label">
+<form method="dialog" class="search-heading"><label for="course-search" id="search-label"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg>搜索课程</label><button class="icon-button" aria-label="关闭搜索"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></form>
+<input id="course-search" type="search" placeholder="搜索概念、代码或问题…" autocomplete="off" spellcheck="false">
+<p class="search-status" id="search-status" role="status">输入关键词，搜索全部 23 篇文章。</p>
+<div class="search-results" id="search-results"></div><footer>↑ ↓ 选择结果 <span>Enter 打开 · Esc 关闭</span></footer></dialog>
+<dialog class="experiment-viewer" id="experiment-viewer" aria-labelledby="experiment-title"><header><strong id="experiment-title">交互实验</strong><div><a id="experiment-standalone" target="_blank" rel="noopener">独立打开 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button" id="close-experiment" type="button">返回阅读 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe id="experiment-frame" title="交互实验" src="about:blank"></iframe></dialog>
+<dialog class="image-viewer" id="image-viewer" aria-label="放大配图">
+<header><span>查看配图</span><div class="image-actions"><button type="button" id="image-zoom-out" aria-label="缩小配图">−</button><output id="image-scale" aria-label="缩放比例">100%</output><button type="button" id="image-zoom-in" aria-label="放大配图">＋</button><button type="button" id="image-size">原尺寸</button><button type="button" id="close-image" autofocus>关闭</button></div></header>
+<div class="image-canvas"><p id="image-status" role="status" hidden></p><img id="large-image" alt=""></div><footer><p id="image-description"></p><a id="original-image" target="_blank" rel="noopener">打开原图 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a></footer></dialog>
+<div class="toast" id="toast" role="status"></div></body></html>

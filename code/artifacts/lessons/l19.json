@@ -1,0 +1,5037 @@
+{
+  "kind": "teaching_run",
+  "sft": {
+    "stage": "sft",
+    "seed": 42,
+    "steps": 300,
+    "learning_rate": 0.001,
+    "batch_size": 16,
+    "seconds": 0.9645899589522742,
+    "environment": {
+      "python": "3.12.14",
+      "torch": "2.9.1",
+      "platform": "macOS-26.5.1-arm64-arm-64bit",
+      "machine": "arm64",
+      "device": "cpu",
+      "dtype": "float32",
+      "threads": 1
+    },
+    "parent_parameter_sha256": "f944cbe2b5077affefcaee449bae06adfc32ad4464a519f128d756877b373c72",
+    "dataset_hash": "a3d79f9d2424509ea61d70799126f3f3f9ce6db9aa2645f1240d1676928ff1ab",
+    "history": [
+      {
+        "step": 0,
+        "train_loss": 2.877918084462484,
+        "val_loss": 2.9757840633392334
+      },
+      {
+        "step": 50,
+        "train_loss": 9.711536404211074e-05,
+        "val_loss": 0.014797737821936607,
+        "batch_loss": 9.441777365282178e-05,
+        "grad_norm_before_clip": 0.0011899661039933562,
+        "observed_parameter_before": -0.07405408471822739,
+        "observed_gradient_after_clip": 1.1409040325816022e-06,
+        "observed_parameter_after": -0.07406552881002426,
+        "observed_update": -1.1444091796875e-05
+      },
+      {
+        "step": 100,
+        "train_loss": 4.865582983863229e-05,
+        "val_loss": 0.005246747750788927,
+        "batch_loss": 5.0376675062580034e-05,
+        "grad_norm_before_clip": 0.0003717759682331234,
+        "observed_parameter_before": -0.07416024804115295,
+        "observed_gradient_after_clip": 1.0353635389037663e-06,
+        "observed_parameter_after": -0.07415971904993057,
+        "observed_update": 5.289912223815918e-07
+      },
+      {
+        "step": 150,
+        "train_loss": 3.4147041636363916e-05,
+        "val_loss": 0.004285913892090321,
+        "batch_loss": 3.2982348784571514e-05,
+        "grad_norm_before_clip": 0.00021971076785121113,
+        "observed_parameter_before": -0.07411710172891617,
+        "observed_gradient_after_clip": -6.124647597971489e-07,
+        "observed_parameter_after": -0.07411602139472961,
+        "observed_update": 1.080334186553955e-06
+      },
+      {
+        "step": 200,
+        "train_loss": 2.5722803911776282e-05,
+        "val_loss": 0.004097324796020985,
+        "batch_loss": 2.563341513450723e-05,
+        "grad_norm_before_clip": 0.00015486101619899273,
+        "observed_parameter_before": -0.07406224310398102,
+        "observed_gradient_after_clip": 3.302441200503381e-07,
+        "observed_parameter_after": -0.07406128197908401,
+        "observed_update": 9.611248970031738e-07
+      },
+      {
+        "step": 250,
+        "train_loss": 2.0042229759080026e-05,
+        "val_loss": 0.004039501305669546,
+        "batch_loss": 2.0830166249652393e-05,
+        "grad_norm_before_clip": 0.00012174776202300563,
+        "observed_parameter_before": -0.07401437312364578,
+        "observed_gradient_after_clip": -3.9392563166984473e-07,
+        "observed_parameter_after": -0.07401334494352341,
+        "observed_update": 1.0281801223754883e-06
+      },
+      {
+        "step": 300,
+        "train_loss": 1.593253485528597e-05,
+        "val_loss": 0.004042775835841894,
+        "batch_loss": 1.6602707546553575e-05,
+        "grad_norm_before_clip": 8.977619290817529e-05,
+        "observed_parameter_before": -0.07396409660577774,
+        "observed_gradient_after_clip": -1.5339659853452758e-07,
+        "observed_parameter_after": -0.07396316528320312,
+        "observed_update": 9.313225746154785e-07
+      }
+    ],
+    "answers": {
+      "sft_train": [
+        {
+          "record_id": "s-0-0",
+          "prompt": "问：小丁喜欢什么水果？\n答：",
+          "expected": "红色的苹果。",
+          "actual": "红色的苹果。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-0-1",
+          "prompt": "问：小周喜欢什么水果？\n答：",
+          "expected": "黄色的香蕉。",
+          "actual": "黄色的香蕉。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-0-2",
+          "prompt": "问：小陈喜欢什么水果？\n答：",
+          "expected": "紫色的葡萄。",
+          "actual": "紫色的葡萄。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-0-3",
+          "prompt": "问：小李喜欢什么水果？\n答：",
+          "expected": "绿色的梨子。",
+          "actual": "绿色的梨子。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-0-4",
+          "prompt": "问：小王喜欢什么水果？\n答：",
+          "expected": "红色的草莓。",
+          "actual": "红色的草莓。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-0-5",
+          "prompt": "问：小赵喜欢什么水果？\n答：",
+          "expected": "黄色的柠檬。",
+          "actual": "黄色的柠檬。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-0-6",
+          "prompt": "问：小吴喜欢什么水果？\n答：",
+          "expected": "绿色的西瓜。",
+          "actual": "绿色的西瓜。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-0-7",
+          "prompt": "问：小何喜欢什么水果？\n答：",
+          "expected": "紫色的桑葚。",
+          "actual": "紫色的桑葚。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-1-0",
+          "prompt": "问：请说出小丁喜欢的水果。\n答：",
+          "expected": "红色的苹果。",
+          "actual": "红色的苹果。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-1-1",
+          "prompt": "问：请说出小周喜欢的水果。\n答：",
+          "expected": "黄色的香蕉。",
+          "actual": "黄色的香蕉。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-1-2",
+          "prompt": "问：请说出小陈喜欢的水果。\n答：",
+          "expected": "紫色的葡萄。",
+          "actual": "紫色的葡萄。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-1-3",
+          "prompt": "问：请说出小李喜欢的水果。\n答：",
+          "expected": "绿色的梨子。",
+          "actual": "绿色的梨子。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-1-4",
+          "prompt": "问：请说出小王喜欢的水果。\n答：",
+          "expected": "红色的草莓。",
+          "actual": "红色的草莓。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-1-5",
+          "prompt": "问：请说出小赵喜欢的水果。\n答：",
+          "expected": "黄色的柠檬。",
+          "actual": "黄色的柠檬。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-1-6",
+          "prompt": "问：请说出小吴喜欢的水果。\n答：",
+          "expected": "绿色的西瓜。",
+          "actual": "绿色的西瓜。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-1-7",
+          "prompt": "问：请说出小何喜欢的水果。\n答：",
+          "expected": "紫色的桑葚。",
+          "actual": "紫色的桑葚。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-2-0",
+          "prompt": "问：小丁爱吃哪种水果？\n答：",
+          "expected": "红色的苹果。",
+          "actual": "红色的苹果。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-2-1",
+          "prompt": "问：小周爱吃哪种水果？\n答：",
+          "expected": "黄色的香蕉。",
+          "actual": "黄色的香蕉。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-2-2",
+          "prompt": "问：小陈爱吃哪种水果？\n答：",
+          "expected": "紫色的葡萄。",
+          "actual": "紫色的葡萄。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-2-3",
+          "prompt": "问：小李爱吃哪种水果？\n答：",
+          "expected": "绿色的梨子。",
+          "actual": "绿色的梨子。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-2-4",
+          "prompt": "问：小王爱吃哪种水果？\n答：",
+          "expected": "红色的草莓。",
+          "actual": "红色的草莓。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-2-5",
+          "prompt": "问：小赵爱吃哪种水果？\n答：",
+          "expected": "黄色的柠檬。",
+          "actual": "黄色的柠檬。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-2-6",
+          "prompt": "问：小吴爱吃哪种水果？\n答：",
+          "expected": "绿色的西瓜。",
+          "actual": "绿色的西瓜。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-2-7",
+          "prompt": "问：小何爱吃哪种水果？\n答：",
+          "expected": "紫色的桑葚。",
+          "actual": "紫色的桑葚。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        }
+      ],
+      "sft_val": [
+        {
+          "record_id": "s-3-0",
+          "prompt": "问：小丁最喜欢的水果是什么？\n答：",
+          "expected": "红色的苹果。",
+          "actual": "红色的苹果。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-3-1",
+          "prompt": "问：小周最喜欢的水果是什么？\n答：",
+          "expected": "黄色的香蕉。",
+          "actual": "黄色的香蕉。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-3-2",
+          "prompt": "问：小陈最喜欢的水果是什么？\n答：",
+          "expected": "紫色的葡萄。",
+          "actual": "紫色的葡萄。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-3-3",
+          "prompt": "问：小李最喜欢的水果是什么？\n答：",
+          "expected": "绿色的梨子。",
+          "actual": "绿色的梨子。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-3-4",
+          "prompt": "问：小王最喜欢的水果是什么？\n答：",
+          "expected": "红色的草莓。",
+          "actual": "红色的草莓。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-3-5",
+          "prompt": "问：小赵最喜欢的水果是什么？\n答：",
+          "expected": "黄色的柠檬。",
+          "actual": "黄色的柠檬。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-3-6",
+          "prompt": "问：小吴最喜欢的水果是什么？\n答：",
+          "expected": "绿色的西瓜。",
+          "actual": "绿色的西瓜。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        },
+        {
+          "record_id": "s-3-7",
+          "prompt": "问：小何最喜欢的水果是什么？\n答：",
+          "expected": "紫色的桑葚。",
+          "actual": "紫色的桑葚。",
+          "exact_match": true,
+          "stop_reason": "eos"
+        }
+      ]
+    },
+    "sft_train_exact_match": 1.0,
+    "sft_val_exact_match": 1.0
+  },
+  "comparison": {
+    "initial": {
+      "parameter_sha256": "82aaf35a1b52aa644e0eea910cc416ac2d06fb777252c3e183f397feb8a86500",
+      "outputs": [
+        {
+          "prompt": "早上，小丁喜欢",
+          "generated_text": "色檬葡最爱梨吴爱",
+          "generated_ids": [
+            57,
+            43,
+            63,
+            36,
+            47,
+            42,
+            19,
+            47
+          ],
+          "stop_reason": "max_new_tokens",
+          "steps": [
+            {
+              "step": 0,
+              "input_ids": [
+                1,
+                32,
+                7,
+                76,
+                27,
+                6,
+                22,
+                44
+              ],
+              "selected_id": 57,
+              "selected_token": "色",
+              "top_candidates": [
+                {
+                  "token": "色",
+                  "id": 57,
+                  "probability": 0.018117353320121765
+                },
+                {
+                  "token": "喜",
+                  "id": 22,
+                  "probability": 0.01807010918855667
+                },
+                {
+                  "token": "吃",
+                  "id": 17,
+                  "probability": 0.01794336549937725
+                },
+                {
+                  "token": "在",
+                  "id": 23,
+                  "probability": 0.017013996839523315
+                },
+                {
+                  "token": "放",
+                  "id": 30,
+                  "probability": 0.016386860981583595
+                }
+              ]
+            },
+            {
+              "step": 1,
+              "input_ids": [
+                1,
+                32,
+                7,
+                76,
+                27,
+                6,
+                22,
+                44,
+                57
+              ],
+              "selected_id": 43,
+              "selected_token": "檬",
+              "top_candidates": [
+                {
+                  "token": "檬",
+                  "id": 43,
+                  "probability": 0.018530618399381638
+                },
+                {
+                  "token": "吃",
+                  "id": 17,
+                  "probability": 0.017354844138026237
+                },
+                {
+                  "token": "在",
+                  "id": 23,
+                  "probability": 0.017341094091534615
+                },
+                {
+                  "token": "拿",
+                  "id": 29,
+                  "probability": 0.0159425251185894
+                },
+                {
+                  "token": "上",
+                  "id": 7,
+                  "probability": 0.015889858826994896
+                }
+              ]
+            },
+            {
+              "step": 2,
+              "input_ids": [
+                1,
+                32,
+                7,
+                76,
+                27,
+                6,
+                22,
+                44,
+                57,
+                43
+              ],
+              "selected_id": 63,
+              "selected_token": "葡",
+              "top_candidates": [
+                {
+                  "token": "葡",
+                  "id": 63,
+                  "probability": 0.019374145194888115
+                },
+                {
+                  "token": "果",
+                  "id": 39,
+                  "probability": 0.018961893394589424
+                },
+                {
+                  "token": "桑",
+                  "id": 41,
+                  "probability": 0.018265292048454285
+                },
+                {
+                  "token": "吃",
+                  "id": 17,
+                  "probability": 0.01759597472846508
+                },
+                {
+                  "token": "红",
+                  "id": 55,
+                  "probability": 0.017462503165006638
+                }
+              ]
+            },
+            {
+              "step": 3,
+              "input_ids": [
+                1,
+                32,
+                7,
+                76,
+                27,
+                6,
+                22,
+                44,
+                57,
+                43,
+                63
+              ],
+              "selected_id": 36,
+              "selected_token": "最",
+              "top_candidates": [
+                {
+                  "token": "最",
+                  "id": 36,
+                  "probability": 0.01851544715464115
+                },
+                {
+                  "token": "桑",
+                  "id": 41,
+                  "probability": 0.01820502243936062
+                },
+                {
+                  "token": "下",
+                  "id": 8,
+                  "probability": 0.01728038489818573
+                },
+                {
+                  "token": "早",
+                  "id": 32,
+                  "probability": 0.016671638935804367
+                },
+                {
+                  "token": "了",
+                  "id": 11,
+                  "probability": 0.016480380669236183
+                }
+              ]
+            },
+            {
+              "step": 4,
+              "input_ids": [
+                1,
+                32,
+                7,
+                76,
+                27,
+                6,
+                22,
+                44,
+                57,
+                43,
+                63,
+                36
+              ],
+              "selected_id": 47,
+              "selected_token": "爱",
+              "top_candidates": [
+                {
+                  "token": "爱",
+                  "id": 47,
+                  "probability": 0.02115655690431595
+                },
+                {
+                  "token": "早",
+                  "id": 32,
+                  "probability": 0.018088210374116898
+                },
+                {
+                  "token": "檬",
+                  "id": 43,
+                  "probability": 0.017471076920628548
+                },
+                {
+                  "token": "蕉",
+                  "id": 64,
+                  "probability": 0.017175205051898956
+                },
+                {
+                  "token": "喜",
+                  "id": 22,
+                  "probability": 0.016645098105072975
+                }
+              ]
+            },
+            {
+              "step": 5,
+              "input_ids": [
+                1,
+                32,
+                7,
+                76,
+                27,
+                6,
+                22,
+                44,
+                57,
+                43,
+                63,
+                36,
+                47
+              ],
+              "selected_id": 42,
+              "selected_token": "梨",
+              "top_candidates": [
+                {
+                  "token": "梨",
+                  "id": 42,
+                  "probability": 0.02089020609855652
+                },
+                {
+                  "token": "最",
+                  "id": 36,
+                  "probability": 0.017650380730628967
+                },
+                {
+                  "token": "草",
+                  "id": 59,
+                  "probability": 0.01721409521996975
+                },
+                {
+                  "token": "红",
+                  "id": 55,
+                  "probability": 0.017111558467149734
+                },
+                {
+                  "token": "哪",
+                  "id": 21,
+                  "probability": 0.016633374616503716
+                }
+              ]
+            },
+            {
+              "step": 6,
+              "input_ids": [
+                1,
+                32,
+                7,
+                76,
+                27,
+                6,
+                22,
+                44,
+                57,
+                43,
+                63,
+                36,
+                47,
+                42
+              ],
+              "selected_id": 19,
+              "selected_token": "吴",
+              "top_candidates": [
+                {
+                  "token": "吴",
+                  "id": 19,
+                  "probability": 0.018324516713619232
+                },
+                {
+                  "token": "草",
+                  "id": 59,
+                  "probability": 0.016295619308948517
+                },
+                {
+                  "token": "吃",
+                  "id": 17,
+                  "probability": 0.016284383833408356
+                },
+                {
+                  "token": "葡",
+                  "id": 63,
+                  "probability": 0.01626291312277317
+                },
+                {
+                  "token": "桑",
+                  "id": 41,
+                  "probability": 0.015726083889603615
+                }
+              ]
+            },
+            {
+              "step": 7,
+              "input_ids": [
+                1,
+                32,
+                7,
+                76,
+                27,
+                6,
+                22,
+                44,
+                57,
+                43,
+                63,
+                36,
+                47,
+                42,
+                19
+              ],
+              "selected_id": 47,
+              "selected_token": "爱",
+              "top_candidates": [
+                {
+                  "token": "爱",
+                  "id": 47,
+                  "probability": 0.01820271834731102
+                },
+                {
+                  "token": "果",
+                  "id": 39,
+                  "probability": 0.017729107290506363
+                },
+                {
+                  "token": "吃",
+                  "id": 17,
+                  "probability": 0.017477983608841896
+                },
+                {
+                  "token": "葡",
+                  "id": 63,
+                  "probability": 0.017273494973778725
+                },
+                {
+                  "token": "什",
+                  "id": 12,
+                  "probability": 0.016871007159352303
+                }
+              ]
+            }
+          ],
+          "greedy": true,
+          "temperature": null,
+          "seed": 42
+        },
+        {
+          "prompt": "晚上，小周拿着",
+          "generated_text": "吃何梨草果草果草",
+          "generated_ids": [
+            17,
+            13,
+            42,
+            59,
+            39,
+            59,
+            39,
+            59
+          ],
+          "stop_reason": "max_new_tokens",
+          "steps": [
+            {
+              "step": 0,
+              "input_ids": [
+                1,
+                35,
+                7,
+                76,
+                27,
+                20,
+                29,
+                51
+              ],
+              "selected_id": 17,
+              "selected_token": "吃",
+              "top_candidates": [
+                {
+                  "token": "吃",
+                  "id": 17,
+                  "probability": 0.018426058813929558
+                },
+                {
+                  "token": "桑",
+                  "id": 41,
+                  "probability": 0.0179011020809412
+                },
+                {
+                  "token": "何",
+                  "id": 13,
+                  "probability": 0.017627015709877014
+                },
+                {
+                  "token": "喜",
+                  "id": 22,
+                  "probability": 0.0175912007689476
+                },
+                {
+                  "token": "晚",
+                  "id": 35,
+                  "probability": 0.01624494418501854
+                }
+              ]
+            },
+            {
+              "step": 1,
+              "input_ids": [
+                1,
+                35,
+                7,
+                76,
+                27,
+                20,
+                29,
+                51,
+                17
+              ],
+              "selected_id": 13,
+              "selected_token": "何",
+              "top_candidates": [
+                {
+                  "token": "何",
+                  "id": 13,
+                  "probability": 0.018702432513237
+                },
+                {
+                  "token": "什",
+                  "id": 12,
+                  "probability": 0.018513578921556473
+                },
+                {
+                  "token": "爱",
+                  "id": 47,
+                  "probability": 0.018230291083455086
+                },
+                {
+                  "token": "果",
+                  "id": 39,
+                  "probability": 0.017568662762641907
+                },
+                {
+                  "token": "时",
+                  "id": 33,
+                  "probability": 0.016633057966828346
+                }
+              ]
+            },
+            {
+              "step": 2,
+              "input_ids": [
+                1,
+                35,
+                7,
+                76,
+                27,
+                20,
+                29,
+                51,
+                17,
+                13
+              ],
+              "selected_id": 42,
+              "selected_token": "梨",
+              "top_candidates": [
+                {
+                  "token": "梨",
+                  "id": 42,
+                  "probability": 0.01775462180376053
+                },
+                {
+                  "token": "草",
+                  "id": 59,
+                  "probability": 0.01747087761759758
+                },
+                {
+                  "token": "小",
+                  "id": 27,
+                  "probability": 0.017284533008933067
+                },
+                {
+                  "token": "果",
+                  "id": 39,
+                  "probability": 0.017052102833986282
+                },
+                {
+                  "token": "葡",
+                  "id": 63,
+                  "probability": 0.01675993576645851
+                }
+              ]
+            },
+            {
+              "step": 3,
+              "input_ids": [
+                1,
+                35,
+                7,
+                76,
+                27,
+                20,
+                29,
+                51,
+                17,
+                13,
+                42
+              ],
+              "selected_id": 59,
+              "selected_token": "草",
+              "top_candidates": [
+                {
+                  "token": "草",
+                  "id": 59,
+                  "probability": 0.01794973574578762
+                },
+                {
+                  "token": "什",
+                  "id": 12,
+                  "probability": 0.016778338700532913
+                },
+                {
+                  "token": "何",
+                  "id": 13,
+                  "probability": 0.016561167314648628
+                },
+                {
+                  "token": "葡",
+                  "id": 63,
+                  "probability": 0.016493281349539757
+                },
+                {
+                  "token": "吴",
+                  "id": 19,
+                  "probability": 0.016215942800045013
+                }
+              ]
+            },
+            {
+              "step": 4,
+              "input_ids": [
+                1,
+                35,
+                7,
+                76,
+                27,
+                20,
+                29,
+                51,
+                17,
+                13,
+                42,
+                59
+              ],
+              "selected_id": 39,
+              "selected_token": "果",
+              "top_candidates": [
+                {
+                  "token": "果",
+                  "id": 39,
+                  "probability": 0.019490201026201248
+                },
+                {
+                  "token": "答",
+                  "id": 53,
+                  "probability": 0.019380830228328705
+                },
+                {
+                  "token": "了",
+                  "id": 11,
+                  "probability": 0.019265439361333847
+                },
+                {
+                  "token": "饭",
+                  "id": 73,
+                  "probability": 0.0183609277009964
+                },
+                {
+                  "token": "草",
+                  "id": 59,
+                  "probability": 0.018199525773525238
+                }
+              ]
+            },
+            {
+              "step": 5,
+              "input_ids": [
+                1,
+                35,
+                7,
+                76,
+                27,
+                20,
+                29,
+                51,
+                17,
+                13,
+                42,
+                59,
+                39
+              ],
+              "selected_id": 59,
+              "selected_token": "草",
+              "top_candidates": [
+                {
+                  "token": "草",
+                  "id": 59,
+                  "probability": 0.018803255632519722
+                },
+                {
+                  "token": "爱",
+                  "id": 47,
+                  "probability": 0.017888011410832405
+                },
+                {
+                  "token": "时",
+                  "id": 33,
+                  "probability": 0.017715848982334137
+                },
+                {
+                  "token": "下",
+                  "id": 8,
+                  "probability": 0.017413506284356117
+                },
+                {
+                  "token": "果",
+                  "id": 39,
+                  "probability": 0.016823045909404755
+                }
+              ]
+            },
+            {
+              "step": 6,
+              "input_ids": [
+                1,
+                35,
+                7,
+                76,
+                27,
+                20,
+                29,
+                51,
+                17,
+                13,
+                42,
+                59,
+                39,
+                59
+              ],
+              "selected_id": 39,
+              "selected_token": "果",
+              "top_candidates": [
+                {
+                  "token": "果",
+                  "id": 39,
+                  "probability": 0.019977843388915062
+                },
+                {
+                  "token": "答",
+                  "id": 53,
+                  "probability": 0.01946263015270233
+                },
+                {
+                  "token": "了",
+                  "id": 11,
+                  "probability": 0.018464447930455208
+                },
+                {
+                  "token": "黄",
+                  "id": 75,
+                  "probability": 0.018306603655219078
+                },
+                {
+                  "token": "爱",
+                  "id": 47,
+                  "probability": 0.017986813560128212
+                }
+              ]
+            },
+            {
+              "step": 7,
+              "input_ids": [
+                1,
+                35,
+                7,
+                76,
+                27,
+                20,
+                29,
+                51,
+                17,
+                13,
+                42,
+                59,
+                39,
+                59,
+                39
+              ],
+              "selected_id": 59,
+              "selected_token": "草",
+              "top_candidates": [
+                {
+                  "token": "草",
+                  "id": 59,
+                  "probability": 0.01836048811674118
+                },
+                {
+                  "token": "爱",
+                  "id": 47,
+                  "probability": 0.018325842916965485
+                },
+                {
+                  "token": "时",
+                  "id": 33,
+                  "probability": 0.017814990133047104
+                },
+                {
+                  "token": "下",
+                  "id": 8,
+                  "probability": 0.017266372218728065
+                },
+                {
+                  "token": "果",
+                  "id": 39,
+                  "probability": 0.01721513830125332
+                }
+              ]
+            }
+          ],
+          "greedy": true,
+          "temperature": null,
+          "seed": 42
+        },
+        {
+          "prompt": "问：小丁喜欢什么水果？\n答：",
+          "generated_text": "爱红绿吃爱梨吴爱",
+          "generated_ids": [
+            47,
+            55,
+            56,
+            17,
+            47,
+            42,
+            19,
+            47
+          ],
+          "stop_reason": "max_new_tokens",
+          "steps": [
+            {
+              "step": 0,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                6,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77
+              ],
+              "selected_id": 47,
+              "selected_token": "爱",
+              "top_candidates": [
+                {
+                  "token": "爱",
+                  "id": 47,
+                  "probability": 0.023876851424574852
+                },
+                {
+                  "token": "哪",
+                  "id": 21,
+                  "probability": 0.018539398908615112
+                },
+                {
+                  "token": "是",
+                  "id": 34,
+                  "probability": 0.017202014103531837
+                },
+                {
+                  "token": "柠",
+                  "id": 40,
+                  "probability": 0.016576148569583893
+                },
+                {
+                  "token": "着",
+                  "id": 51,
+                  "probability": 0.016194907948374748
+                }
+              ]
+            },
+            {
+              "step": 1,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                6,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                47
+              ],
+              "selected_id": 55,
+              "selected_token": "红",
+              "top_candidates": [
+                {
+                  "token": "红",
+                  "id": 55,
+                  "probability": 0.021037263795733452
+                },
+                {
+                  "token": "梨",
+                  "id": 42,
+                  "probability": 0.01959415152668953
+                },
+                {
+                  "token": "最",
+                  "id": 36,
+                  "probability": 0.018917949870228767
+                },
+                {
+                  "token": "草",
+                  "id": 59,
+                  "probability": 0.017772361636161804
+                },
+                {
+                  "token": "柠",
+                  "id": 40,
+                  "probability": 0.017376301810145378
+                }
+              ]
+            },
+            {
+              "step": 2,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                6,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                47,
+                55
+              ],
+              "selected_id": 56,
+              "selected_token": "绿",
+              "top_candidates": [
+                {
+                  "token": "绿",
+                  "id": 56,
+                  "probability": 0.018208054825663567
+                },
+                {
+                  "token": "果",
+                  "id": 39,
+                  "probability": 0.017904089763760567
+                },
+                {
+                  "token": "爱",
+                  "id": 47,
+                  "probability": 0.01782078482210636
+                },
+                {
+                  "token": "檬",
+                  "id": 43,
+                  "probability": 0.017772765830159187
+                },
+                {
+                  "token": "了",
+                  "id": 11,
+                  "probability": 0.017728351056575775
+                }
+              ]
+            },
+            {
+              "step": 3,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                6,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                47,
+                55,
+                56
+              ],
+              "selected_id": 17,
+              "selected_token": "吃",
+              "top_candidates": [
+                {
+                  "token": "吃",
+                  "id": 17,
+                  "probability": 0.02247702330350876
+                },
+                {
+                  "token": "最",
+                  "id": 36,
+                  "probability": 0.018785839900374413
+                },
+                {
+                  "token": "么",
+                  "id": 10,
+                  "probability": 0.018749767914414406
+                },
+                {
+                  "token": "桑",
+                  "id": 41,
+                  "probability": 0.018553750589489937
+                },
+                {
+                  "token": "？",
+                  "id": 78,
+                  "probability": 0.017312878742814064
+                }
+              ]
+            },
+            {
+              "step": 4,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                6,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                47,
+                55,
+                56,
+                17
+              ],
+              "selected_id": 47,
+              "selected_token": "爱",
+              "top_candidates": [
+                {
+                  "token": "爱",
+                  "id": 47,
+                  "probability": 0.020267479121685028
+                },
+                {
+                  "token": "什",
+                  "id": 12,
+                  "probability": 0.017608435824513435
+                },
+                {
+                  "token": "早",
+                  "id": 32,
+                  "probability": 0.017518771812319756
+                },
+                {
+                  "token": "果",
+                  "id": 39,
+                  "probability": 0.01707417331635952
+                },
+                {
+                  "token": "哪",
+                  "id": 21,
+                  "probability": 0.01706184633076191
+                }
+              ]
+            },
+            {
+              "step": 5,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                6,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                47,
+                55,
+                56,
+                17,
+                47
+              ],
+              "selected_id": 42,
+              "selected_token": "梨",
+              "top_candidates": [
+                {
+                  "token": "梨",
+                  "id": 42,
+                  "probability": 0.02065332978963852
+                },
+                {
+                  "token": "红",
+                  "id": 55,
+                  "probability": 0.019876284524798393
+                },
+                {
+                  "token": "最",
+                  "id": 36,
+                  "probability": 0.0187795739620924
+                },
+                {
+                  "token": "草",
+                  "id": 59,
+                  "probability": 0.01757930964231491
+                },
+                {
+                  "token": "柠",
+                  "id": 40,
+                  "probability": 0.017441710457205772
+                }
+              ]
+            },
+            {
+              "step": 6,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                6,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                47,
+                55,
+                56,
+                17,
+                47,
+                42
+              ],
+              "selected_id": 19,
+              "selected_token": "吴",
+              "top_candidates": [
+                {
+                  "token": "吴",
+                  "id": 19,
+                  "probability": 0.019184734672307968
+                },
+                {
+                  "token": "草",
+                  "id": 59,
+                  "probability": 0.01617451012134552
+                },
+                {
+                  "token": "葚",
+                  "id": 62,
+                  "probability": 0.01616019941866398
+                },
+                {
+                  "token": "水",
+                  "id": 46,
+                  "probability": 0.015897057950496674
+                },
+                {
+                  "token": "葡",
+                  "id": 63,
+                  "probability": 0.015850523486733437
+                }
+              ]
+            },
+            {
+              "step": 7,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                6,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                47,
+                55,
+                56,
+                17,
+                47,
+                42,
+                19
+              ],
+              "selected_id": 47,
+              "selected_token": "爱",
+              "top_candidates": [
+                {
+                  "token": "爱",
+                  "id": 47,
+                  "probability": 0.02015492133796215
+                },
+                {
+                  "token": "午",
+                  "id": 16,
+                  "probability": 0.018506063148379326
+                },
+                {
+                  "token": "果",
+                  "id": 39,
+                  "probability": 0.017454693093895912
+                },
+                {
+                  "token": "吃",
+                  "id": 17,
+                  "probability": 0.016534628346562386
+                },
+                {
+                  "token": "葚",
+                  "id": 62,
+                  "probability": 0.016481859609484673
+                }
+              ]
+            }
+          ],
+          "greedy": true,
+          "temperature": null,
+          "seed": 42
+        },
+        {
+          "prompt": "问：小周喜欢什么水果？\n答：",
+          "generated_text": "爱红檬果爱梨吴爱",
+          "generated_ids": [
+            47,
+            55,
+            43,
+            39,
+            47,
+            42,
+            19,
+            47
+          ],
+          "stop_reason": "max_new_tokens",
+          "steps": [
+            {
+              "step": 0,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                20,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77
+              ],
+              "selected_id": 47,
+              "selected_token": "爱",
+              "top_candidates": [
+                {
+                  "token": "爱",
+                  "id": 47,
+                  "probability": 0.02380092814564705
+                },
+                {
+                  "token": "哪",
+                  "id": 21,
+                  "probability": 0.018171288073062897
+                },
+                {
+                  "token": "是",
+                  "id": 34,
+                  "probability": 0.0167299285531044
+                },
+                {
+                  "token": "柠",
+                  "id": 40,
+                  "probability": 0.01668812520802021
+                },
+                {
+                  "token": "着",
+                  "id": 51,
+                  "probability": 0.016264457255601883
+                }
+              ]
+            },
+            {
+              "step": 1,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                20,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                47
+              ],
+              "selected_id": 55,
+              "selected_token": "红",
+              "top_candidates": [
+                {
+                  "token": "红",
+                  "id": 55,
+                  "probability": 0.02089676260948181
+                },
+                {
+                  "token": "梨",
+                  "id": 42,
+                  "probability": 0.01946907490491867
+                },
+                {
+                  "token": "最",
+                  "id": 36,
+                  "probability": 0.018988050520420074
+                },
+                {
+                  "token": "草",
+                  "id": 59,
+                  "probability": 0.017627308145165443
+                },
+                {
+                  "token": "柠",
+                  "id": 40,
+                  "probability": 0.017294658347964287
+                }
+              ]
+            },
+            {
+              "step": 2,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                20,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                47,
+                55
+              ],
+              "selected_id": 43,
+              "selected_token": "檬",
+              "top_candidates": [
+                {
+                  "token": "檬",
+                  "id": 43,
+                  "probability": 0.01828089728951454
+                },
+                {
+                  "token": "果",
+                  "id": 39,
+                  "probability": 0.018202796578407288
+                },
+                {
+                  "token": "了",
+                  "id": 11,
+                  "probability": 0.018024329096078873
+                },
+                {
+                  "token": "绿",
+                  "id": 56,
+                  "probability": 0.01784246787428856
+                },
+                {
+                  "token": "爱",
+                  "id": 47,
+                  "probability": 0.017793552950024605
+                }
+              ]
+            },
+            {
+              "step": 3,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                20,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                47,
+                55,
+                43
+              ],
+              "selected_id": 39,
+              "selected_token": "果",
+              "top_candidates": [
+                {
+                  "token": "果",
+                  "id": 39,
+                  "probability": 0.019886145368218422
+                },
+                {
+                  "token": "红",
+                  "id": 55,
+                  "probability": 0.019511394202709198
+                },
+                {
+                  "token": "爱",
+                  "id": 47,
+                  "probability": 0.01938811130821705
+                },
+                {
+                  "token": "黄",
+                  "id": 75,
+                  "probability": 0.018316829577088356
+                },
+                {
+                  "token": "吃",
+                  "id": 17,
+                  "probability": 0.017603596672415733
+                }
+              ]
+            },
+            {
+              "step": 4,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                20,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                47,
+                55,
+                43,
+                39
+              ],
+              "selected_id": 47,
+              "selected_token": "爱",
+              "top_candidates": [
+                {
+                  "token": "爱",
+                  "id": 47,
+                  "probability": 0.019216427579522133
+                },
+                {
+                  "token": "草",
+                  "id": 59,
+                  "probability": 0.017040668055415154
+                },
+                {
+                  "token": "葚",
+                  "id": 62,
+                  "probability": 0.016680341213941574
+                },
+                {
+                  "token": "果",
+                  "id": 39,
+                  "probability": 0.01657848060131073
+                },
+                {
+                  "token": "在",
+                  "id": 23,
+                  "probability": 0.016403788700699806
+                }
+              ]
+            },
+            {
+              "step": 5,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                20,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                47,
+                55,
+                43,
+                39,
+                47
+              ],
+              "selected_id": 42,
+              "selected_token": "梨",
+              "top_candidates": [
+                {
+                  "token": "梨",
+                  "id": 42,
+                  "probability": 0.019853264093399048
+                },
+                {
+                  "token": "红",
+                  "id": 55,
+                  "probability": 0.019837403669953346
+                },
+                {
+                  "token": "最",
+                  "id": 36,
+                  "probability": 0.01888410374522209
+                },
+                {
+                  "token": "柠",
+                  "id": 40,
+                  "probability": 0.01710793748497963
+                },
+                {
+                  "token": "草",
+                  "id": 59,
+                  "probability": 0.016484878957271576
+                }
+              ]
+            },
+            {
+              "step": 6,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                20,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                47,
+                55,
+                43,
+                39,
+                47,
+                42
+              ],
+              "selected_id": 19,
+              "selected_token": "吴",
+              "top_candidates": [
+                {
+                  "token": "吴",
+                  "id": 19,
+                  "probability": 0.01915140263736248
+                },
+                {
+                  "token": "葚",
+                  "id": 62,
+                  "probability": 0.01631430722773075
+                },
+                {
+                  "token": "吃",
+                  "id": 17,
+                  "probability": 0.01619192585349083
+                },
+                {
+                  "token": "水",
+                  "id": 46,
+                  "probability": 0.015975873917341232
+                },
+                {
+                  "token": "最",
+                  "id": 36,
+                  "probability": 0.015455502085387707
+                }
+              ]
+            },
+            {
+              "step": 7,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                20,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                47,
+                55,
+                43,
+                39,
+                47,
+                42,
+                19
+              ],
+              "selected_id": 47,
+              "selected_token": "爱",
+              "top_candidates": [
+                {
+                  "token": "爱",
+                  "id": 47,
+                  "probability": 0.019879823550581932
+                },
+                {
+                  "token": "午",
+                  "id": 16,
+                  "probability": 0.018215732648968697
+                },
+                {
+                  "token": "果",
+                  "id": 39,
+                  "probability": 0.01760191097855568
+                },
+                {
+                  "token": "吃",
+                  "id": 17,
+                  "probability": 0.01681513711810112
+                },
+                {
+                  "token": "葚",
+                  "id": 62,
+                  "probability": 0.016574587672948837
+                }
+              ]
+            }
+          ],
+          "greedy": true,
+          "temperature": null,
+          "seed": 42
+        }
+      ],
+      "training_steps": 0
+    },
+    "pretrain": {
+      "parameter_sha256": "f944cbe2b5077affefcaee449bae06adfc32ad4464a519f128d756877b373c72",
+      "outputs": [
+        {
+          "prompt": "早上，小丁喜欢",
+          "generated_text": "红色的苹果。",
+          "generated_ids": [
+            55,
+            57,
+            50,
+            58,
+            39,
+            5
+          ],
+          "stop_reason": "eos",
+          "steps": [
+            {
+              "step": 0,
+              "input_ids": [
+                1,
+                32,
+                7,
+                76,
+                27,
+                6,
+                22,
+                44
+              ],
+              "selected_id": 55,
+              "selected_token": "红",
+              "top_candidates": [
+                {
+                  "token": "红",
+                  "id": 55,
+                  "probability": 0.9997666478157043
+                },
+                {
+                  "token": "的",
+                  "id": 50,
+                  "probability": 5.944279473624192e-05
+                },
+                {
+                  "token": "草",
+                  "id": 59,
+                  "probability": 5.707895979867317e-05
+                },
+                {
+                  "token": "香",
+                  "id": 74,
+                  "probability": 7.956960871524643e-06
+                },
+                {
+                  "token": "。",
+                  "id": 5,
+                  "probability": 6.616802693315549e-06
+                }
+              ]
+            },
+            {
+              "step": 1,
+              "input_ids": [
+                1,
+                32,
+                7,
+                76,
+                27,
+                6,
+                22,
+                44,
+                55
+              ],
+              "selected_id": 57,
+              "selected_token": "色",
+              "top_candidates": [
+                {
+                  "token": "色",
+                  "id": 57,
+                  "probability": 0.9999434947967529
+                },
+                {
+                  "token": "蕉",
+                  "id": 64,
+                  "probability": 1.1713505955412984e-05
+                },
+                {
+                  "token": "紫",
+                  "id": 54,
+                  "probability": 8.296097803395241e-06
+                },
+                {
+                  "token": "步",
+                  "id": 45,
+                  "probability": 6.139741799415788e-06
+                },
+                {
+                  "token": "吃",
+                  "id": 17,
+                  "probability": 3.2733360058045946e-06
+                }
+              ]
+            },
+            {
+              "step": 2,
+              "input_ids": [
+                1,
+                32,
+                7,
+                76,
+                27,
+                6,
+                22,
+                44,
+                55,
+                57
+              ],
+              "selected_id": 50,
+              "selected_token": "的",
+              "top_candidates": [
+                {
+                  "token": "的",
+                  "id": 50,
+                  "probability": 0.9999897480010986
+                },
+                {
+                  "token": "。",
+                  "id": 5,
+                  "probability": 9.390467994307983e-07
+                },
+                {
+                  "token": "红",
+                  "id": 55,
+                  "probability": 8.493440759593796e-07
+                },
+                {
+                  "token": "柠",
+                  "id": 40,
+                  "probability": 7.224365958791168e-07
+                },
+                {
+                  "token": "桑",
+                  "id": 41,
+                  "probability": 6.2554596524933e-07
+                }
+              ]
+            },
+            {
+              "step": 3,
+              "input_ids": [
+                1,
+                32,
+                7,
+                76,
+                27,
+                6,
+                22,
+                44,
+                55,
+                57,
+                50
+              ],
+              "selected_id": 58,
+              "selected_token": "苹",
+              "top_candidates": [
+                {
+                  "token": "苹",
+                  "id": 58,
+                  "probability": 0.9999313354492188
+                },
+                {
+                  "token": "爱",
+                  "id": 47,
+                  "probability": 2.4931450752774253e-05
+                },
+                {
+                  "token": "香",
+                  "id": 74,
+                  "probability": 1.0122494131792337e-05
+                },
+                {
+                  "token": "葡",
+                  "id": 63,
+                  "probability": 9.448266609979328e-06
+                },
+                {
+                  "token": "柠",
+                  "id": 40,
+                  "probability": 5.926613994233776e-06
+                }
+              ]
+            },
+            {
+              "step": 4,
+              "input_ids": [
+                1,
+                32,
+                7,
+                76,
+                27,
+                6,
+                22,
+                44,
+                55,
+                57,
+                50,
+                58
+              ],
+              "selected_id": 39,
+              "selected_token": "果",
+              "top_candidates": [
+                {
+                  "token": "果",
+                  "id": 39,
+                  "probability": 0.999981164932251
+                },
+                {
+                  "token": "学",
+                  "id": 25,
+                  "probability": 5.3207268138066866e-06
+                },
+                {
+                  "token": "香",
+                  "id": 74,
+                  "probability": 1.776499971128942e-06
+                },
+                {
+                  "token": "苹",
+                  "id": 58,
+                  "probability": 8.144671710397233e-07
+                },
+                {
+                  "token": "答",
+                  "id": 53,
+                  "probability": 5.182586164664826e-07
+                }
+              ]
+            },
+            {
+              "step": 5,
+              "input_ids": [
+                1,
+                32,
+                7,
+                76,
+                27,
+                6,
+                22,
+                44,
+                55,
+                57,
+                50,
+                58,
+                39
+              ],
+              "selected_id": 5,
+              "selected_token": "。",
+              "top_candidates": [
+                {
+                  "token": "。",
+                  "id": 5,
+                  "probability": 0.9999004602432251
+                },
+                {
+                  "token": "苹",
+                  "id": 58,
+                  "probability": 9.59257704380434e-06
+                },
+                {
+                  "token": "，",
+                  "id": 76,
+                  "probability": 9.090778803511057e-06
+                },
+                {
+                  "token": "爱",
+                  "id": 47,
+                  "probability": 8.345652531716041e-06
+                },
+                {
+                  "token": "葡",
+                  "id": 63,
+                  "probability": 7.227280093502486e-06
+                }
+              ]
+            },
+            {
+              "step": 6,
+              "input_ids": [
+                1,
+                32,
+                7,
+                76,
+                27,
+                6,
+                22,
+                44,
+                55,
+                57,
+                50,
+                58,
+                39,
+                5
+              ],
+              "selected_id": 2,
+              "selected_token": "<eos>",
+              "top_candidates": [
+                {
+                  "token": "<eos>",
+                  "id": 2,
+                  "probability": 0.999968409538269
+                },
+                {
+                  "token": "学",
+                  "id": 25,
+                  "probability": 2.9401437586784596e-06
+                },
+                {
+                  "token": "，",
+                  "id": 76,
+                  "probability": 2.799443109324784e-06
+                },
+                {
+                  "token": "了",
+                  "id": 11,
+                  "probability": 1.8622241668708739e-06
+                },
+                {
+                  "token": "紫",
+                  "id": 54,
+                  "probability": 1.4938995036573033e-06
+                }
+              ]
+            }
+          ],
+          "greedy": true,
+          "temperature": null,
+          "seed": 42
+        },
+        {
+          "prompt": "晚上，小周拿着",
+          "generated_text": "黄色的香蕉。",
+          "generated_ids": [
+            75,
+            57,
+            50,
+            74,
+            64,
+            5
+          ],
+          "stop_reason": "eos",
+          "steps": [
+            {
+              "step": 0,
+              "input_ids": [
+                1,
+                35,
+                7,
+                76,
+                27,
+                20,
+                29,
+                51
+              ],
+              "selected_id": 75,
+              "selected_token": "黄",
+              "top_candidates": [
+                {
+                  "token": "黄",
+                  "id": 75,
+                  "probability": 0.9997643828392029
+                },
+                {
+                  "token": "子",
+                  "id": 24,
+                  "probability": 3.631647632573731e-05
+                },
+                {
+                  "token": "绿",
+                  "id": 56,
+                  "probability": 3.169836782035418e-05
+                },
+                {
+                  "token": "蕉",
+                  "id": 64,
+                  "probability": 2.3718597731203772e-05
+                },
+                {
+                  "token": "：",
+                  "id": 77,
+                  "probability": 1.2451080692699179e-05
+                }
+              ]
+            },
+            {
+              "step": 1,
+              "input_ids": [
+                1,
+                35,
+                7,
+                76,
+                27,
+                20,
+                29,
+                51,
+                75
+              ],
+              "selected_id": 57,
+              "selected_token": "色",
+              "top_candidates": [
+                {
+                  "token": "色",
+                  "id": 57,
+                  "probability": 0.9999324083328247
+                },
+                {
+                  "token": "紫",
+                  "id": 54,
+                  "probability": 9.07651428860845e-06
+                },
+                {
+                  "token": "吃",
+                  "id": 17,
+                  "probability": 7.917795301182196e-06
+                },
+                {
+                  "token": "步",
+                  "id": 45,
+                  "probability": 6.635854788328288e-06
+                },
+                {
+                  "token": "蕉",
+                  "id": 64,
+                  "probability": 6.58109411233454e-06
+                }
+              ]
+            },
+            {
+              "step": 2,
+              "input_ids": [
+                1,
+                35,
+                7,
+                76,
+                27,
+                20,
+                29,
+                51,
+                75,
+                57
+              ],
+              "selected_id": 50,
+              "selected_token": "的",
+              "top_candidates": [
+                {
+                  "token": "的",
+                  "id": 50,
+                  "probability": 0.9999896287918091
+                },
+                {
+                  "token": "。",
+                  "id": 5,
+                  "probability": 9.465055086366192e-07
+                },
+                {
+                  "token": "柠",
+                  "id": 40,
+                  "probability": 8.741299097891897e-07
+                },
+                {
+                  "token": "它",
+                  "id": 26,
+                  "probability": 7.587991603941191e-07
+                },
+                {
+                  "token": "红",
+                  "id": 55,
+                  "probability": 6.168581307974819e-07
+                }
+              ]
+            },
+            {
+              "step": 3,
+              "input_ids": [
+                1,
+                35,
+                7,
+                76,
+                27,
+                20,
+                29,
+                51,
+                75,
+                57,
+                50
+              ],
+              "selected_id": 74,
+              "selected_token": "香",
+              "top_candidates": [
+                {
+                  "token": "香",
+                  "id": 74,
+                  "probability": 0.9997738003730774
+                },
+                {
+                  "token": "西",
+                  "id": 65,
+                  "probability": 4.604591231327504e-05
+                },
+                {
+                  "token": "黄",
+                  "id": 75,
+                  "probability": 3.959719106205739e-05
+                },
+                {
+                  "token": "着",
+                  "id": 51,
+                  "probability": 2.2708869437337853e-05
+                },
+                {
+                  "token": "我",
+                  "id": 28,
+                  "probability": 1.6263771613012068e-05
+                }
+              ]
+            },
+            {
+              "step": 4,
+              "input_ids": [
+                1,
+                35,
+                7,
+                76,
+                27,
+                20,
+                29,
+                51,
+                75,
+                57,
+                50,
+                74
+              ],
+              "selected_id": 64,
+              "selected_token": "蕉",
+              "top_candidates": [
+                {
+                  "token": "蕉",
+                  "id": 64,
+                  "probability": 0.999880313873291
+                },
+                {
+                  "token": "它",
+                  "id": 26,
+                  "probability": 7.953795284265652e-05
+                },
+                {
+                  "token": "学",
+                  "id": 25,
+                  "probability": 4.055254066770431e-06
+                },
+                {
+                  "token": "萄",
+                  "id": 61,
+                  "probability": 3.119898792647291e-06
+                },
+                {
+                  "token": "葚",
+                  "id": 62,
+                  "probability": 3.094385647273157e-06
+                }
+              ]
+            },
+            {
+              "step": 5,
+              "input_ids": [
+                1,
+                35,
+                7,
+                76,
+                27,
+                20,
+                29,
+                51,
+                75,
+                57,
+                50,
+                74,
+                64
+              ],
+              "selected_id": 5,
+              "selected_token": "。",
+              "top_candidates": [
+                {
+                  "token": "。",
+                  "id": 5,
+                  "probability": 0.9998964071273804
+                },
+                {
+                  "token": "苹",
+                  "id": 58,
+                  "probability": 1.0500465577933937e-05
+                },
+                {
+                  "token": "，",
+                  "id": 76,
+                  "probability": 1.002961380436318e-05
+                },
+                {
+                  "token": "爱",
+                  "id": 47,
+                  "probability": 8.860123671183828e-06
+                },
+                {
+                  "token": "葡",
+                  "id": 63,
+                  "probability": 7.6131709647597745e-06
+                }
+              ]
+            },
+            {
+              "step": 6,
+              "input_ids": [
+                1,
+                35,
+                7,
+                76,
+                27,
+                20,
+                29,
+                51,
+                75,
+                57,
+                50,
+                74,
+                64,
+                5
+              ],
+              "selected_id": 2,
+              "selected_token": "<eos>",
+              "top_candidates": [
+                {
+                  "token": "<eos>",
+                  "id": 2,
+                  "probability": 0.9999653100967407
+                },
+                {
+                  "token": "瓜",
+                  "id": 49,
+                  "probability": 2.4333207875315566e-06
+                },
+                {
+                  "token": "学",
+                  "id": 25,
+                  "probability": 2.4318685518665006e-06
+                },
+                {
+                  "token": "：",
+                  "id": 77,
+                  "probability": 2.1152268345758785e-06
+                },
+                {
+                  "token": "了",
+                  "id": 11,
+                  "probability": 2.0853708520007785e-06
+                }
+              ]
+            }
+          ],
+          "greedy": true,
+          "temperature": null,
+          "seed": 42
+        },
+        {
+          "prompt": "问：小丁喜欢什么水果？\n答：",
+          "generated_text": "我爱吃香蕉。",
+          "generated_ids": [
+            28,
+            47,
+            17,
+            74,
+            64,
+            5
+          ],
+          "stop_reason": "eos",
+          "steps": [
+            {
+              "step": 0,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                6,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77
+              ],
+              "selected_id": 28,
+              "selected_token": "我",
+              "top_candidates": [
+                {
+                  "token": "我",
+                  "id": 28,
+                  "probability": 0.9999752044677734
+                },
+                {
+                  "token": "。",
+                  "id": 5,
+                  "probability": 2.4875673716451274e-06
+                },
+                {
+                  "token": "欢",
+                  "id": 44,
+                  "probability": 1.8130847365682712e-06
+                },
+                {
+                  "token": "末",
+                  "id": 37,
+                  "probability": 1.284702534576354e-06
+                },
+                {
+                  "token": "<eos>",
+                  "id": 2,
+                  "probability": 9.953918151950347e-07
+                }
+              ]
+            },
+            {
+              "step": 1,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                6,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                28
+              ],
+              "selected_id": 47,
+              "selected_token": "爱",
+              "top_candidates": [
+                {
+                  "token": "爱",
+                  "id": 47,
+                  "probability": 0.9999961853027344
+                },
+                {
+                  "token": "柠",
+                  "id": 40,
+                  "probability": 4.215867477341817e-07
+                },
+                {
+                  "token": "时",
+                  "id": 33,
+                  "probability": 4.0964087588690745e-07
+                },
+                {
+                  "token": "葚",
+                  "id": 62,
+                  "probability": 2.892851682645414e-07
+                },
+                {
+                  "token": "步",
+                  "id": 45,
+                  "probability": 1.9914652682473388e-07
+                }
+              ]
+            },
+            {
+              "step": 2,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                6,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                28,
+                47
+              ],
+              "selected_id": 17,
+              "selected_token": "吃",
+              "top_candidates": [
+                {
+                  "token": "吃",
+                  "id": 17,
+                  "probability": 0.999901294708252
+                },
+                {
+                  "token": "紫",
+                  "id": 54,
+                  "probability": 4.162852928857319e-05
+                },
+                {
+                  "token": "色",
+                  "id": 57,
+                  "probability": 3.208163980161771e-05
+                },
+                {
+                  "token": "果",
+                  "id": 39,
+                  "probability": 5.8094201449421234e-06
+                },
+                {
+                  "token": "上",
+                  "id": 7,
+                  "probability": 4.083253315911861e-06
+                }
+              ]
+            },
+            {
+              "step": 3,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                6,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                28,
+                47,
+                17
+              ],
+              "selected_id": 74,
+              "selected_token": "香",
+              "top_candidates": [
+                {
+                  "token": "香",
+                  "id": 74,
+                  "probability": 0.396471232175827
+                },
+                {
+                  "token": "西",
+                  "id": 65,
+                  "probability": 0.11269506812095642
+                },
+                {
+                  "token": "周",
+                  "id": 20,
+                  "probability": 0.06964126974344254
+                },
+                {
+                  "token": "何",
+                  "id": 13,
+                  "probability": 0.06535930931568146
+                },
+                {
+                  "token": "李",
+                  "id": 38,
+                  "probability": 0.058067552745342255
+                }
+              ]
+            },
+            {
+              "step": 4,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                6,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                28,
+                47,
+                17,
+                74
+              ],
+              "selected_id": 64,
+              "selected_token": "蕉",
+              "top_candidates": [
+                {
+                  "token": "蕉",
+                  "id": 64,
+                  "probability": 0.9999668598175049
+                },
+                {
+                  "token": "色",
+                  "id": 57,
+                  "probability": 6.709884019073797e-06
+                },
+                {
+                  "token": "葚",
+                  "id": 62,
+                  "probability": 6.694282092212234e-06
+                },
+                {
+                  "token": "：",
+                  "id": 77,
+                  "probability": 2.487422989361221e-06
+                },
+                {
+                  "token": "萄",
+                  "id": 61,
+                  "probability": 2.4377354748139624e-06
+                }
+              ]
+            },
+            {
+              "step": 5,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                6,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                28,
+                47,
+                17,
+                74,
+                64
+              ],
+              "selected_id": 5,
+              "selected_token": "。",
+              "top_candidates": [
+                {
+                  "token": "。",
+                  "id": 5,
+                  "probability": 0.9998959302902222
+                },
+                {
+                  "token": "，",
+                  "id": 76,
+                  "probability": 1.8448154150974005e-05
+                },
+                {
+                  "token": "爱",
+                  "id": 47,
+                  "probability": 1.1659164556476753e-05
+                },
+                {
+                  "token": "苹",
+                  "id": 58,
+                  "probability": 1.1430690392444376e-05
+                },
+                {
+                  "token": "果",
+                  "id": 39,
+                  "probability": 5.669740403391188e-06
+                }
+              ]
+            },
+            {
+              "step": 6,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                6,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                28,
+                47,
+                17,
+                74,
+                64,
+                5
+              ],
+              "selected_id": 2,
+              "selected_token": "<eos>",
+              "top_candidates": [
+                {
+                  "token": "<eos>",
+                  "id": 2,
+                  "probability": 0.9999703168869019
+                },
+                {
+                  "token": "，",
+                  "id": 76,
+                  "probability": 2.266839828735101e-06
+                },
+                {
+                  "token": "紫",
+                  "id": 54,
+                  "probability": 2.1476689653354697e-06
+                },
+                {
+                  "token": "了",
+                  "id": 11,
+                  "probability": 1.6396576256738626e-06
+                },
+                {
+                  "token": "后",
+                  "id": 18,
+                  "probability": 1.3899253872295958e-06
+                }
+              ]
+            }
+          ],
+          "greedy": true,
+          "temperature": null,
+          "seed": 42
+        },
+        {
+          "prompt": "问：小周喜欢什么水果？\n答：",
+          "generated_text": "我爱吃香蕉。",
+          "generated_ids": [
+            28,
+            47,
+            17,
+            74,
+            64,
+            5
+          ],
+          "stop_reason": "eos",
+          "steps": [
+            {
+              "step": 0,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                20,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77
+              ],
+              "selected_id": 28,
+              "selected_token": "我",
+              "top_candidates": [
+                {
+                  "token": "我",
+                  "id": 28,
+                  "probability": 0.9999668598175049
+                },
+                {
+                  "token": "末",
+                  "id": 37,
+                  "probability": 4.027971499453997e-06
+                },
+                {
+                  "token": "。",
+                  "id": 5,
+                  "probability": 3.3462010833318345e-06
+                },
+                {
+                  "token": "欢",
+                  "id": 44,
+                  "probability": 2.4792975636955816e-06
+                },
+                {
+                  "token": "：",
+                  "id": 77,
+                  "probability": 1.673664655754692e-06
+                }
+              ]
+            },
+            {
+              "step": 1,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                20,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                28
+              ],
+              "selected_id": 47,
+              "selected_token": "爱",
+              "top_candidates": [
+                {
+                  "token": "爱",
+                  "id": 47,
+                  "probability": 0.999995231628418
+                },
+                {
+                  "token": "柠",
+                  "id": 40,
+                  "probability": 4.386631644592853e-07
+                },
+                {
+                  "token": "时",
+                  "id": 33,
+                  "probability": 3.6330783359517227e-07
+                },
+                {
+                  "token": "葚",
+                  "id": 62,
+                  "probability": 3.055029083043337e-07
+                },
+                {
+                  "token": "步",
+                  "id": 45,
+                  "probability": 2.830102800999157e-07
+                }
+              ]
+            },
+            {
+              "step": 2,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                20,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                28,
+                47
+              ],
+              "selected_id": 17,
+              "selected_token": "吃",
+              "top_candidates": [
+                {
+                  "token": "吃",
+                  "id": 17,
+                  "probability": 0.9998873472213745
+                },
+                {
+                  "token": "色",
+                  "id": 57,
+                  "probability": 4.395404539536685e-05
+                },
+                {
+                  "token": "紫",
+                  "id": 54,
+                  "probability": 3.931168612325564e-05
+                },
+                {
+                  "token": "果",
+                  "id": 39,
+                  "probability": 5.954225798632251e-06
+                },
+                {
+                  "token": "上",
+                  "id": 7,
+                  "probability": 5.506060006155167e-06
+                }
+              ]
+            },
+            {
+              "step": 3,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                20,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                28,
+                47,
+                17
+              ],
+              "selected_id": 74,
+              "selected_token": "香",
+              "top_candidates": [
+                {
+                  "token": "香",
+                  "id": 74,
+                  "probability": 0.7176754474639893
+                },
+                {
+                  "token": "。",
+                  "id": 5,
+                  "probability": 0.1751479208469391
+                },
+                {
+                  "token": "西",
+                  "id": 65,
+                  "probability": 0.0699414387345314
+                },
+                {
+                  "token": "苹",
+                  "id": 58,
+                  "probability": 0.01554064080119133
+                },
+                {
+                  "token": "着",
+                  "id": 51,
+                  "probability": 0.009927324950695038
+                }
+              ]
+            },
+            {
+              "step": 4,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                20,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                28,
+                47,
+                17,
+                74
+              ],
+              "selected_id": 64,
+              "selected_token": "蕉",
+              "top_candidates": [
+                {
+                  "token": "蕉",
+                  "id": 64,
+                  "probability": 0.9999655485153198
+                },
+                {
+                  "token": "色",
+                  "id": 57,
+                  "probability": 6.842594302725047e-06
+                },
+                {
+                  "token": "葚",
+                  "id": 62,
+                  "probability": 6.505971214210149e-06
+                },
+                {
+                  "token": "：",
+                  "id": 77,
+                  "probability": 2.7767969186243135e-06
+                },
+                {
+                  "token": "萄",
+                  "id": 61,
+                  "probability": 2.691019972189679e-06
+                }
+              ]
+            },
+            {
+              "step": 5,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                20,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                28,
+                47,
+                17,
+                74,
+                64
+              ],
+              "selected_id": 5,
+              "selected_token": "。",
+              "top_candidates": [
+                {
+                  "token": "。",
+                  "id": 5,
+                  "probability": 0.9998821020126343
+                },
+                {
+                  "token": "，",
+                  "id": 76,
+                  "probability": 1.995395723497495e-05
+                },
+                {
+                  "token": "爱",
+                  "id": 47,
+                  "probability": 1.3536448932427447e-05
+                },
+                {
+                  "token": "苹",
+                  "id": 58,
+                  "probability": 1.29283262140234e-05
+                },
+                {
+                  "token": "果",
+                  "id": 39,
+                  "probability": 6.833897714386694e-06
+                }
+              ]
+            },
+            {
+              "step": 6,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                20,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                28,
+                47,
+                17,
+                74,
+                64,
+                5
+              ],
+              "selected_id": 2,
+              "selected_token": "<eos>",
+              "top_candidates": [
+                {
+                  "token": "<eos>",
+                  "id": 2,
+                  "probability": 0.9999631643295288
+                },
+                {
+                  "token": "，",
+                  "id": 76,
+                  "probability": 3.849471340799937e-06
+                },
+                {
+                  "token": "后",
+                  "id": 18,
+                  "probability": 1.7961060621018987e-06
+                },
+                {
+                  "token": "了",
+                  "id": 11,
+                  "probability": 1.7810684767027851e-06
+                },
+                {
+                  "token": "紫",
+                  "id": 54,
+                  "probability": 1.607729814168124e-06
+                }
+              ]
+            }
+          ],
+          "greedy": true,
+          "temperature": null,
+          "seed": 42
+        }
+      ],
+      "training_steps": 1000
+    },
+    "sft": {
+      "parameter_sha256": "1207da1c8ebd0f0a9ae0f5af1315e036d38582aca4672c81a0648926b3627da6",
+      "outputs": [
+        {
+          "prompt": "早上，小丁喜欢",
+          "generated_text": "红色的苹果。",
+          "generated_ids": [
+            55,
+            57,
+            50,
+            58,
+            39,
+            5
+          ],
+          "stop_reason": "eos",
+          "steps": [
+            {
+              "step": 0,
+              "input_ids": [
+                1,
+                32,
+                7,
+                76,
+                27,
+                6,
+                22,
+                44
+              ],
+              "selected_id": 55,
+              "selected_token": "红",
+              "top_candidates": [
+                {
+                  "token": "红",
+                  "id": 55,
+                  "probability": 0.999936580657959
+                },
+                {
+                  "token": "草",
+                  "id": 59,
+                  "probability": 2.3122551283449866e-05
+                },
+                {
+                  "token": "苹",
+                  "id": 58,
+                  "probability": 6.528511676151538e-06
+                },
+                {
+                  "token": "的",
+                  "id": 50,
+                  "probability": 4.4789130697608925e-06
+                },
+                {
+                  "token": "香",
+                  "id": 74,
+                  "probability": 3.7880713534832466e-06
+                }
+              ]
+            },
+            {
+              "step": 1,
+              "input_ids": [
+                1,
+                32,
+                7,
+                76,
+                27,
+                6,
+                22,
+                44,
+                55
+              ],
+              "selected_id": 57,
+              "selected_token": "色",
+              "top_candidates": [
+                {
+                  "token": "色",
+                  "id": 57,
+                  "probability": 0.9999990463256836
+                },
+                {
+                  "token": "紫",
+                  "id": 54,
+                  "probability": 1.601831769448836e-07
+                },
+                {
+                  "token": "蕉",
+                  "id": 64,
+                  "probability": 1.4330476005852688e-07
+                },
+                {
+                  "token": "黄",
+                  "id": 75,
+                  "probability": 9.224029895449348e-08
+                },
+                {
+                  "token": "何",
+                  "id": 13,
+                  "probability": 4.175651824311899e-08
+                }
+              ]
+            },
+            {
+              "step": 2,
+              "input_ids": [
+                1,
+                32,
+                7,
+                76,
+                27,
+                6,
+                22,
+                44,
+                55,
+                57
+              ],
+              "selected_id": 50,
+              "selected_token": "的",
+              "top_candidates": [
+                {
+                  "token": "的",
+                  "id": 50,
+                  "probability": 0.9999978542327881
+                },
+                {
+                  "token": "柠",
+                  "id": 40,
+                  "probability": 2.4549854060751386e-07
+                },
+                {
+                  "token": "。",
+                  "id": 5,
+                  "probability": 1.8026817372174264e-07
+                },
+                {
+                  "token": "红",
+                  "id": 55,
+                  "probability": 1.7284401110373437e-07
+                },
+                {
+                  "token": "西",
+                  "id": 65,
+                  "probability": 1.0789360516127999e-07
+                }
+              ]
+            },
+            {
+              "step": 3,
+              "input_ids": [
+                1,
+                32,
+                7,
+                76,
+                27,
+                6,
+                22,
+                44,
+                55,
+                57,
+                50
+              ],
+              "selected_id": 58,
+              "selected_token": "苹",
+              "top_candidates": [
+                {
+                  "token": "苹",
+                  "id": 58,
+                  "probability": 0.9999555349349976
+                },
+                {
+                  "token": "柠",
+                  "id": 40,
+                  "probability": 1.1906305189768318e-05
+                },
+                {
+                  "token": "葡",
+                  "id": 63,
+                  "probability": 1.0175392162636854e-05
+                },
+                {
+                  "token": "香",
+                  "id": 74,
+                  "probability": 5.189103376324056e-06
+                },
+                {
+                  "token": "草",
+                  "id": 59,
+                  "probability": 4.600505235430319e-06
+                }
+              ]
+            },
+            {
+              "step": 4,
+              "input_ids": [
+                1,
+                32,
+                7,
+                76,
+                27,
+                6,
+                22,
+                44,
+                55,
+                57,
+                50,
+                58
+              ],
+              "selected_id": 39,
+              "selected_token": "果",
+              "top_candidates": [
+                {
+                  "token": "果",
+                  "id": 39,
+                  "probability": 0.9999982118606567
+                },
+                {
+                  "token": "梨",
+                  "id": 42,
+                  "probability": 2.3190692388652678e-07
+                },
+                {
+                  "token": "学",
+                  "id": 25,
+                  "probability": 1.703584047163531e-07
+                },
+                {
+                  "token": "香",
+                  "id": 74,
+                  "probability": 1.6116571543989267e-07
+                },
+                {
+                  "token": "葡",
+                  "id": 63,
+                  "probability": 1.2860603249009728e-07
+                }
+              ]
+            },
+            {
+              "step": 5,
+              "input_ids": [
+                1,
+                32,
+                7,
+                76,
+                27,
+                6,
+                22,
+                44,
+                55,
+                57,
+                50,
+                58,
+                39
+              ],
+              "selected_id": 5,
+              "selected_token": "。",
+              "top_candidates": [
+                {
+                  "token": "。",
+                  "id": 5,
+                  "probability": 0.9999896287918091
+                },
+                {
+                  "token": "苹",
+                  "id": 58,
+                  "probability": 1.4779744788029348e-06
+                },
+                {
+                  "token": "葡",
+                  "id": 63,
+                  "probability": 1.2332415053606383e-06
+                },
+                {
+                  "token": "紫",
+                  "id": 54,
+                  "probability": 7.179220915531914e-07
+                },
+                {
+                  "token": "香",
+                  "id": 74,
+                  "probability": 5.869800361324451e-07
+                }
+              ]
+            },
+            {
+              "step": 6,
+              "input_ids": [
+                1,
+                32,
+                7,
+                76,
+                27,
+                6,
+                22,
+                44,
+                55,
+                57,
+                50,
+                58,
+                39,
+                5
+              ],
+              "selected_id": 2,
+              "selected_token": "<eos>",
+              "top_candidates": [
+                {
+                  "token": "<eos>",
+                  "id": 2,
+                  "probability": 0.9999980926513672
+                },
+                {
+                  "token": "瓜",
+                  "id": 49,
+                  "probability": 5.604907755696331e-07
+                },
+                {
+                  "token": "梨",
+                  "id": 42,
+                  "probability": 2.3589272757362778e-07
+                },
+                {
+                  "token": "桑",
+                  "id": 41,
+                  "probability": 1.2971274543360778e-07
+                },
+                {
+                  "token": "檬",
+                  "id": 43,
+                  "probability": 6.131925545105332e-08
+                }
+              ]
+            }
+          ],
+          "greedy": true,
+          "temperature": null,
+          "seed": 42
+        },
+        {
+          "prompt": "晚上，小周拿着",
+          "generated_text": "黄色的香蕉。",
+          "generated_ids": [
+            75,
+            57,
+            50,
+            74,
+            64,
+            5
+          ],
+          "stop_reason": "eos",
+          "steps": [
+            {
+              "step": 0,
+              "input_ids": [
+                1,
+                35,
+                7,
+                76,
+                27,
+                20,
+                29,
+                51
+              ],
+              "selected_id": 75,
+              "selected_token": "黄",
+              "top_candidates": [
+                {
+                  "token": "黄",
+                  "id": 75,
+                  "probability": 0.999919056892395
+                },
+                {
+                  "token": "绿",
+                  "id": 56,
+                  "probability": 1.0505241334612947e-05
+                },
+                {
+                  "token": "蕉",
+                  "id": 64,
+                  "probability": 8.468879968859255e-06
+                },
+                {
+                  "token": "<eos>",
+                  "id": 2,
+                  "probability": 5.057428552390775e-06
+                },
+                {
+                  "token": "香",
+                  "id": 74,
+                  "probability": 3.671484819278703e-06
+                }
+              ]
+            },
+            {
+              "step": 1,
+              "input_ids": [
+                1,
+                35,
+                7,
+                76,
+                27,
+                20,
+                29,
+                51,
+                75
+              ],
+              "selected_id": 57,
+              "selected_token": "色",
+              "top_candidates": [
+                {
+                  "token": "色",
+                  "id": 57,
+                  "probability": 0.9999988079071045
+                },
+                {
+                  "token": "黄",
+                  "id": 75,
+                  "probability": 3.888904984705732e-07
+                },
+                {
+                  "token": "紫",
+                  "id": 54,
+                  "probability": 2.3002512250513973e-07
+                },
+                {
+                  "token": "蕉",
+                  "id": 64,
+                  "probability": 8.657259087385683e-08
+                },
+                {
+                  "token": "吃",
+                  "id": 17,
+                  "probability": 5.251533963246402e-08
+                }
+              ]
+            },
+            {
+              "step": 2,
+              "input_ids": [
+                1,
+                35,
+                7,
+                76,
+                27,
+                20,
+                29,
+                51,
+                75,
+                57
+              ],
+              "selected_id": 50,
+              "selected_token": "的",
+              "top_candidates": [
+                {
+                  "token": "的",
+                  "id": 50,
+                  "probability": 0.9999909400939941
+                },
+                {
+                  "token": "黄",
+                  "id": 75,
+                  "probability": 3.6383244150783867e-06
+                },
+                {
+                  "token": "柠",
+                  "id": 40,
+                  "probability": 2.065016133201425e-06
+                },
+                {
+                  "token": "。",
+                  "id": 5,
+                  "probability": 2.4609931870145374e-07
+                },
+                {
+                  "token": "桑",
+                  "id": 41,
+                  "probability": 1.798280351295034e-07
+                }
+              ]
+            },
+            {
+              "step": 3,
+              "input_ids": [
+                1,
+                35,
+                7,
+                76,
+                27,
+                20,
+                29,
+                51,
+                75,
+                57,
+                50
+              ],
+              "selected_id": 74,
+              "selected_token": "香",
+              "top_candidates": [
+                {
+                  "token": "香",
+                  "id": 74,
+                  "probability": 0.9998925924301147
+                },
+                {
+                  "token": "苹",
+                  "id": 58,
+                  "probability": 4.635152799892239e-05
+                },
+                {
+                  "token": "柠",
+                  "id": 40,
+                  "probability": 2.0296580260037445e-05
+                },
+                {
+                  "token": "西",
+                  "id": 65,
+                  "probability": 1.0502289114810992e-05
+                },
+                {
+                  "token": "我",
+                  "id": 28,
+                  "probability": 3.55758925252303e-06
+                }
+              ]
+            },
+            {
+              "step": 4,
+              "input_ids": [
+                1,
+                35,
+                7,
+                76,
+                27,
+                20,
+                29,
+                51,
+                75,
+                57,
+                50,
+                74
+              ],
+              "selected_id": 64,
+              "selected_token": "蕉",
+              "top_candidates": [
+                {
+                  "token": "蕉",
+                  "id": 64,
+                  "probability": 0.9990530610084534
+                },
+                {
+                  "token": "它",
+                  "id": 26,
+                  "probability": 0.0007647041929885745
+                },
+                {
+                  "token": "色",
+                  "id": 57,
+                  "probability": 2.203787153121084e-05
+                },
+                {
+                  "token": "葡",
+                  "id": 63,
+                  "probability": 1.5672501831431873e-05
+                },
+                {
+                  "token": "吴",
+                  "id": 19,
+                  "probability": 1.0038564141723327e-05
+                }
+              ]
+            },
+            {
+              "step": 5,
+              "input_ids": [
+                1,
+                35,
+                7,
+                76,
+                27,
+                20,
+                29,
+                51,
+                75,
+                57,
+                50,
+                74,
+                64
+              ],
+              "selected_id": 5,
+              "selected_token": "。",
+              "top_candidates": [
+                {
+                  "token": "。",
+                  "id": 5,
+                  "probability": 0.9999901056289673
+                },
+                {
+                  "token": "苹",
+                  "id": 58,
+                  "probability": 1.4254435427574208e-06
+                },
+                {
+                  "token": "葡",
+                  "id": 63,
+                  "probability": 1.1360953067196533e-06
+                },
+                {
+                  "token": "紫",
+                  "id": 54,
+                  "probability": 6.205414138094056e-07
+                },
+                {
+                  "token": "香",
+                  "id": 74,
+                  "probability": 5.601597763416066e-07
+                }
+              ]
+            },
+            {
+              "step": 6,
+              "input_ids": [
+                1,
+                35,
+                7,
+                76,
+                27,
+                20,
+                29,
+                51,
+                75,
+                57,
+                50,
+                74,
+                64,
+                5
+              ],
+              "selected_id": 2,
+              "selected_token": "<eos>",
+              "top_candidates": [
+                {
+                  "token": "<eos>",
+                  "id": 2,
+                  "probability": 0.9999984502792358
+                },
+                {
+                  "token": "瓜",
+                  "id": 49,
+                  "probability": 3.5451208191261685e-07
+                },
+                {
+                  "token": "黄",
+                  "id": 75,
+                  "probability": 1.541604461863244e-07
+                },
+                {
+                  "token": "梨",
+                  "id": 42,
+                  "probability": 1.2090457346403127e-07
+                },
+                {
+                  "token": "桑",
+                  "id": 41,
+                  "probability": 7.728613837798548e-08
+                }
+              ]
+            }
+          ],
+          "greedy": true,
+          "temperature": null,
+          "seed": 42
+        },
+        {
+          "prompt": "问：小丁喜欢什么水果？\n答：",
+          "generated_text": "红色的苹果。",
+          "generated_ids": [
+            55,
+            57,
+            50,
+            58,
+            39,
+            5
+          ],
+          "stop_reason": "eos",
+          "steps": [
+            {
+              "step": 0,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                6,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77
+              ],
+              "selected_id": 55,
+              "selected_token": "红",
+              "top_candidates": [
+                {
+                  "token": "红",
+                  "id": 55,
+                  "probability": 0.9999692440032959
+                },
+                {
+                  "token": "草",
+                  "id": 59,
+                  "probability": 8.502128366671968e-06
+                },
+                {
+                  "token": "的",
+                  "id": 50,
+                  "probability": 3.80857477466634e-06
+                },
+                {
+                  "token": "莓",
+                  "id": 60,
+                  "probability": 1.4730138673257898e-06
+                },
+                {
+                  "token": "黄",
+                  "id": 75,
+                  "probability": 1.2655256114157964e-06
+                }
+              ]
+            },
+            {
+              "step": 1,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                6,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                55
+              ],
+              "selected_id": 57,
+              "selected_token": "色",
+              "top_candidates": [
+                {
+                  "token": "色",
+                  "id": 57,
+                  "probability": 0.9999983310699463
+                },
+                {
+                  "token": "黄",
+                  "id": 75,
+                  "probability": 5.723042590943805e-07
+                },
+                {
+                  "token": "蕉",
+                  "id": 64,
+                  "probability": 3.8313177697091305e-07
+                },
+                {
+                  "token": "紫",
+                  "id": 54,
+                  "probability": 1.6361677523946128e-07
+                },
+                {
+                  "token": "步",
+                  "id": 45,
+                  "probability": 7.011902170006579e-08
+                }
+              ]
+            },
+            {
+              "step": 2,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                6,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                55,
+                57
+              ],
+              "selected_id": 50,
+              "selected_token": "的",
+              "top_candidates": [
+                {
+                  "token": "的",
+                  "id": 50,
+                  "probability": 0.9999978542327881
+                },
+                {
+                  "token": "柠",
+                  "id": 40,
+                  "probability": 3.89930335131794e-07
+                },
+                {
+                  "token": "黄",
+                  "id": 75,
+                  "probability": 1.394300284118799e-07
+                },
+                {
+                  "token": "桑",
+                  "id": 41,
+                  "probability": 1.200203740836514e-07
+                },
+                {
+                  "token": "。",
+                  "id": 5,
+                  "probability": 1.1494363860720114e-07
+                }
+              ]
+            },
+            {
+              "step": 3,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                6,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                55,
+                57,
+                50
+              ],
+              "selected_id": 58,
+              "selected_token": "苹",
+              "top_candidates": [
+                {
+                  "token": "苹",
+                  "id": 58,
+                  "probability": 0.9999703168869019
+                },
+                {
+                  "token": "柠",
+                  "id": 40,
+                  "probability": 8.350948519364465e-06
+                },
+                {
+                  "token": "葡",
+                  "id": 63,
+                  "probability": 7.438489319611108e-06
+                },
+                {
+                  "token": "草",
+                  "id": 59,
+                  "probability": 3.1615898024028866e-06
+                },
+                {
+                  "token": "梨",
+                  "id": 42,
+                  "probability": 2.612345952002215e-06
+                }
+              ]
+            },
+            {
+              "step": 4,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                6,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                55,
+                57,
+                50,
+                58
+              ],
+              "selected_id": 39,
+              "selected_token": "果",
+              "top_candidates": [
+                {
+                  "token": "果",
+                  "id": 39,
+                  "probability": 0.9999990463256836
+                },
+                {
+                  "token": "梨",
+                  "id": 42,
+                  "probability": 8.40965128645621e-08
+                },
+                {
+                  "token": "香",
+                  "id": 74,
+                  "probability": 6.649346317999516e-08
+                },
+                {
+                  "token": "学",
+                  "id": 25,
+                  "probability": 6.55380389957827e-08
+                },
+                {
+                  "token": "莓",
+                  "id": 60,
+                  "probability": 6.464021851115831e-08
+                }
+              ]
+            },
+            {
+              "step": 5,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                6,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                55,
+                57,
+                50,
+                58,
+                39
+              ],
+              "selected_id": 5,
+              "selected_token": "。",
+              "top_candidates": [
+                {
+                  "token": "。",
+                  "id": 5,
+                  "probability": 0.9999892711639404
+                },
+                {
+                  "token": "紫",
+                  "id": 54,
+                  "probability": 1.6846524886204861e-06
+                },
+                {
+                  "token": "苹",
+                  "id": 58,
+                  "probability": 1.247884142685507e-06
+                },
+                {
+                  "token": "葡",
+                  "id": 63,
+                  "probability": 8.588745004090015e-07
+                },
+                {
+                  "token": "着",
+                  "id": 51,
+                  "probability": 4.820335561817046e-07
+                }
+              ]
+            },
+            {
+              "step": 6,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                6,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                55,
+                57,
+                50,
+                58,
+                39,
+                5
+              ],
+              "selected_id": 2,
+              "selected_token": "<eos>",
+              "top_candidates": [
+                {
+                  "token": "<eos>",
+                  "id": 2,
+                  "probability": 0.9999986886978149
+                },
+                {
+                  "token": "瓜",
+                  "id": 49,
+                  "probability": 1.4896671984843124e-07
+                },
+                {
+                  "token": "梨",
+                  "id": 42,
+                  "probability": 1.394071347249337e-07
+                },
+                {
+                  "token": "，",
+                  "id": 76,
+                  "probability": 9.785533450212824e-08
+                },
+                {
+                  "token": "檬",
+                  "id": 43,
+                  "probability": 8.810899032596353e-08
+                }
+              ]
+            }
+          ],
+          "greedy": true,
+          "temperature": null,
+          "seed": 42
+        },
+        {
+          "prompt": "问：小周喜欢什么水果？\n答：",
+          "generated_text": "黄色的香蕉。",
+          "generated_ids": [
+            75,
+            57,
+            50,
+            74,
+            64,
+            5
+          ],
+          "stop_reason": "eos",
+          "steps": [
+            {
+              "step": 0,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                20,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77
+              ],
+              "selected_id": 75,
+              "selected_token": "黄",
+              "top_candidates": [
+                {
+                  "token": "黄",
+                  "id": 75,
+                  "probability": 0.999954342842102
+                },
+                {
+                  "token": "紫",
+                  "id": 54,
+                  "probability": 4.38219785792171e-06
+                },
+                {
+                  "token": "色",
+                  "id": 57,
+                  "probability": 3.844008006126387e-06
+                },
+                {
+                  "token": "绿",
+                  "id": 56,
+                  "probability": 3.5550956454244442e-06
+                },
+                {
+                  "token": "<eos>",
+                  "id": 2,
+                  "probability": 3.4477814097044757e-06
+                }
+              ]
+            },
+            {
+              "step": 1,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                20,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                75
+              ],
+              "selected_id": 57,
+              "selected_token": "色",
+              "top_candidates": [
+                {
+                  "token": "色",
+                  "id": 57,
+                  "probability": 0.999996542930603
+                },
+                {
+                  "token": "黄",
+                  "id": 75,
+                  "probability": 1.9482736206555273e-06
+                },
+                {
+                  "token": "蕉",
+                  "id": 64,
+                  "probability": 4.751774156375177e-07
+                },
+                {
+                  "token": "紫",
+                  "id": 54,
+                  "probability": 2.1817830031523044e-07
+                },
+                {
+                  "token": "步",
+                  "id": 45,
+                  "probability": 6.892825155091487e-08
+                }
+              ]
+            },
+            {
+              "step": 2,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                20,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                75,
+                57
+              ],
+              "selected_id": 50,
+              "selected_token": "的",
+              "top_candidates": [
+                {
+                  "token": "的",
+                  "id": 50,
+                  "probability": 0.9999964237213135
+                },
+                {
+                  "token": "黄",
+                  "id": 75,
+                  "probability": 1.0426139169794624e-06
+                },
+                {
+                  "token": "柠",
+                  "id": 40,
+                  "probability": 3.086484525738342e-07
+                },
+                {
+                  "token": "桑",
+                  "id": 41,
+                  "probability": 1.571590075855056e-07
+                },
+                {
+                  "token": "。",
+                  "id": 5,
+                  "probability": 1.2125407522489695e-07
+                }
+              ]
+            },
+            {
+              "step": 3,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                20,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                75,
+                57,
+                50
+              ],
+              "selected_id": 74,
+              "selected_token": "香",
+              "top_candidates": [
+                {
+                  "token": "香",
+                  "id": 74,
+                  "probability": 0.9999263286590576
+                },
+                {
+                  "token": "苹",
+                  "id": 58,
+                  "probability": 1.9516728571034037e-05
+                },
+                {
+                  "token": "柠",
+                  "id": 40,
+                  "probability": 1.579287891217973e-05
+                },
+                {
+                  "token": "西",
+                  "id": 65,
+                  "probability": 7.63422212912701e-06
+                },
+                {
+                  "token": "梨",
+                  "id": 42,
+                  "probability": 5.164513368072221e-06
+                }
+              ]
+            },
+            {
+              "step": 4,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                20,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                75,
+                57,
+                50,
+                74
+              ],
+              "selected_id": 64,
+              "selected_token": "蕉",
+              "top_candidates": [
+                {
+                  "token": "蕉",
+                  "id": 64,
+                  "probability": 0.9999910593032837
+                },
+                {
+                  "token": "色",
+                  "id": 57,
+                  "probability": 2.215711674580234e-06
+                },
+                {
+                  "token": "萄",
+                  "id": 61,
+                  "probability": 8.637074415673851e-07
+                },
+                {
+                  "token": "葚",
+                  "id": 62,
+                  "probability": 7.25854647498636e-07
+                },
+                {
+                  "token": "莓",
+                  "id": 60,
+                  "probability": 4.4003314769724966e-07
+                }
+              ]
+            },
+            {
+              "step": 5,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                20,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                75,
+                57,
+                50,
+                74,
+                64
+              ],
+              "selected_id": 5,
+              "selected_token": "。",
+              "top_candidates": [
+                {
+                  "token": "。",
+                  "id": 5,
+                  "probability": 0.9999902248382568
+                },
+                {
+                  "token": "苹",
+                  "id": 58,
+                  "probability": 1.3438357200357132e-06
+                },
+                {
+                  "token": "紫",
+                  "id": 54,
+                  "probability": 1.2216769391670823e-06
+                },
+                {
+                  "token": "葡",
+                  "id": 63,
+                  "probability": 8.490455911669414e-07
+                },
+                {
+                  "token": "香",
+                  "id": 74,
+                  "probability": 6.181104481584043e-07
+                }
+              ]
+            },
+            {
+              "step": 6,
+              "input_ids": [
+                1,
+                70,
+                77,
+                27,
+                20,
+                22,
+                44,
+                12,
+                10,
+                46,
+                39,
+                78,
+                4,
+                53,
+                77,
+                75,
+                57,
+                50,
+                74,
+                64,
+                5
+              ],
+              "selected_id": 2,
+              "selected_token": "<eos>",
+              "top_candidates": [
+                {
+                  "token": "<eos>",
+                  "id": 2,
+                  "probability": 0.9999978542327881
+                },
+                {
+                  "token": "黄",
+                  "id": 75,
+                  "probability": 9.151708582066931e-07
+                },
+                {
+                  "token": "檬",
+                  "id": 43,
+                  "probability": 1.1942904620809713e-07
+                },
+                {
+                  "token": "梨",
+                  "id": 42,
+                  "probability": 9.58901082981356e-08
+                },
+                {
+                  "token": "瓜",
+                  "id": 49,
+                  "probability": 7.368574728161548e-08
+                }
+              ]
+            }
+          ],
+          "greedy": true,
+          "temperature": null,
+          "seed": 42
+        }
+      ],
+      "training_steps": 300
+    }
+  },
+  "mask_example": {
+    "record": {
+      "record_id": "s-0-0",
+      "template_id": 0,
+      "prompt": "问：小丁喜欢什么水果？\n答：",
+      "answer": "红色的苹果。"
+    },
+    "prefix_len": 15,
+    "x": [
+      [
+        1,
+        70,
+        77,
+        27,
+        6,
+        22,
+        44,
+        12,
+        10,
+        46,
+        39,
+        78,
+        4,
+        53,
+        77,
+        55,
+        57,
+        50,
+        58,
+        39,
+        5,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "y": [
+      [
+        -100,
+        -100,
+        -100,
+        -100,
+        -100,
+        -100,
+        -100,
+        -100,
+        -100,
+        -100,
+        -100,
+        -100,
+        -100,
+        -100,
+        55,
+        57,
+        50,
+        58,
+        39,
+        5,
+        2,
+        -100,
+        -100,
+        -100,
+        -100,
+        -100,
+        -100,
+        -100,
+        -100,
+        -100,
+        -100,
+        -100
+      ]
+    ],
+    "x_tokens": [
+      "<bos>",
+      "问",
+      "：",
+      "小",
+      "丁",
+      "喜",
+      "欢",
+      "什",
+      "么",
+      "水",
+      "果",
+      "？",
+      "\n",
+      "答",
+      "：",
+      "红",
+      "色",
+      "的",
+      "苹",
+      "果",
+      "。",
+      "<pad>",
+      "<pad>",
+      "<pad>",
+      "<pad>",
+      "<pad>",
+      "<pad>",
+      "<pad>",
+      "<pad>",
+      "<pad>",
+      "<pad>",
+      "<pad>"
+    ],
+    "y_tokens": [
+      "忽略",
+      "忽略",
+      "忽略",
+      "忽略",
+      "忽略",
+      "忽略",
+      "忽略",
+      "忽略",
+      "忽略",
+      "忽略",
+      "忽略",
+      "忽略",
+      "忽略",
+      "忽略",
+      "红",
+      "色",
+      "的",
+      "苹",
+      "果",
+      "。",
+      "<eos>",
+      "忽略",
+      "忽略",
+      "忽略",
+      "忽略",
+      "忽略",
+      "忽略",
+      "忽略",
+      "忽略",
+      "忽略",
+      "忽略",
+      "忽略"
+    ],
+    "valid_count": 7
+  }
+}

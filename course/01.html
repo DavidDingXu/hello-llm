@@ -1,0 +1,261 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<meta name="source-sha256" content="31a76294519110d1c3c5d4f73977100c8b54e025a018c9de280e90432f9803f5"><meta name="description" content="两项输入、两条权重和一个偏置，怎样先算出4？再用一个做不到的目标，看清激活函数为什么出现。"><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/01.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="01｜神经元：模型接着写字，底下先算什么？ · Hello LLM"><meta property="og:description" content="两项输入、两条权重和一个偏置，怎样先算出4？再用一个做不到的目标，看清激活函数为什么出现。"><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/01.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>01｜神经元：模型接着写字，底下先算什么？ · Hello LLM</title>
+<link rel="icon" href="../assets/favicon.png" type="image/png">
+<script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
+<script defer src="../code/visuals/reading_site/search-index.js?v=ea96857fef58"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="01" data-alternate-sections="[&quot;to-change-the-result-first-identify-the-adjustable-numbers&quot;, &quot;first-calculate-that-4&quot;, &quot;some-tasks-remain-impossible-however-freely-we-adjust-the-parameters&quot;, &quot;clamp-negative-values-to-0-and-the-three-targets-line-up&quot;, &quot;return-to-that-4-and-turn-it-into-editable-code&quot;, &quot;can-one-result-be-passed-to-the-same-function-again&quot;, &quot;three-short-exercises&quot;]"><a class="skip-link" href="#main-content">跳到正文</a>
+<header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="打开课程目录" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+<a class="brand" href="../index.html" aria-label="Hello LLM · 学习站首页">
+<img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>手写小模型，看懂大模型</small></span></a>
+<nav class="header-nav" aria-label="主导航"><a href="../index.html#curriculum">学习路径</a><a href="../index.html#experiments">交互实验</a><a href="https://github.com/DavidDingXu/hello-llm" target="_blank" rel="noopener">GitHub <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a></nav>
+<div class="header-controls"><a class="language-switch" href="01.en.html" lang="en" aria-label="Switch to English">EN</a><button class="icon-button theme-toggle js-only" type="button" aria-label="切换到深色主题" title="切换到深色主题"><span class="theme-light-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A9 9 0 0 1 9.5 3.5a9 9 0 1 0 11 11Z"/></svg></span><span class="theme-dark-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></span></button>
+<button class="search-trigger js-only" type="button" aria-label="搜索课程"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><span>搜索课程</span><kbd>⌘ K</kbd></button>
+</div></div><div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div></header><div class="sidebar-scrim" hidden></div><div class="reader-layout"><aside class="course-sidebar" id="course-sidebar" aria-label="课程目录">
+<div class="sidebar-heading"><a href="../index.html">课程目录</a><button class="icon-button menu-close js-only" type="button" aria-label="关闭课程目录"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+<nav aria-label="全部文章"><div class="sidebar-guides"><a class="lesson-link" data-lesson="intro" href="../course/intro.html"><span class="lesson-number">·</span><span>专栏介绍</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="00" href="../course/00.html"><span class="lesson-number">·</span><span>开篇导学</span><span class="lesson-state" aria-hidden="true"></span></a></div><details class="sidebar-stage" open><summary><span class="stage-index">第一部分</span>让数值网络学起来</summary><a class="lesson-link" data-lesson="01" href="../course/01.html" aria-current="page"><span class="lesson-number">01</span><span>神经元</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="02" href="../course/02.html"><span class="lesson-number">02</span><span>向量与矩阵</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="03" href="../course/03.html"><span class="lesson-number">03</span><span>多层与非线性</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="04" href="../course/04.html"><span class="lesson-number">04</span><span>梯度与参数更新</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="05" href="../course/05.html"><span class="lesson-number">05</span><span>手写反向传播</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="06" href="../course/06.html"><span class="lesson-number">06</span><span>让网络学起来</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">第二部分</span>把文字接进来</summary><a class="lesson-link" data-lesson="07" href="../course/07.html"><span class="lesson-number">07</span><span>文字与向量</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="08" href="../course/08.html"><span class="lesson-number">08</span><span>分数与概率</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="09" href="../course/09.html"><span class="lesson-number">09</span><span>文本训练题</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">第三部分</span>读取前文，组装模型</summary><a class="lesson-link" data-lesson="10" href="../course/10.html"><span class="lesson-number">10</span><span>单头注意力</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="11" href="../course/11.html"><span class="lesson-number">11</span><span>因果掩码</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="12" href="../course/12.html"><span class="lesson-number">12</span><span>多头注意力</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="13" href="../course/13.html"><span class="lesson-number">13</span><span>旋转位置</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="14" href="../course/14.html"><span class="lesson-number">14</span><span>逐位置前馈</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="15" href="../course/15.html"><span class="lesson-number">15</span><span>残差与归一化</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="16" href="../course/16.html"><span class="lesson-number">16</span><span>完整模型前向</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">第四部分</span>预训练、生成与微调</summary><a class="lesson-link" data-lesson="17" href="../course/17.html"><span class="lesson-number">17</span><span>第一次预训练</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="18" href="../course/18.html"><span class="lesson-number">18</span><span>逐字生成</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="19" href="../course/19.html"><span class="lesson-number">19</span><span>问答微调</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="20" href="../course/20.html"><span class="lesson-number">20</span><span>闭环与原理检验</span><span class="lesson-state" aria-hidden="true"></span></a></details><a class="lesson-link" data-lesson="end" href="../course/end.html"><span class="lesson-number">·</span><span>结束篇</span><span class="lesson-state" aria-hidden="true"></span></a></nav></aside><main class="reader-main" id="main-content"><div class="article-context"><span>让数值网络学起来</span><div class="article-actions"><button type="button" class="copy-page-link js-only">复制链接</button><button type="button" class="focus-toggle js-only" aria-pressed="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg><span>专注阅读</span></button></div></div>
+<div class="mobile-context"><nav class="reading-route" aria-label="本篇路线"><details><summary>本篇目录</summary><div class="toc">
+<ul>
+<li><a href="#结果要变先找出哪些数能调">结果要变，先找出哪些数能调</a></li>
+<li><a href="#先算出这个-4">先算出这个 4</a></li>
+<li><a href="#允许随便调参数也有做不到的事">允许随便调参数，也有做不到的事</a></li>
+<li><a href="#让负数停在-0三个目标就接上了">让负数停在 0，三个目标就接上了</a></li>
+<li><a href="#回到那个-4把它变成能改的代码">回到那个 4，把它变成能改的代码</a></li>
+<li><a href="#一个结果能不能再交给同一个函数">一个结果，能不能再交给同一个函数？</a></li>
+<li><a href="#三道小题">三道小题</a></li>
+</ul>
+</div>
+</details></nav><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="减小正文字号">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="增大正文字号">A+</button></div></div><article id="article-body"><h1 id="01神经元模型接着写字底下先算什么">01｜神经元：模型接着写字，底下先算什么？</h1>
+<p>手写小模型，看懂大模型 · 第 01 讲</p>
+<p>输入“早上，小丁喜欢”，我们自己训练的小语言模型会接着生成“红色的苹果。”</p>
+<p>生成程序里没有为这半句话单独写一条续写规则。几百条人物、水果和颜色短句参与了训练，改变了它保存的参数。它能续写熟悉的句子，换个说法也会错，<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/EXPERIMENTS.md">实验记录</a>保留了这些结果。</p>
+<p>计算步骤不变，只改参数，为什么就能改变输出？先不追整句话，把输入缩成两个数，看看怎样让一个结果从 4 变成 5。</p>
+<h2 id="结果要变先找出哪些数能调">结果要变，先找出哪些数能调</h2>
+<ul>
+<li><strong>输入 <code>[2, 1]</code>：</strong> 本次送进来的两项数据。</li>
+<li><strong>权重 <code>[1, 3]</code>：</strong> 两项输入各自配上的乘数。</li>
+<li><strong>偏置 <code>−1</code>：</strong> 乘积相加之后，再加上的一个数。</li>
+</ul>
+<p>权重和偏置合起来，叫作<strong>参数</strong>。接收输入、按这些参数算出一个数，是人工神经元的基本工作。</p>
+<p>输入随数据变化；参数由模型保存，决定怎样处理数据。这里先手工指定参数，后面训练时根据错误调整；生成文字时参数固定。</p>
+<p><img alt="输入与参数分别进入计算单元，得到一个数值输出" src="../chapters/01-neuron/images/01-%E8%BE%93%E5%85%A5%E4%B8%8E%E5%8F%82%E6%95%B0.svg"  width="1080" height="975" loading="eager" decoding="async" /></p>
+<h2 id="先算出这个-4">先算出这个 4</h2>
+<p>把两项输入记作 <code>x₁</code>、<code>x₂</code>，对应权重记作 <code>w₁</code>、<code>w₂</code>。下标只是编号：第一项输入配第一项权重，第二项配第二项。</p>
+<p>第一条路径算 <strong>2 × 1 = 2</strong>；第二条路径算 <strong>1 × 3 = 3</strong>。</p>
+<p><img alt="两个输入沿各自路径乘权重，分别得到乘积2和3" src="../chapters/01-neuron/images/02-%E4%B8%A4%E6%9D%A1%E4%B9%98%E6%B3%95%E8%B7%AF%E5%BE%84.svg"  width="1080" height="900" loading="lazy" decoding="async" /></p>
+<p>权重就是乘数，可以是小数或负数，用来放大、缩小或改变这一项贡献的正负号。</p>
+<p>接着，把两个乘积相加：<strong>2 + 3 = 5</strong>。</p>
+<p>再加偏置 −1：<strong>5 + (−1) = 4</strong>。</p>
+<p>把偏置记作 <code>b</code>，把目前这个计算结果记作 <code>z</code>，就得到：</p>
+<p><strong>z = x₁ × w₁ + x₂ × w₂ + b = 4</strong></p>
+<p>为什么还需要偏置？输入全为 0 时，乘积之和一定是 0。偏置让这个结果也能独立调整。</p>
+<h2 id="允许随便调参数也有做不到的事">允许随便调参数，也有做不到的事</h2>
+<p>上面的输出能靠参数改变，但有些要求，怎样调参数也做不到。换成单个输入 <code>x</code>，要求不超过 1 时输出 0，超过 1 时只输出超出的部分：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>输入 x</th>
+<th>需要的输出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1</td>
+</tr>
+</tbody>
+</table></div>
+<p>只用 <strong>y = w × x + b</strong>，能同时满足吗？</p>
+<p>输入 0 要输出 0，迫使 <strong>b = 0</strong>。接着，输入 1 也要输出 0，又迫使 <strong>w = 0</strong>。</p>
+<p>两个参数确定后，输入 2 只能得到 <strong>0 × 2 + 0 = 0</strong>，无法得到要求的 1。换别的参数，就会破坏前两条要求。</p>
+<p>调整参数，让输出接近目标，叫作<strong>拟合</strong>。这三个目标无法同时精确拟合，限制来自函数形式。</p>
+<p>再接一个函数，能绕过这个限制吗？假设先算 <code>a=x−1</code>，再算 <code>y=2×a+1</code>。展开后：</p>
+<p><strong>y = 2 × (x − 1) + 1 = 2 × x − 1</strong></p>
+<p>仍然是“输入乘一个数，再加一个数”。换参数只会改变合并后的乘数和加数，继续堆叠也无法满足这三个目标。</p>
+<p>这里的乘加指<strong>输入乘固定权重，再求和、加偏置</strong>。我们还需要让不同区间的输入得到不同处理。</p>
+<h2 id="让负数停在-0三个目标就接上了">让负数停在 0，三个目标就接上了</h2>
+<p>缺少的变化很具体：前半段要一直为 0，后半段才开始增长。对乘加结果 <code>z</code> 增加这条规则：</p>
+<p><strong>ReLU(z) = max(0, z)</strong></p>
+<p><code>max(0, z)</code> 取 0 和 <code>z</code> 中较大的数：负数变成 0，非负数保留。这个函数叫 <strong>ReLU</strong>，是一种<strong>激活函数</strong>。</p>
+<p><img alt="ReLU以z为输入：负1变成0，正1保留为1，在z等于0处转折" src="../chapters/01-neuron/images/04-ReLU%E6%80%8E%E6%A0%B7%E5%A4%84%E7%90%86%E6%AD%A3%E8%B4%9F%E6%95%B0.svg"  width="1080" height="1080" loading="lazy" decoding="async" /></p>
+<p>折线无法用一条直线表示，这就是所需的<strong>非线性</strong>。它也可以来自平滑曲线；这里用折线便于手算。</p>
+<p>对刚才三个目标，取权重 <strong>w=1</strong>、偏置 <strong>b=−1</strong>：</p>
+<p><strong>z = 1 × x − 1</strong></p>
+<p>再把 <code>z</code> 交给 ReLU：</p>
+<p><strong>y = ReLU(z) = ReLU(x − 1)</strong></p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>输入 x</th>
+<th>z=x−1</th>
+<th>输出 y</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>−1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1</td>
+<td>1</td>
+</tr>
+</tbody>
+</table></div>
+<p><img alt="整个神经元以x为输入：纯乘加不能满足三个目标，ReLU加偏置后在x等于1处转折" src="../chapters/01-neuron/images/08-%E6%BF%80%E6%B4%BB%E5%87%BD%E6%95%B0%E5%A2%9E%E5%8A%A0%E4%BA%86%E4%BB%80%E4%B9%88.svg"  width="1080" height="1080" loading="lazy" decoding="async" /></p>
+<p>两张图的横轴不同：前图是乘加后的 <strong>z</strong>，纵轴是 ReLU 输出，转折在 <strong>z=0</strong>；后图是原始输入 <strong>x</strong>，纵轴是整个神经元输出。因为先算 <code>z=x−1</code>，转折就落在 <strong>x=1</strong>。沿横轴找输入，向上到曲线即可读输出；偏置移动了转折位置，ReLU 规则没变。</p>
+<p>后图圆点是目标。蓝线由前两个目标确定，一直输出 0；加上 ReLU 后，紫色折线经过了三个点。这次参数是手工挑出的，后面再让训练程序来寻找它们。</p>
+<h2 id="回到那个-4把它变成能改的代码">回到那个 4，把它变成能改的代码</h2>
+<p>原来 <code>[2, 1]</code> 的乘加结果 <code>z=4</code> 为正，经过 ReLU 仍然是 4。</p>
+<details class="motion-figure"><summary>展开观看动态过程</summary><img alt="主算例逐步经过乘法、汇总、偏置和ReLU" src="../chapters/01-neuron/images/07-%E7%A5%9E%E7%BB%8F%E5%85%83%E5%85%AD%E6%AD%A5%E8%AE%A1%E7%AE%97.gif"  width="720" height="1000" loading="lazy" decoding="async" /></details>
+<p>需要停下来核对，可以打开<a href="../chapters/01-neuron/images/07-%E5%AE%8C%E6%95%B4%E8%AE%A1%E7%AE%97.png">完整静态图</a>，或在<a href="../chapters/01-neuron/walkthrough.html">逐步演示</a>里前进、后退。</p><details class="inline-experiment"><summary><span>动手实验 · 逐步演示</span><small>逐步核对计算过程，随时前进或后退。</small></summary><p><a href="../chapters/01-neuron/walkthrough.html" class="js-experiment inline-expand">展开大窗口 ↗</a> · <a href="../chapters/01-neuron/walkthrough.html" target="_blank" rel="noopener">在新标签页打开 ↗</a></p><dialog class="inline-workspace experiment-viewer" aria-label="逐步演示"><header><strong>逐步演示</strong><div><a href="../chapters/01-neuron/walkthrough.html" target="_blank" rel="noopener">在新标签页打开 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button inline-close" type="button" aria-label="返回阅读">返回阅读 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe data-src="../chapters/01-neuron/walkthrough.html" title="逐步演示" loading="lazy"></iframe></dialog></details>
+<p>把最后输出记作 <code>y</code>，公式与数字合起来是：</p>
+<p><strong>y = ReLU(x₁w₁+x₂w₂+b) = ReLU(2×1+1×3−1) = 4</strong></p>
+<p>逐项相乘再累加，就能处理一项、两项或更多项输入：</p>
+<pre><code class="language-python">def neuron(inputs, weights, bias=0.0):
+    &quot;&quot;&quot;输入列表与权重逐项配对，加偏置、做 ReLU，返回一个数。&quot;&quot;&quot;
+    if len(inputs) != len(weights) or not inputs:
+        raise ValueError(&quot;输入与权重必须非空且等长&quot;)
+
+    total = 0.0
+    # 同一位置的输入乘自己的权重，再把各项贡献加起来。
+    for value, weight in zip(inputs, weights):
+        total += value * weight
+    z = total + bias
+    # ReLU 只改变负数；它的规则固定，可调的是 weights 和 bias。
+    return max(0.0, z)
+
+# 本次输入为 [2, 1]，参数是权重 [1, 3] 和偏置 -1。
+print(neuron([2, 1], [1, 3], -1))  # 4.0
+</code></pre>
+<p><code>inputs、weights、bias</code> 对应 <code>x、w、b</code>。<code>zip</code> 把对应输入和权重配对，循环相乘，<code>total += ...</code> 累加；最后加偏置、做 ReLU。开头的检查防止漏配权重或传入空列表。保存成 <code>neuron.py</code> 即可运行，只需 Python 标准功能。</p>
+<h3 id="改一个数结果怎样变">改一个数，结果怎样变</h3>
+<p>代码跑出 4 后，先试着只把偏置 −1 改成 0。再改回去，把第二项输入从 1 改成 2。每次只改一处：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>改动</th>
+<th>乘加计算</th>
+<th>输出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>原例子</td>
+<td>2×1 + 1×3 − 1</td>
+<td>4</td>
+</tr>
+<tr>
+<td>x₂：1 → 2</td>
+<td>2×1 + 2×3 − 1</td>
+<td>7</td>
+</tr>
+<tr>
+<td>b：−1 → 0</td>
+<td>2×1 + 1×3 + 0</td>
+<td>5</td>
+</tr>
+</tbody>
+</table></div>
+<p>第二项输入增加 1，输出就增加 3，因为这一份输入要先乘权重 3。三个结果为正，ReLU 都保留原值。</p>
+<section class="python-lab" id="python-lab" aria-labelledby="python-lab-title">
+<div class="lab-heading"><span>PYTHON · 可编辑实验</span><h3 id="python-lab-title">改一改，运行看看</h3></div>
+<p class="lab-challenge">把 x2 从 1 改成 2，输出会从 4 变成多少？</p>
+<div class="lab-controls"><label for="lab-x2">第二个输入<input id="lab-x2" data-variable="x2" type="number" value="1" min="-10" max="10" step="1" required></label><label for="lab-bias">偏置<input id="lab-bias" data-variable="bias" type="number" value="-1" min="-20" max="20" step="1" required></label></div>
+<details class="lab-editor"><summary>修改 Python 代码</summary>
+<label class="lab-editor-label" for="lab-code">Python 代码</label>
+<p class="lab-editor-help" id="lab-code-help">Tab 缩进，Shift + Tab 反缩进；按 Esc 后再按 Tab 离开代码框。Ctrl / ⌘ + Enter 运行。</p>
+<textarea id="lab-code" class="lab-code" aria-describedby="lab-code-help" wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" rows="10">from tiny_lm.scalar import forward, neuron
+
+x2 = 1
+bias = -1
+inputs = [2, x2]
+weights = [1, 3]
+
+print(&quot;weighted sum =&quot;, forward(inputs, weights, bias))
+print(&quot;output =&quot;, neuron(inputs, weights, bias))
+</textarea>
+</details>
+<div class="lab-actions"><button type="button" class="button primary lab-run" disabled>运行代码</button><button type="button" class="button lab-stop" disabled>停止</button><button type="button" class="button lab-reset" disabled>恢复示例</button><button type="button" class="button lab-download" disabled>下载代码</button></div>
+<p class="lab-status" role="status">点击运行，结果显示在下面。</p>
+<pre class="lab-output" tabindex="0" aria-label="运行输出">等待运行…</pre>
+<noscript>启用 JavaScript 后可在这里运行代码，也可以复制示例在本地执行。</noscript>
+</section><h2 id="一个结果能不能再交给同一个函数">一个结果，能不能再交给同一个函数？</h2>
+<p>把第一个输出 4 再交给 <code>neuron</code>，权重取 0.5，偏置取 1：</p>
+<pre><code class="language-python"># 沿用上一段的 neuron；前一个输出成为后一个神经元的输入。
+first = neuron([2, 1], [1, 3], -1)
+# 后一个神经元有自己的权重和偏置，并未修改前一个的参数。
+second = neuron([first], [0.5], 1)
+print(first, second)  # 4.0 3.0
+</code></pre>
+<p><img alt="前一个神经元输出4，后一个读取4再计算得到3" src="../chapters/01-neuron/images/06-%E8%BF%9E%E6%8E%A5%E4%B8%A4%E4%B8%AA%E7%A5%9E%E7%BB%8F%E5%85%83.svg"  width="1080" height="900" loading="lazy" decoding="async" /></p>
+<p>第二个仍执行乘加与 ReLU，只是输入变为一项。多个神经元可以各用一组参数，产生一组中间数，常称为<strong>特征</strong>。它们的作用要放在整个网络中看，不能预先认定某个数代表“苹果”或“语法”。</p>
+<p>把两个神经元并排放，它们的输出再交给第三个，就得到下面的网络：</p>
+<p><img alt="两项输入送到两个独立神经元，它们的输出再成为后一层的输入" src="../chapters/01-neuron/images/09-%E4%BB%8E%E7%A5%9E%E7%BB%8F%E5%85%83%E5%88%B0%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C.svg"  width="1080" height="1095" loading="lazy" decoding="async" /></p>
+<ul>
+<li><strong>输入层：</strong> 两个点只放数据，不额外计算。</li>
+<li><strong>隐藏层：</strong> A、B 位于输入与最终输出之间，读取同一组输入，各用自己的参数计算。</li>
+<li><strong>输出层：</strong> C 把 A、B 的输出作为两项输入继续计算，图中也采用 ReLU。</li>
+</ul>
+<p>每条进入神经元的连线对应一个权重，交叉点不计算。下一讲把 A、B 这样的并排计算写成矩阵，一次得到一层的多个输出。</p>
+<h2 id="三道小题">三道小题</h2>
+<ol>
+<li>主算例的输入 <code>[2, 1]</code>、权重 <code>[1, 3]</code> 不变，偏置改成 −6。<code>z</code> 是多少？最后输出是多少？</li>
+<li>单输入反例中，权重仍取 1，偏置从 −1 改成 −2。转折位置移到哪里？输入 2 时输出是多少？</li>
+<li>最后的网络结构图中，有几个权重、几个偏置？两个输入点算不算可调参数？</li>
+</ol>
+<p>第一题可在交互演示中把偏置调到 −6；第二题可用 <code>neuron([2], [1], -2)</code> 核对。</p>
+<details class="answer">
+<summary>参考答案</summary>
+<p>答案：第一题，<code>z=2×1+1×3−6=−1</code>，输出 <strong>0</strong>。第二题，<code>z=x−2</code>，转折移到 <strong>x=2</strong>，输入 2 时输出 <strong>0</strong>，超过 2 才有正输出。第三题，进入 A、B 各有两条权重，进入 C 有两条，共 <strong>6 个权重</strong>；A、B、C 各有一个偏置，共 <strong>3 个偏置</strong>，合计 <strong>9 个可调参数</strong>。输入点是数据。</p>
+</details>
+<p>想让配套程序打印本讲的计算，进入 <code>code</code> 目录运行：</p>
+<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+python -m lessons.l01
+</code></pre>
+<p>macOS 可以用 <code>python3</code>，Windows 也可以用 <code>py -m lessons.l01</code>。完整安装与运行说明见<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md">配套代码</a>。</p>
+<p>配套入口：<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l01.py">运行入口</a> · <a href="../chapters/01-neuron/walkthrough.html">交互演示</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/EXPERIMENTS.md">真实模型实验</a></p>
+<p>源码导航：<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/scalar.py#L22">scalar.py · neuron</a>。</p></article><details class="lesson-video video-ready" id="lesson-video"><summary><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></svg>观看配套视频<span class="video-duration">6:19</span></summary><div class="bilibili-embed"><iframe data-src="https://player.bilibili.com/player.html?bvid=BV1xjHg6ZEFD&amp;p=1&amp;autoplay=0&amp;danmaku=0" title="01｜神经元：模型接着写字，底下先算什么？ · B站视频" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><p class="video-actions"><a href="https://www.bilibili.com/video/BV1xjHg6ZEFD/?p=1" target="_blank" rel="noopener">在 B 站高清观看 ↗</a></p></div></details>
+<div class="reader-feedback"><span>这一讲有疑问？</span><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=question.yml&amp;title=%5B%E5%AD%A6%E4%B9%A0%5D+01%EF%BD%9C%E7%A5%9E%E7%BB%8F%E5%85%83%EF%BC%9A%E6%A8%A1%E5%9E%8B%E6%8E%A5%E7%9D%80%E5%86%99%E5%AD%97%EF%BC%8C%E5%BA%95%E4%B8%8B%E5%85%88%E7%AE%97%E4%BB%80%E4%B9%88%EF%BC%9F&amp;location=01%EF%BD%9C%E7%A5%9E%E7%BB%8F%E5%85%83%EF%BC%9A%E6%A8%A1%E5%9E%8B%E6%8E%A5%E7%9D%80%E5%86%99%E5%AD%97%EF%BC%8C%E5%BA%95%E4%B8%8B%E5%85%88%E7%AE%97%E4%BB%80%E4%B9%88%EF%BC%9F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F01.html" target="_blank" rel="noopener">提出学习疑问</a><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=content.yml&amp;title=%5B%E5%8B%98%E8%AF%AF%5D+01%EF%BD%9C%E7%A5%9E%E7%BB%8F%E5%85%83%EF%BC%9A%E6%A8%A1%E5%9E%8B%E6%8E%A5%E7%9D%80%E5%86%99%E5%AD%97%EF%BC%8C%E5%BA%95%E4%B8%8B%E5%85%88%E7%AE%97%E4%BB%80%E4%B9%88%EF%BC%9F&amp;location=01%EF%BD%9C%E7%A5%9E%E7%BB%8F%E5%85%83%EF%BC%9A%E6%A8%A1%E5%9E%8B%E6%8E%A5%E7%9D%80%E5%86%99%E5%AD%97%EF%BC%8C%E5%BA%95%E4%B8%8B%E5%85%88%E7%AE%97%E4%BB%80%E4%B9%88%EF%BC%9F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F01.html" target="_blank" rel="noopener">反馈内容勘误</a></div><nav class="chapter-nav" aria-label="前后篇"><a href="../course/00.html"><span>上一篇 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg></span><strong>开篇词｜先给成品出两道题，再从零把它造出来</strong></a><a href="../course/02.html"><span>下一篇 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><strong>02｜向量与矩阵：算两个数，要复制两遍代码吗？</strong></a></nav><footer class="reader-footer">Hello LLM · 手写小模型，看懂大模型<details class="community-mini"><summary>关注与交流 · 好好用 AI</summary><div class="community-section"><div><h2>关注与交流 · 好好用 AI</h2><p>交流学习中的问题与实践心得。</p><p>代码问题和勘误，欢迎在 <a href="https://github.com/DavidDingXu/hello-llm/issues" target="_blank" rel="noopener">GitHub 提交 Issue</a>。</p></div><a class="qr-link" href="../code/assets/wechat-official-account.jpg" target="_blank" rel="noopener" aria-label="查看好好用 AI 公众号二维码原图"><img src="../code/assets/wechat-official-account.jpg" alt="好好用 AI 微信公众号二维码" width="130" height="130" loading="lazy"><p class="qr-caption">微信扫码 · 点击查看原图</p></a></div></details></footer></main>
+<aside class="context-sidebar" aria-label="本篇辅助导航"><div class="context-inner"><nav class="reading-route" aria-label="本篇路线"><details open><summary>本篇路线</summary><div class="toc">
+<ul>
+<li><a href="#结果要变先找出哪些数能调">结果要变，先找出哪些数能调</a></li>
+<li><a href="#先算出这个-4">先算出这个 4</a></li>
+<li><a href="#允许随便调参数也有做不到的事">允许随便调参数，也有做不到的事</a></li>
+<li><a href="#让负数停在-0三个目标就接上了">让负数停在 0，三个目标就接上了</a></li>
+<li><a href="#回到那个-4把它变成能改的代码">回到那个 4，把它变成能改的代码</a></li>
+<li><a href="#一个结果能不能再交给同一个函数">一个结果，能不能再交给同一个函数？</a></li>
+<li><a href="#三道小题">三道小题</a></li>
+</ul>
+</div>
+</details></nav>
+<section class="reading-settings"><h2>阅读设置</h2><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="减小正文字号">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="增大正文字号">A+</button></div><span>建议预留 30 分钟</span><p class="lesson-goal">解释输入、参数和激活各自的作用。</p></section>
+</div></aside></div><dialog class="search-dialog" id="search-dialog" aria-labelledby="search-label">
+<form method="dialog" class="search-heading"><label for="course-search" id="search-label"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg>搜索课程</label><button class="icon-button" aria-label="关闭搜索"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></form>
+<input id="course-search" type="search" placeholder="搜索概念、代码或问题…" autocomplete="off" spellcheck="false">
+<p class="search-status" id="search-status" role="status">输入关键词，搜索全部 23 篇文章。</p>
+<div class="search-results" id="search-results"></div><footer>↑ ↓ 选择结果 <span>Enter 打开 · Esc 关闭</span></footer></dialog>
+<dialog class="experiment-viewer" id="experiment-viewer" aria-labelledby="experiment-title"><header><strong id="experiment-title">交互实验</strong><div><a id="experiment-standalone" target="_blank" rel="noopener">独立打开 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button" id="close-experiment" type="button">返回阅读 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe id="experiment-frame" title="交互实验" src="about:blank"></iframe></dialog>
+<dialog class="image-viewer" id="image-viewer" aria-label="放大配图">
+<header><span>查看配图</span><div class="image-actions"><button type="button" id="image-zoom-out" aria-label="缩小配图">−</button><output id="image-scale" aria-label="缩放比例">100%</output><button type="button" id="image-zoom-in" aria-label="放大配图">＋</button><button type="button" id="image-size">原尺寸</button><button type="button" id="close-image" autofocus>关闭</button></div></header>
+<div class="image-canvas"><p id="image-status" role="status" hidden></p><img id="large-image" alt=""></div><footer><p id="image-description"></p><a id="original-image" target="_blank" rel="noopener">打开原图 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a></footer></dialog>
+<div class="toast" id="toast" role="status"></div></body></html>

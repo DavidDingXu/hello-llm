@@ -1,0 +1,17 @@
+/* The highlight and textarea share exact metrics so the visible text follows the caret. */
+.lab-code-editor{--editor-bg:#f8fafc;--editor-fg:#243247;--editor-keyword:#7c3aed;--editor-string:#166534;--editor-number:#9a3412;--editor-comment:#64748b;--editor-builtin:#075985;--editor-name:#1d4ed8;--editor-selection:#c7ddff;--editor-padding:14px;--editor-font-size:max(14px,calc(var(--body-size,18px) - 4px));position:relative;display:grid;grid-template-columns:calc(var(--editor-line-digits,2)*1ch + 18px) minmax(0,1fr);align-items:start;min-width:0;overflow:hidden;border:1px solid var(--line);border-radius:6px;background:var(--editor-bg);font:var(--editor-font-size)/1.7 var(--mono)}
+[data-theme=dark] .lab-code-editor{--editor-bg:#111827;--editor-fg:#e2e8f0;--editor-keyword:#c4b5fd;--editor-string:#86efac;--editor-number:#fdba74;--editor-comment:#94a3b8;--editor-builtin:#7dd3fc;--editor-name:#93c5fd;--editor-selection:#264c75}
+#article-body .lab-code-editor .lab-code,#article-body .lab-code-editor .lab-code-highlight,#article-body .lab-code-editor .lab-code-lines{margin:0;border:0;border-radius:0;padding:var(--editor-padding);box-sizing:border-box;font:var(--editor-font-size)/1.7 var(--mono);font-weight:400;font-style:normal;font-variant-ligatures:none;letter-spacing:normal;tab-size:4;white-space:pre;word-break:normal;overflow-wrap:normal;text-align:left;text-transform:none}
+.lab-code-input{position:relative;min-width:0}
+.lab-code-gutter{position:relative;min-width:0;overflow:hidden;border-right:1px solid var(--line)}
+#article-body .lab-code-editor .lab-code-lines{position:absolute;inset:0;overflow:visible;padding-inline:8px;text-align:right;color:var(--muted);background:transparent;user-select:none;pointer-events:none}
+#article-body .lab-code-editor .lab-code{position:relative;z-index:1;display:block;width:100%;height:clamp(220px,38vh,380px);min-height:160px;max-height:65vh;resize:vertical;overflow:auto;background:transparent;color:transparent;caret-color:var(--editor-fg);outline:none}
+#article-body .lab-code-editor .lab-code-highlight{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;user-select:none;color:var(--editor-fg);background:transparent}
+.lab-code-editor:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.lab-code-editor .py-keyword{color:var(--editor-keyword)}.lab-code-editor .py-string{color:var(--editor-string)}.lab-code-editor .py-number{color:var(--editor-number)}.lab-code-editor .py-comment{color:var(--editor-comment)}.lab-code-editor .py-builtin{color:var(--editor-builtin)}.lab-code-editor .py-name{color:var(--editor-name)}
+.lab-code-editor .lab-code::selection{background:var(--editor-selection);color:var(--editor-fg)}
+#article-body .lab-code-editor.code-editor-plain .lab-code{color:var(--editor-fg)}
+.code-editor-plain .lab-code-highlight{visibility:hidden}
+#article-body .lab-editor-help{margin:0 0 10px;font-size:12px;line-height:1.7;color:var(--muted)}
+@media(max-width:600px){.lab-code-editor{--editor-font-size:max(16px,calc(var(--body-size,18px) - 3px));--editor-padding:12px}#article-body .lab-code-editor .lab-code{height:260px;max-height:60vh}}
+@media(forced-colors:active){.lab-code-editor .lab-code-highlight{visibility:hidden}#article-body .lab-code-editor .lab-code{color:CanvasText;caret-color:CanvasText}.lab-code-editor{background:Canvas;border-color:CanvasText}}

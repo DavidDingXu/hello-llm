@@ -1,0 +1,304 @@
+{
+  "version": "0.1.0-rc.1",
+  "videos": [
+    {
+      "id": "intro",
+      "status": "ready",
+      "title": "模型答错了，接下来查哪里？",
+      "article": "chapters/intro/README.md",
+      "audio_language": "zh-CN",
+      "duration_seconds": 134.06666666666666,
+      "poster": "assets/videos/intro/poster.jpg",
+      "bilibili": {
+        "bvid": "BV1edHT6eEGr",
+        "part": 1
+      }
+    },
+    {
+      "id": "00",
+      "status": "ready",
+      "title": "开篇：先给成品出两道题，再从零把它造出来",
+      "article": "chapters/00-introduction/README.md",
+      "audio_language": "zh-CN",
+      "duration_seconds": 253.5,
+      "poster": "assets/videos/00/poster.jpg",
+      "bilibili": {
+        "bvid": "BV1NjHg6ZEpK",
+        "part": 1
+      }
+    },
+    {
+      "id": "01",
+      "status": "ready",
+      "title": "01｜神经元：计算规则不变，结果为什么能变？",
+      "article": "chapters/01-neuron/README.md",
+      "audio_language": "zh-CN",
+      "duration_seconds": 379.46666666666664,
+      "poster": "assets/videos/01/poster.jpg",
+      "bilibili": {
+        "bvid": "BV1xjHg6ZEFD",
+        "part": 1
+      }
+    },
+    {
+      "id": "02",
+      "status": "ready",
+      "title": "02｜向量与矩阵：一份输入，怎样算出一层结果？",
+      "article": "chapters/02-vectors-and-matrices/README.md",
+      "audio_language": "zh-CN",
+      "duration_seconds": 313.26666666666665,
+      "poster": "assets/videos/02/poster.jpg",
+      "bilibili": {
+        "bvid": "BV1fhHg67Epd",
+        "part": 1
+      }
+    },
+    {
+      "id": "03",
+      "status": "ready",
+      "title": "03｜非线性：四条规则，为什么纯乘加做不到？",
+      "article": "chapters/03-nonlinearity/README.md",
+      "audio_language": "zh-CN",
+      "duration_seconds": 269.96666666666664,
+      "poster": "assets/videos/03/poster.jpg",
+      "bilibili": {
+        "bvid": "BV1fhHg67ET6",
+        "part": 1
+      }
+    },
+    {
+      "id": "04",
+      "status": "ready",
+      "title": "04｜梯度：方向对了，为什么反而改得更差？",
+      "article": "chapters/04-gradients/README.md",
+      "audio_language": "zh-CN",
+      "duration_seconds": 313.9,
+      "poster": "assets/videos/04/poster.jpg",
+      "bilibili": {
+        "bvid": "BV1EhHg6EEhy",
+        "part": 1
+      }
+    },
+    {
+      "id": "05",
+      "status": "ready",
+      "title": "05｜反向传播：一次前向，怎样算出9个参数的梯度？",
+      "article": "chapters/05-backpropagation/README.md",
+      "audio_language": "zh-CN",
+      "duration_seconds": 343.6,
+      "poster": "assets/videos/05/poster.jpg",
+      "bilibili": {
+        "bvid": "BV1fbHg6UE9j",
+        "part": 1
+      }
+    },
+    {
+      "id": "06",
+      "status": "ready",
+      "title": "06｜训练循环：参数更新500次，网络会发生什么？",
+      "article": "chapters/06-training-loop/README.md",
+      "audio_language": "zh-CN",
+      "duration_seconds": 331.4,
+      "poster": "assets/videos/06/poster.jpg",
+      "bilibili": {
+        "bvid": "BV1oeHg6LEj5",
+        "part": 1
+      }
+    },
+    {
+      "id": "07",
+      "status": "ready",
+      "title": "07｜Embedding：编号只是地址，哪一部分才需要学习？",
+      "article": "chapters/07-embeddings/README.md",
+      "audio_language": "zh-CN",
+      "duration_seconds": 263.2,
+      "poster": "assets/videos/07/poster.jpg",
+      "bilibili": {
+        "bvid": "BV1ZaHg62E6N",
+        "part": 1
+      }
+    },
+    {
+      "id": "08",
+      "status": "ready",
+      "title": "08｜Softmax：红没被扣分，概率为什么下降了？",
+      "article": "chapters/08-softmax/README.md",
+      "audio_language": "zh-CN",
+      "duration_seconds": 280.7,
+      "poster": "assets/videos/08/poster.jpg",
+      "bilibili": {
+        "bvid": "BV1oaHg62EdQ",
+        "part": 1
+      }
+    },
+    {
+      "id": "09",
+      "status": "ready",
+      "title": "09｜训练目标：原句怎样变成输入、答案和损失？",
+      "article": "chapters/09-training-targets/README.md",
+      "audio_language": "zh-CN",
+      "duration_seconds": 272.46666666666664,
+      "poster": "assets/videos/09/poster.jpg",
+      "bilibili": {
+        "bvid": "BV1BjHV6sEtf",
+        "part": 1
+      }
+    },
+    {
+      "id": "10",
+      "status": "ready",
+      "title": "10｜注意力：前文怎样真正参与当前位置的计算？",
+      "article": "chapters/10-attention/README.md",
+      "audio_language": "zh-CN",
+      "duration_seconds": 276.56666666666666,
+      "poster": "assets/videos/10/poster.jpg",
+      "bilibili": {
+        "bvid": "BV1J5HV6oEAE",
+        "part": 1
+      }
+    },
+    {
+      "id": "11",
+      "status": "ready",
+      "title": "11｜因果掩码：训练时答案在输入里，怎样防止偷看？",
+      "article": "chapters/11-causal-mask/README.md",
+      "audio_language": "zh-CN",
+      "duration_seconds": 248.73333333333332,
+      "poster": "assets/videos/11/poster.jpg",
+      "bilibili": {
+        "bvid": "BV1z5HV6dEAr",
+        "part": 1
+      }
+    },
+    {
+      "id": "12",
+      "status": "ready",
+      "title": "12｜多头注意力：同一个位置，怎样保留几种读取方式？",
+      "article": "chapters/12-multi-head-attention/README.md",
+      "audio_language": "zh-CN",
+      "duration_seconds": 256.3,
+      "poster": "assets/videos/12/poster.jpg",
+      "bilibili": {
+        "bvid": "BV1z5HV6dEPK",
+        "part": 1
+      }
+    },
+    {
+      "id": "13",
+      "status": "ready",
+      "title": "13｜RoPE：把位置差放进两条向量的点积",
+      "article": "chapters/13-rope/README.md",
+      "audio_language": "zh-CN",
+      "duration_seconds": 298.5,
+      "poster": "assets/videos/13/poster.jpg",
+      "bilibili": {
+        "bvid": "BV1qJHV6pEAt",
+        "part": 1
+      }
+    },
+    {
+      "id": "14",
+      "status": "ready",
+      "title": "14｜SwiGLU：两条支路怎样让输入共同起作用？",
+      "article": "chapters/14-swiglu/README.md",
+      "audio_language": "zh-CN",
+      "duration_seconds": 241.43333333333334,
+      "poster": "assets/videos/14/poster.jpg",
+      "bilibili": {
+        "bvid": "BV1qJHV6pE7n",
+        "part": 1
+      }
+    },
+    {
+      "id": "15",
+      "status": "ready",
+      "title": "15｜残差与RMSNorm：原值走哪条路，尺度在哪里调整？",
+      "article": "chapters/15-residual-and-rmsnorm/README.md",
+      "audio_language": "zh-CN",
+      "duration_seconds": 265.96666666666664,
+      "poster": "assets/videos/15/poster.jpg",
+      "bilibili": {
+        "bvid": "BV1iJHV6pE6C",
+        "part": 1
+      }
+    },
+    {
+      "id": "16",
+      "status": "ready",
+      "title": "16｜完整模型：跟着欢这一行，从编号走到候选分数",
+      "article": "chapters/16-transformer/README.md",
+      "audio_language": "zh-CN",
+      "duration_seconds": 282.23333333333335,
+      "poster": "assets/videos/16/poster.jpg",
+      "bilibili": {
+        "bvid": "BV1oJHV6pEMN",
+        "part": 1
+      }
+    },
+    {
+      "id": "17",
+      "status": "ready",
+      "title": "17｜预训练：训练题熟了，留出题为什么更差？",
+      "article": "chapters/17-pretraining/README.md",
+      "audio_language": "zh-CN",
+      "duration_seconds": 339.3333333333333,
+      "poster": "assets/videos/17/poster.jpg",
+      "bilibili": {
+        "bvid": "BV1iJHV6pEU6",
+        "part": 1
+      }
+    },
+    {
+      "id": "18",
+      "status": "ready",
+      "title": "18｜生成：六个可见字符，为什么做了七次选择？",
+      "article": "chapters/18-generation/README.md",
+      "audio_language": "zh-CN",
+      "duration_seconds": 290.1333333333333,
+      "poster": "assets/videos/18/poster.jpg",
+      "bilibili": {
+        "bvid": "BV1qJHV6pELU",
+        "part": 1
+      }
+    },
+    {
+      "id": "19",
+      "status": "ready",
+      "title": "19｜监督微调：让模型回答问题，也要检查旧能力",
+      "article": "chapters/19-fine-tuning/README.md",
+      "audio_language": "zh-CN",
+      "duration_seconds": 380.73333333333335,
+      "poster": "assets/videos/19/poster.jpg",
+      "bilibili": {
+        "bvid": "BV1B7HV69EK6",
+        "part": 1
+      }
+    },
+    {
+      "id": "20",
+      "status": "ready",
+      "title": "20｜全流程：改输入、改标签、改数据，分别会发生什么？",
+      "article": "chapters/20-full-workflow/README.md",
+      "audio_language": "zh-CN",
+      "duration_seconds": 388.7,
+      "poster": "assets/videos/20/poster.jpg",
+      "bilibili": {
+        "bvid": "BV1q7HV69E9P",
+        "part": 1
+      }
+    },
+    {
+      "id": "end",
+      "status": "ready",
+      "title": "结束语：那句红色的苹果，现在可以解释清楚了",
+      "article": "chapters/end/README.md",
+      "audio_language": "zh-CN",
+      "duration_seconds": 219.96666666666667,
+      "poster": "assets/videos/end/poster.jpg",
+      "bilibili": {
+        "bvid": "BV1PEHg64Eem",
+        "part": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,268 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<meta name="source-sha256" content="2a3809f823efc2ca413ff04491e31d58b94a854fa71440ec64fbacfed0442087"><meta name="description" content="“欢”的编号44不是它的含义。先给字符编地址，再从可训练表里取一行向量，把文字接上数值计算。"><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/07.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="07｜Embedding：文字怎样变成网络的输入？ · Hello LLM"><meta property="og:description" content="“欢”的编号44不是它的含义。先给字符编地址，再从可训练表里取一行向量，把文字接上数值计算。"><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/07.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>07｜Embedding：文字怎样变成网络的输入？ · Hello LLM</title>
+<link rel="icon" href="../assets/favicon.png" type="image/png">
+<script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
+<script defer src="../code/visuals/reading_site/search-index.js?v=ea96857fef58"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="07" data-alternate-sections="[&quot;first-make-sure-every-character-can-be-retrieved&quot;, &quot;ids-round-trip-correctly-but-multiply-and-add-is-still-disconnected&quot;, &quot;how-do-two-sequences-form-a-three-axis-tensor&quot;, &quot;if-a-character-appears-twice-will-the-wrong-row-be-updated&quot;, &quot;where-does-the-current-vocabulary-come-from&quot;, &quot;three-exercises-with-changed-values&quot;]"><a class="skip-link" href="#main-content">跳到正文</a>
+<header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="打开课程目录" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+<a class="brand" href="../index.html" aria-label="Hello LLM · 学习站首页">
+<img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>手写小模型，看懂大模型</small></span></a>
+<nav class="header-nav" aria-label="主导航"><a href="../index.html#curriculum">学习路径</a><a href="../index.html#experiments">交互实验</a><a href="https://github.com/DavidDingXu/hello-llm" target="_blank" rel="noopener">GitHub <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a></nav>
+<div class="header-controls"><a class="language-switch" href="07.en.html" lang="en" aria-label="Switch to English">EN</a><button class="icon-button theme-toggle js-only" type="button" aria-label="切换到深色主题" title="切换到深色主题"><span class="theme-light-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A9 9 0 0 1 9.5 3.5a9 9 0 1 0 11 11Z"/></svg></span><span class="theme-dark-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></span></button>
+<button class="search-trigger js-only" type="button" aria-label="搜索课程"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><span>搜索课程</span><kbd>⌘ K</kbd></button>
+</div></div><div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div></header><div class="sidebar-scrim" hidden></div><div class="reader-layout"><aside class="course-sidebar" id="course-sidebar" aria-label="课程目录">
+<div class="sidebar-heading"><a href="../index.html">课程目录</a><button class="icon-button menu-close js-only" type="button" aria-label="关闭课程目录"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+<nav aria-label="全部文章"><div class="sidebar-guides"><a class="lesson-link" data-lesson="intro" href="../course/intro.html"><span class="lesson-number">·</span><span>专栏介绍</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="00" href="../course/00.html"><span class="lesson-number">·</span><span>开篇导学</span><span class="lesson-state" aria-hidden="true"></span></a></div><details class="sidebar-stage"><summary><span class="stage-index">第一部分</span>让数值网络学起来</summary><a class="lesson-link" data-lesson="01" href="../course/01.html"><span class="lesson-number">01</span><span>神经元</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="02" href="../course/02.html"><span class="lesson-number">02</span><span>向量与矩阵</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="03" href="../course/03.html"><span class="lesson-number">03</span><span>多层与非线性</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="04" href="../course/04.html"><span class="lesson-number">04</span><span>梯度与参数更新</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="05" href="../course/05.html"><span class="lesson-number">05</span><span>手写反向传播</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="06" href="../course/06.html"><span class="lesson-number">06</span><span>让网络学起来</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage" open><summary><span class="stage-index">第二部分</span>把文字接进来</summary><a class="lesson-link" data-lesson="07" href="../course/07.html" aria-current="page"><span class="lesson-number">07</span><span>文字与向量</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="08" href="../course/08.html"><span class="lesson-number">08</span><span>分数与概率</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="09" href="../course/09.html"><span class="lesson-number">09</span><span>文本训练题</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">第三部分</span>读取前文，组装模型</summary><a class="lesson-link" data-lesson="10" href="../course/10.html"><span class="lesson-number">10</span><span>单头注意力</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="11" href="../course/11.html"><span class="lesson-number">11</span><span>因果掩码</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="12" href="../course/12.html"><span class="lesson-number">12</span><span>多头注意力</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="13" href="../course/13.html"><span class="lesson-number">13</span><span>旋转位置</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="14" href="../course/14.html"><span class="lesson-number">14</span><span>逐位置前馈</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="15" href="../course/15.html"><span class="lesson-number">15</span><span>残差与归一化</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="16" href="../course/16.html"><span class="lesson-number">16</span><span>完整模型前向</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">第四部分</span>预训练、生成与微调</summary><a class="lesson-link" data-lesson="17" href="../course/17.html"><span class="lesson-number">17</span><span>第一次预训练</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="18" href="../course/18.html"><span class="lesson-number">18</span><span>逐字生成</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="19" href="../course/19.html"><span class="lesson-number">19</span><span>问答微调</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="20" href="../course/20.html"><span class="lesson-number">20</span><span>闭环与原理检验</span><span class="lesson-state" aria-hidden="true"></span></a></details><a class="lesson-link" data-lesson="end" href="../course/end.html"><span class="lesson-number">·</span><span>结束篇</span><span class="lesson-state" aria-hidden="true"></span></a></nav></aside><main class="reader-main" id="main-content"><div class="article-context"><span>把文字接进来</span><div class="article-actions"><button type="button" class="copy-page-link js-only">复制链接</button><button type="button" class="focus-toggle js-only" aria-pressed="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg><span>专注阅读</span></button></div></div>
+<div class="mobile-context"><nav class="reading-route" aria-label="本篇路线"><details><summary>本篇目录</summary><div class="toc">
+<ul>
+<li><a href="#先保证每个字都能找回来">先保证每个字都能找回来</a></li>
+<li><a href="#编号能往返了乘加还是没接上">编号能往返了，乘加还是没接上</a></li>
+<li><a href="#两条序列怎样排成三轴张量">两条序列，怎样排成三轴张量</a></li>
+<li><a href="#一个字出现两次会不会更新错行">一个字出现两次，会不会更新错行？</a></li>
+<li><a href="#现在的词表从哪里来">现在的词表从哪里来？</a></li>
+<li><a href="#三道改数题">三道改数题</a></li>
+</ul>
+</div>
+</details></nav><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="减小正文字号">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="增大正文字号">A+</button></div></div><article id="article-body"><h1 id="07embedding文字怎样变成网络的输入">07｜Embedding：文字怎样变成网络的输入？</h1>
+<p>手写小模型，看懂大模型 · 第 07 讲</p>
+<p>在 Python 里写 <code>"小" * 2</code>，会得到“小小”。但前六讲的网络需要做数值乘加，再根据预测错误改参数，字符串重复接不上这条计算。</p>
+<p>给字编个号呢？课程词表里，“小”是 27，“丁”是 6。现在 <code>27×2=54</code> 能算了，然而编号 54 对应的字是“紫”。“小”乘 2 变成“紫”，显然不是我们想建立的文字关系。</p>
+<p>编号让程序找得到一个字，却没有告诉它该怎样计算这个字。先把“小丁喜欢苹果。”送进去，看看哪里需要固定编号，哪里需要能调整的数。</p>
+<h2 id="先保证每个字都能找回来">先保证每个字都能找回来</h2>
+<p>维护一个字符列表，每个字符在列表中的位置，就是它的编号。这一步先只解决“哪个字符”，不拿编号大小解释含义。</p>
+<p>我们的小模型采用字符级表示，一个汉字或标点各算一项。这些送进模型的基本项，统称 <strong>token，词元</strong>。本栏按字符切分，其他方案可以把多个字符合成一项，所以 token 不一定是一个汉字。</p>
+<p>固定词表共有 <strong>79 项</strong>：75 个普通字符，再加 4 个特殊项。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>编号</th>
+<th>项目</th>
+<th>在本课程中的作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td><code>&lt;pad&gt;</code></td>
+<td>补齐样本长度</td>
+</tr>
+<tr>
+<td>1</td>
+<td><code>&lt;bos&gt;</code></td>
+<td>标记一条文字开始</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>&lt;eos&gt;</code></td>
+<td>标记一条文字结束</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>&lt;unk&gt;</code></td>
+<td>接住词表里没有的字符</td>
+</tr>
+</tbody>
+</table></div>
+<p>普通字符从 4 开始，按固定的 Unicode 顺序排列。用真实课程词表查“小丁喜欢苹果。”，得到：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>字符</th>
+<th>小</th>
+<th>丁</th>
+<th>喜</th>
+<th>欢</th>
+<th>苹</th>
+<th>果</th>
+<th>。</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>编号</td>
+<td>27</td>
+<td>6</td>
+<td>22</td>
+<td>44</td>
+<td>58</td>
+<td>39</td>
+<td>5</td>
+</tr>
+</tbody>
+</table></div>
+<p>把文字转换成编号列表，叫作<strong>编码</strong>；按列表反查字符，叫作<strong>解码</strong>。完成这两种动作的组件，就是 tokenizer。</p>
+<p>同一个“小”每次都要查到 27，否则保存的参数就会读错位置。在配套代码目录运行下面的标准 Python，做一次编码、解码往返，检查是否仍能得到原句：</p>
+<pre><code class="language-python">import json
+from pathlib import Path
+
+# 列表位置就是固定编号；读取课程词表，保证与保存的模型使用同一套地址。
+tokens = json.loads(Path(&quot;data/vocab.json&quot;).read_text(
+    encoding=&quot;utf-8&quot;))[&quot;tokens&quot;]
+# 反向索引便于从字符查编号，编号本身不是要训练的浮点参数。
+to_id = {token: i for i, token in enumerate(tokens)}
+
+def encode(text):
+    &quot;&quot;&quot;逐字符编码成整数地址；查不到的字符使用 UNK 编号 3。&quot;&quot;&quot;
+    return [to_id.get(char, 3) for char in text]
+
+def decode(ids):
+    &quot;&quot;&quot;按编号取回普通字符，跳过 0—3 四个特殊项；不能恢复未知原字。&quot;&quot;&quot;
+    return &quot;&quot;.join(tokens[i] for i in ids if i &gt;= 4)
+
+text = &quot;小丁喜欢苹果。&quot;
+ids = encode(text)
+print(len(tokens), ids)
+print(decode(ids))
+assert len(tokens) == 79
+# 本例字符都在词表中，所以编码、解码后应回到原句。
+assert decode(ids) == text
+</code></pre>
+<p><code>enumerate</code> 同时给出列表位置和内容；<code>get(char, 3)</code> 表示查不到时使用 UNK 编号。上面的解码默认跳过特殊项，所以往返相同的前提是原文字符都在词表里。未知字符被编码成 UNK 后，原字符已经丢失，不能靠解码恢复。</p>
+<p>例如输入“龙”，词表里没有它，编码就得到 <code>[3]</code>。这代表一个未知项，不是系统根据读音或字形猜出了它的含义。</p>
+<h2 id="编号能往返了乘加还是没接上">编号能往返了，乘加还是没接上</h2>
+<p>程序打印出了原句，说明字符没有找错。但如果接着计算 <code>w×27+b</code>，换一份词表、把“小”改编为 28，文字没变，输出却变了。计算开始依赖人为排序。</p>
+<p>我们需要让“小”拥有自己能从预测错误里调整的表示。它与“丁”应当怎样区分，由参数去学；“丁”的编号比“小”小 21，不该预先强迫它们在数值上相距 21。</p>
+<p>把编号留作地址，为每个地址放一行参数就可以了：<strong>输入编号只负责选行，选出的数再参加乘加。</strong></p>
+<p>先离开 79 项真实词表，用一套独立的四项演示词表手算。这里 0、1、2、3 都是普通演示项，不沿用上面的特殊项含义。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>演示编号</th>
+<th>参数第 0 列</th>
+<th>参数第 1 列</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>3</td>
+<td>−1</td>
+<td>2</td>
+</tr>
+</tbody>
+</table></div>
+<p>输入编号 2，就取出 <code>[1, 1]</code>；输入编号 1，就取出 <code>[0, 1]</code>。输入 <code>[2, 1, 2]</code>，得到：</p>
+<pre><code class="language-text">[[1, 1],
+ [0, 1],
+ [1, 1]]
+</code></pre>
+<p>这张可训练参数表叫 <strong>Embedding 表</strong>，把编号变成向量的动作叫嵌入。此时每行有 2 个数，所以表示宽度为 2；这两个坐标没有预先规定的“颜色”“水果”等含义。</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/07-embeddings/images/web/01-%E6%9C%BA%E5%88%B6.svg" width="1504" height="1007.8"><img alt="字符先查真实词表取得编号，编号再选择参数表行；演示表展开成三行向量" src="../chapters/07-embeddings/images/01-%E6%9C%BA%E5%88%B6.svg"  width="1080" height="2010" loading="eager" decoding="async" /></picture></p>
+<p>读图时先沿一个编号追踪：它只指向表的一行，没有把整个表都乘一遍。最后把各位置选出的行依次排好，位置顺序也保留了。</p>
+<p>把表记作 <code>E</code>，编号记作 <code>i</code>，查表就写成 <strong>输出向量 h=E[i]</strong>。这是索引读取，不是 <code>i×E</code>。</p>
+<p>这与前面的矩阵乘法也接得上。用 <code>[0, 0, 1, 0]</code> 乘这张表，相当于只留下第 2 行，其他行都乘 0，结果仍是 <code>[1, 1]</code>。实际代码直接选行，省去那些必然为零的乘加。</p>
+<p>训练改变的是表里的浮点数，编号规则保持固定。选出的向量是这次前向的结果。</p>
+<h2 id="两条序列怎样排成三轴张量">两条序列，怎样排成三轴张量</h2>
+<p>仍用这张小表，一次处理两条编号序列 <code>[2,1,2]</code>、<code>[1,2,1]</code>。每条都有3个位置，每个位置取出2个数，输出形状就是 <strong>[2,3,2]</strong>。三根轴依次选样本、位置、向量坐标，分别记作 <code>B、T、D</code>。</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/07-embeddings/images/web/03-%E4%B8%89%E4%B8%AA%E8%BD%B4%E6%80%8E%E6%A0%B7%E6%95%B0.svg" width="1504" height="794.2"><img alt="用同一张两列参数表读取两条三位置序列，得到两个三行两列表；先选样本、再选位置、最后选坐标" src="../chapters/07-embeddings/images/03-%E4%B8%89%E4%B8%AA%E8%BD%B4%E6%80%8E%E6%A0%B7%E6%95%B0.svg"  width="1080" height="1890" loading="lazy" decoding="async" /></picture></p>
+<p>沿图取 <code>batch_vectors[1,2,0]</code>：先选第二条样本，再选它的第三个位置，最后选向量的第一个坐标，得到0。<strong>“二维向量”说的是每个位置有2个数；这里的“三轴张量”说的是要用3个索引才能取到一个数。</strong> 两种说法数的不是同一件事。</p>
+<p>在<a href="../chapters/07-embeddings/lab3d.html">三维查表实验</a>中，可以沿这三个轴选中一个数，查看它来自参数表的哪一行；也可以修改某个位置的输入编号，比较哪些输出随之改变。实验使用上面的四项演示表，修改编号只改变选行，不更新参数。</p><details class="inline-experiment"><summary><span>动手实验 · 三维 Embedding 查表</span><small>选中一个编号，追踪参数表的一行怎样进入批次张量。</small></summary><p><a href="../chapters/07-embeddings/lab3d.html" class="js-experiment inline-expand">展开大窗口 ↗</a> · <a href="../chapters/07-embeddings/lab3d.html" target="_blank" rel="noopener">在新标签页打开 ↗</a></p><dialog class="inline-workspace experiment-viewer" aria-label="三维 Embedding 查表"><header><strong>三维 Embedding 查表</strong><div><a href="../chapters/07-embeddings/lab3d.html" target="_blank" rel="noopener">在新标签页打开 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button inline-close" type="button" aria-label="返回阅读">返回阅读 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe data-src="../chapters/07-embeddings/lab3d.html" title="三维 Embedding 查表" loading="lazy"></iframe></dialog></details>
+<p>现在换回正式模型：每个字符表示成64个数，参数表形状为 <strong>[79,64]</strong>。前一轴选词表项，后一轴选特征坐标，共有 <code>79×64=5056</code> 个参数。</p>
+<p>一句话有7个字符，输入形状是 <code>[7]</code>，查表后为 <code>[7,64]</code>。如果一次送入 <code>B</code> 条、每条补齐到 <code>T</code> 个位置，编号形状为 <code>[B,T]</code>，结果就是 <code>[B,T,64]</code>。查表给每个输入位置取出64个坐标，不改变样本数和位置数。</p>
+<p>给这句短句加上 BOS、EOS，就有 9 个位置，查表后是 <code>[9, 64]</code>。多输入一个字，是多取一行；想把每个字改成 32 维表示，则要修改参数表的列数。</p>
+<p>刚查完表时，同一个字符在不同位置得到相同向量。表尚未读取前文，也不知道这次“小”出现在什么句子里。后面需要专门的计算把上下文混进来。</p>
+<h2 id="一个字出现两次会不会更新错行">一个字出现两次，会不会更新错行？</h2>
+<p>编号 2 在 <code>[2, 1, 2]</code> 里出现两次，读出的两个向量来自同一行。反向传播时，两处的梯度都回来，会不会只留下最后一次？</p>
+<p>临时把“所有输出坐标相加”作为演示损失。这样每个输出坐标的梯度都是 1，最容易看清两条路径会在哪里碰面。</p>
+<p>编号 2 被读取两次，所以两次贡献都回到第 2 行，得到 <code>[2, 2]</code>；编号 1 只读一次，得到 <code>[1, 1]</code>；另两行没被读取，得到 <code>[0, 0]</code>。</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/07-embeddings/images/web/02-%E9%AA%8C%E8%AF%81.svg" width="1504" height="647.2"><img alt="重复出现的编号2把两条梯度加回同一参数行，其他行按读取次数累计" src="../chapters/07-embeddings/images/02-%E9%AA%8C%E8%AF%81.svg"  width="1080" height="1515" loading="lazy" decoding="async" /></picture></p>
+<p>下面用代码核对选行、梯度累加和更新，可独立运行。</p>
+<pre><code class="language-python">import torch
+
+# 独立的四项演示表：0—3 在这里都是普通地址，不沿用课程特殊项含义。
+# 表内浮点数可求梯度，行号只是选行的整数。
+table = torch.tensor([[1., 0.], [0., 1.],
+                      [1., 1.], [-1., 2.]],
+                     requires_grad=True)
+indices = torch.tensor([2, 1, 2], dtype=torch.long)
+# 按位置依次取行，得到 [3,2]；编号 2 的两次读取共享同一行参数。
+vectors = table[indices]
+# 用求和作演示损失，使每个输出坐标收到的梯度都为 1。
+loss = vectors.sum()
+# 两次读取的贡献加回第 2 行；这里只算梯度，还没有修改表内数值。
+loss.backward()
+
+print(vectors)
+print(table.grad)
+assert table.grad.tolist() == [[0., 0.], [1., 1.],
+                               [2., 2.], [0., 0.]]
+
+# 两条序列仍查同一张表；三根轴依次选择样本、位置、向量坐标。
+batch_ids = torch.tensor([[2, 1, 2], [1, 2, 1]])
+batch_vectors = table[batch_ids]
+assert list(batch_vectors.shape) == [2, 3, 2]
+assert batch_vectors[1, 2, 0].item() == 0.0
+
+# 全部梯度算好后，再按学习率0.1更新；赋值过程不建立新的求导记录。
+with torch.no_grad():
+    table -= 0.1 * table.grad
+print(&quot;更新后的第2行：&quot;, table[2])  # 约 [0.8, 0.8]
+assert torch.allclose(table[2], torch.tensor([0.8, 0.8]))
+</code></pre>
+<p><code>long</code> 是整数类型，负责存编号。整数索引本身不求梯度；可求梯度的是 <code>requires_grad=True</code> 的浮点表。<code>table[indices]</code> 读取多行，自动求导仍能追踪每行来自哪里。</p>
+<p>输出里，第 2 行的梯度确实是 <code>[2, 2]</code>。两处读取都影响同一份参数，贡献相加，这正是第 05 讲的分支梯度规则。用学习率 0.1 更新后，它从 <code>[1, 1]</code> 变成 <code>[0.8, 0.8]</code>；下次遇到这个编号，两处都会取到更新后的同一行。</p>
+<p>这里用求和损失只为看清梯度。到第 09 讲，我们会让“下一个字预测错了”来推动这张表改变。PyTorch 的 <code>nn.Embedding(79, 64)</code> 保存的就是这样一份可训练参数。</p>
+<h2 id="现在的词表从哪里来">现在的词表从哪里来？</h2>
+<p>本栏预先声明八个人物、水果、颜色和有限句式，再据此固定合法字符集合。原始记录先按完整模板划分，之后才编码：预训练 256 条训练、64 条留出；问答 24 条训练、8 条留出。</p>
+<p>词表声明合法字符，训练组负责更新参数，留出组用来检查效果。记录、词表及文件校验清单在<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/data/manifest.json">数据目录</a>，完整生成规则在<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/data.py">数据源码</a>。</p>
+<p>要让模型回答“接下来可能是哪一个字”，还需要把位置向量转换成词表里 79 个候选的分数。</p>
+<h2 id="三道改数题">三道改数题</h2>
+<ol>
+<li>把演示编号 1、2 对调，同时交换参数表的第 1、2 行。原来的一段符号经过编码与查表后，向量会变吗？如果只改编号，不改表呢？</li>
+<li>从本讲的初始参数表重新运行，把输入改成 <code>[2, 2, 2]</code>，仍以输出所有坐标之和为损失。第 2 行的梯度是多少？用学习率 0.1 更新后，这一行变成什么？</li>
+<li>图中的两条序列各加一个编号，仍查同一张两列参数表。输出形状变成什么？每个向量也变成四维了吗？</li>
+</ol>
+<details class="answer">
+<summary>参考答案</summary>
+<p>第一题，同时交换规则和对应表行，符号取得的向量不变；只改规则，会取到另一行，结果一般改变。</p>
+<p>第二题，第2行梯度为 <code>[3,3]</code>，更新后为 <code>[0.7,0.7]</code>，其余行梯度为0。编号重复不会自动新增三份参数。</p>
+<p>第三题，输出为 <code>[2,4,2]</code>。变的是中间的位置轴，每个位置取出的向量仍有2个数；参数表的列数没有改变。</p>
+</details>
+<p>进入配套代码目录，使用已安装 PyTorch 的课程环境运行：</p>
+<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+python -m lessons.l07
+</code></pre>
+<p>本讲入口：<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l07.py">运行入口</a> · 完整组件：<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/tokenizer.py">tokenizer.py</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md">环境说明</a></p>
+<p>源码导航：<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/tokenizer.py#L8">tokenizer.py · CharTokenizer</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/experiments.py#L113">experiments.py · lesson07</a>。</p></article><details class="lesson-video video-ready" id="lesson-video"><summary><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></svg>观看配套视频<span class="video-duration">4:23</span></summary><div class="bilibili-embed"><iframe data-src="https://player.bilibili.com/player.html?bvid=BV1ZaHg62E6N&amp;p=1&amp;autoplay=0&amp;danmaku=0" title="07｜Embedding：文字怎样变成网络的输入？ · B站视频" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><p class="video-actions"><a href="https://www.bilibili.com/video/BV1ZaHg62E6N/?p=1" target="_blank" rel="noopener">在 B 站高清观看 ↗</a></p></div></details>
+<div class="reader-feedback"><span>这一讲有疑问？</span><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=question.yml&amp;title=%5B%E5%AD%A6%E4%B9%A0%5D+07%EF%BD%9CEmbedding%EF%BC%9A%E6%96%87%E5%AD%97%E6%80%8E%E6%A0%B7%E5%8F%98%E6%88%90%E7%BD%91%E7%BB%9C%E7%9A%84%E8%BE%93%E5%85%A5%EF%BC%9F&amp;location=07%EF%BD%9CEmbedding%EF%BC%9A%E6%96%87%E5%AD%97%E6%80%8E%E6%A0%B7%E5%8F%98%E6%88%90%E7%BD%91%E7%BB%9C%E7%9A%84%E8%BE%93%E5%85%A5%EF%BC%9F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F07.html" target="_blank" rel="noopener">提出学习疑问</a><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=content.yml&amp;title=%5B%E5%8B%98%E8%AF%AF%5D+07%EF%BD%9CEmbedding%EF%BC%9A%E6%96%87%E5%AD%97%E6%80%8E%E6%A0%B7%E5%8F%98%E6%88%90%E7%BD%91%E7%BB%9C%E7%9A%84%E8%BE%93%E5%85%A5%EF%BC%9F&amp;location=07%EF%BD%9CEmbedding%EF%BC%9A%E6%96%87%E5%AD%97%E6%80%8E%E6%A0%B7%E5%8F%98%E6%88%90%E7%BD%91%E7%BB%9C%E7%9A%84%E8%BE%93%E5%85%A5%EF%BC%9F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F07.html" target="_blank" rel="noopener">反馈内容勘误</a></div><nav class="chapter-nav" aria-label="前后篇"><a href="../course/06.html"><span>上一篇 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg></span><strong>06｜训练循环：更新500次，四条预测会怎样？</strong></a><a href="../course/08.html"><span>下一篇 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><strong>08｜Softmax：分数怎样变成下一字的概率？</strong></a></nav><footer class="reader-footer">Hello LLM · 手写小模型，看懂大模型<details class="community-mini"><summary>关注与交流 · 好好用 AI</summary><div class="community-section"><div><h2>关注与交流 · 好好用 AI</h2><p>交流学习中的问题与实践心得。</p><p>代码问题和勘误，欢迎在 <a href="https://github.com/DavidDingXu/hello-llm/issues" target="_blank" rel="noopener">GitHub 提交 Issue</a>。</p></div><a class="qr-link" href="../code/assets/wechat-official-account.jpg" target="_blank" rel="noopener" aria-label="查看好好用 AI 公众号二维码原图"><img src="../code/assets/wechat-official-account.jpg" alt="好好用 AI 微信公众号二维码" width="130" height="130" loading="lazy"><p class="qr-caption">微信扫码 · 点击查看原图</p></a></div></details></footer></main>
+<aside class="context-sidebar" aria-label="本篇辅助导航"><div class="context-inner"><nav class="reading-route" aria-label="本篇路线"><details open><summary>本篇路线</summary><div class="toc">
+<ul>
+<li><a href="#先保证每个字都能找回来">先保证每个字都能找回来</a></li>
+<li><a href="#编号能往返了乘加还是没接上">编号能往返了，乘加还是没接上</a></li>
+<li><a href="#两条序列怎样排成三轴张量">两条序列，怎样排成三轴张量</a></li>
+<li><a href="#一个字出现两次会不会更新错行">一个字出现两次，会不会更新错行？</a></li>
+<li><a href="#现在的词表从哪里来">现在的词表从哪里来？</a></li>
+<li><a href="#三道改数题">三道改数题</a></li>
+</ul>
+</div>
+</details></nav>
+<section class="reading-settings"><h2>阅读设置</h2><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="减小正文字号">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="增大正文字号">A+</button></div><span>建议预留 35 分钟</span><p class="lesson-goal">区分字符编号、词向量与张量三根轴。</p></section>
+</div></aside></div><dialog class="search-dialog" id="search-dialog" aria-labelledby="search-label">
+<form method="dialog" class="search-heading"><label for="course-search" id="search-label"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg>搜索课程</label><button class="icon-button" aria-label="关闭搜索"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></form>
+<input id="course-search" type="search" placeholder="搜索概念、代码或问题…" autocomplete="off" spellcheck="false">
+<p class="search-status" id="search-status" role="status">输入关键词，搜索全部 23 篇文章。</p>
+<div class="search-results" id="search-results"></div><footer>↑ ↓ 选择结果 <span>Enter 打开 · Esc 关闭</span></footer></dialog>
+<dialog class="experiment-viewer" id="experiment-viewer" aria-labelledby="experiment-title"><header><strong id="experiment-title">交互实验</strong><div><a id="experiment-standalone" target="_blank" rel="noopener">独立打开 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button" id="close-experiment" type="button">返回阅读 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe id="experiment-frame" title="交互实验" src="about:blank"></iframe></dialog>
+<dialog class="image-viewer" id="image-viewer" aria-label="放大配图">
+<header><span>查看配图</span><div class="image-actions"><button type="button" id="image-zoom-out" aria-label="缩小配图">−</button><output id="image-scale" aria-label="缩放比例">100%</output><button type="button" id="image-zoom-in" aria-label="放大配图">＋</button><button type="button" id="image-size">原尺寸</button><button type="button" id="close-image" autofocus>关闭</button></div></header>
+<div class="image-canvas"><p id="image-status" role="status" hidden></p><img id="large-image" alt=""></div><footer><p id="image-description"></p><a id="original-image" target="_blank" rel="noopener">打开原图 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a></footer></dialog>
+<div class="toast" id="toast" role="status"></div></body></html>

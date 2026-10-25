@@ -1,0 +1,13 @@
+* text=auto eol=lf
+*.py text eol=lf
+*.json text eol=lf
+*.jsonl text eol=lf
+*.md text eol=lf
+*.html text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+LICENSE* text eol=lf
+NOTICE text eol=lf
+*.pt binary
+*.onnx binary
+*.f32 binary

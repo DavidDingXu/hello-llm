@@ -1,0 +1,5 @@
+# 仅在重新导出网页训练图时安装；阅读网站与本地课程实验不依赖这些工具。
+-r requirements.txt
+onnx==1.23.2
+onnxscript==0.7.2
+onnxruntime==1.31.0

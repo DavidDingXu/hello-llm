@@ -1,0 +1,411 @@
+[
+  {
+    "number": 4,
+    "folder": "04-gradients",
+    "figure": "chapters/04-gradients/images/02-验证.svg",
+    "height": 1950,
+    "phases": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "frames": [
+      {
+        "figure": "chapters/04-gradients/images/02-验证.svg",
+        "phase": 0,
+        "caption": "损失曲线与当前参数点"
+      },
+      {
+        "figure": "chapters/04-gradients/images/02-验证.svg",
+        "phase": 1,
+        "caption": "当前位置的导数切线"
+      },
+      {
+        "figure": "chapters/04-gradients/images/02-验证.svg",
+        "phase": 2,
+        "caption": "学习率决定参数移动距离"
+      },
+      {
+        "figure": "chapters/04-gradients/images/02-验证.svg",
+        "phase": 3,
+        "caption": "小步更新后重新计算损失"
+      },
+      {
+        "figure": "chapters/04-gradients/images/02-验证.svg",
+        "phase": 4,
+        "caption": "对照较大学习率的新落点"
+      }
+    ],
+    "captions": [
+      "损失曲线与当前参数点",
+      "当前位置的导数切线",
+      "学习率决定参数移动距离",
+      "小步更新后重新计算损失",
+      "对照较大学习率的新落点"
+    ]
+  },
+  {
+    "number": 5,
+    "folder": "05-backpropagation",
+    "figure": "chapters/05-backpropagation/images/01-机制.svg",
+    "height": 2100,
+    "phases": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "frames": [
+      {
+        "figure": "chapters/05-backpropagation/images/01-机制.svg",
+        "phase": 0,
+        "caption": "保存选中路径的前向数值"
+      },
+      {
+        "figure": "chapters/05-backpropagation/images/01-机制.svg",
+        "phase": 1,
+        "caption": "标出各段局部变化率"
+      },
+      {
+        "figure": "chapters/05-backpropagation/images/01-机制.svg",
+        "phase": 2,
+        "caption": "逆序相乘，得到选中权重梯度"
+      },
+      {
+        "figure": "chapters/05-backpropagation/images/02-验证.svg",
+        "phase": 0,
+        "caption": "算齐全部参数的梯度"
+      },
+      {
+        "figure": "chapters/05-backpropagation/images/02-验证.svg",
+        "phase": 1,
+        "caption": "统一应用同一学习率"
+      },
+      {
+        "figure": "chapters/05-backpropagation/images/02-验证.svg",
+        "phase": 2,
+        "caption": "写回全部新参数"
+      },
+      {
+        "figure": "chapters/05-backpropagation/images/02-验证.svg",
+        "phase": 3,
+        "caption": "用新参数重新前向并计算损失"
+      }
+    ],
+    "captions": [
+      "保存选中路径的前向数值",
+      "标出各段局部变化率",
+      "逆序相乘，得到选中权重梯度",
+      "算齐全部参数的梯度",
+      "统一应用同一学习率",
+      "写回全部新参数",
+      "用新参数重新前向并计算损失"
+    ]
+  },
+  {
+    "number": 10,
+    "folder": "10-attention",
+    "figure": "chapters/10-attention/images/01-机制.svg",
+    "height": 2100,
+    "phases": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "frames": [
+      {
+        "figure": "chapters/10-attention/images/01-机制.svg",
+        "phase": 0,
+        "caption": "选出查询向量与各行K"
+      },
+      {
+        "figure": "chapters/10-attention/images/01-机制.svg",
+        "phase": 1,
+        "caption": "点积后除以头宽度的平方根"
+      },
+      {
+        "figure": "chapters/10-attention/images/01-机制.svg",
+        "phase": 2,
+        "caption": "Softmax把这一行归一化"
+      },
+      {
+        "figure": "chapters/10-attention/images/01-机制.svg",
+        "phase": 3,
+        "caption": "用各比例乘对应V"
+      },
+      {
+        "figure": "chapters/10-attention/images/01-机制.svg",
+        "phase": 4,
+        "caption": "逐坐标求和，得到新向量"
+      }
+    ],
+    "captions": [
+      "选出查询向量与各行K",
+      "点积后除以头宽度的平方根",
+      "Softmax把这一行归一化",
+      "用各比例乘对应V",
+      "逐坐标求和，得到新向量"
+    ]
+  },
+  {
+    "number": 11,
+    "folder": "11-causal-mask",
+    "figure": "chapters/11-causal-mask/images/01-机制.svg",
+    "height": 1950,
+    "phases": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "frames": [
+      {
+        "figure": "chapters/11-causal-mask/images/01-机制.svg",
+        "phase": 0,
+        "caption": "读取原始分数表"
+      },
+      {
+        "figure": "chapters/11-causal-mask/images/01-机制.svg",
+        "phase": 1,
+        "caption": "把未来分数设为负无穷"
+      },
+      {
+        "figure": "chapters/11-causal-mask/images/01-机制.svg",
+        "phase": 2,
+        "caption": "Softmax后未来权重为0"
+      },
+      {
+        "figure": "chapters/11-causal-mask/images/01-机制.svg",
+        "phase": 3,
+        "caption": "只汇总可读取位置的V"
+      }
+    ],
+    "captions": [
+      "读取原始分数表",
+      "把未来分数设为负无穷",
+      "Softmax后未来权重为0",
+      "只汇总可读取位置的V"
+    ]
+  },
+  {
+    "number": 12,
+    "folder": "12-multi-head-attention",
+    "figure": "chapters/12-multi-head-attention/images/01-机制.svg",
+    "height": 2100,
+    "phases": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "frames": [
+      {
+        "figure": "chapters/12-multi-head-attention/images/01-机制.svg",
+        "phase": 0,
+        "caption": "逐位置读取四个特征"
+      },
+      {
+        "figure": "chapters/12-multi-head-attention/images/01-机制.svg",
+        "phase": 1,
+        "caption": "沿特征轴分成两个头"
+      },
+      {
+        "figure": "chapters/12-multi-head-attention/images/01-机制.svg",
+        "phase": 2,
+        "caption": "投影后各头独立计算注意力"
+      },
+      {
+        "figure": "chapters/12-multi-head-attention/images/01-机制.svg",
+        "phase": 3,
+        "caption": "按原位置拼接两个头的结果"
+      },
+      {
+        "figure": "chapters/12-multi-head-attention/images/01-机制.svg",
+        "phase": 4,
+        "caption": "输出投影混合各头的特征"
+      }
+    ],
+    "captions": [
+      "逐位置读取四个特征",
+      "沿特征轴分成两个头",
+      "投影后各头独立计算注意力",
+      "按原位置拼接两个头的结果",
+      "输出投影混合各头的特征"
+    ],
+    "motion_height": 1800,
+    "motion_summary": [
+      "索引格子同步移动，沿特征分组",
+      "每个头保留全部位置",
+      "按原位置拼回，数值不变"
+    ]
+  },
+  {
+    "number": 13,
+    "folder": "13-rope",
+    "figure": "chapters/13-rope/images/01-机制.svg",
+    "height": 1890,
+    "phases": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "frames": [
+      {
+        "figure": "chapters/13-rope/images/01-机制.svg",
+        "phase": 0,
+        "caption": "从原点读取向量坐标"
+      },
+      {
+        "figure": "chapters/13-rope/images/01-机制.svg",
+        "phase": 1,
+        "caption": "入门示意：旋转四分之一圈"
+      },
+      {
+        "figure": "chapters/13-rope/images/01-机制.svg",
+        "phase": 2,
+        "caption": "真实频率：位置1旋转1弧度"
+      },
+      {
+        "figure": "chapters/13-rope/images/01-机制.svg",
+        "phase": 3,
+        "caption": "按两坐标公式核对旋转结果"
+      }
+    ],
+    "captions": [
+      "从原点读取向量坐标",
+      "入门示意：旋转四分之一圈",
+      "真实频率：位置1旋转1弧度",
+      "按两坐标公式核对旋转结果"
+    ],
+    "motion_height": 1800,
+    "motion_summary": [
+      "Q位置1，K位置0，点积cos(1)",
+      "两个位置一起后移3格，点积不变",
+      "只让K前移一格，点积变为cos(2)"
+    ]
+  },
+  {
+    "number": 18,
+    "folder": "18-generation",
+    "figure": "chapters/18-generation/images/01-机制.svg",
+    "height": 2100,
+    "phases": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "frames": [
+      {
+        "figure": "chapters/18-generation/images/01-机制.svg",
+        "phase": 0,
+        "caption": "读取前缀，模型参数保持固定"
+      },
+      {
+        "figure": "chapters/18-generation/images/01-机制.svg",
+        "phase": 1,
+        "caption": "第 1 步：读取 8 个编号，选出 红"
+      },
+      {
+        "figure": "chapters/18-generation/images/01-机制.svg",
+        "phase": 2,
+        "caption": "第 2 步：读取 9 个编号，选出 色"
+      },
+      {
+        "figure": "chapters/18-generation/images/01-机制.svg",
+        "phase": 3,
+        "caption": "第 3 步：读取 10 个编号，选出 的"
+      },
+      {
+        "figure": "chapters/18-generation/images/01-机制.svg",
+        "phase": 4,
+        "caption": "第 4 步：读取 11 个编号，选出 苹"
+      },
+      {
+        "figure": "chapters/18-generation/images/01-机制.svg",
+        "phase": 5,
+        "caption": "第 5 步：读取 12 个编号，选出 果"
+      },
+      {
+        "figure": "chapters/18-generation/images/01-机制.svg",
+        "phase": 6,
+        "caption": "第 6 步：读取 13 个编号，选出 。"
+      },
+      {
+        "figure": "chapters/18-generation/images/01-机制.svg",
+        "phase": 7,
+        "caption": "第 7 步：读取 14 个编号，选出 <eos>"
+      }
+    ],
+    "captions": [
+      "读取前缀，模型参数保持固定",
+      "第 1 步：读取 8 个编号，选出 红",
+      "第 2 步：读取 9 个编号，选出 色",
+      "第 3 步：读取 10 个编号，选出 的",
+      "第 4 步：读取 11 个编号，选出 苹",
+      "第 5 步：读取 12 个编号，选出 果",
+      "第 6 步：读取 13 个编号，选出 。",
+      "第 7 步：读取 14 个编号，选出 <eos>"
+    ]
+  },
+  {
+    "number": 19,
+    "folder": "19-fine-tuning",
+    "figure": "chapters/19-fine-tuning/images/01-机制.svg",
+    "height": 2100,
+    "phases": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "frames": [
+      {
+        "figure": "chapters/19-fine-tuning/images/01-机制.svg",
+        "phase": 0,
+        "caption": "拼接提示词、答案与结束标记"
+      },
+      {
+        "figure": "chapters/19-fine-tuning/images/01-机制.svg",
+        "phase": 1,
+        "caption": "对齐下一字符的输入与标签"
+      },
+      {
+        "figure": "chapters/19-fine-tuning/images/01-机制.svg",
+        "phase": 2,
+        "caption": "忽略提示词标签，保留答案与EOS"
+      },
+      {
+        "figure": "chapters/19-fine-tuning/images/01-机制.svg",
+        "phase": 3,
+        "caption": "七个有效目标汇入平均损失"
+      },
+      {
+        "figure": "chapters/19-fine-tuning/images/01-机制.svg",
+        "phase": 4,
+        "caption": "梯度仍能沿上下文路径传回提示词"
+      }
+    ],
+    "captions": [
+      "拼接提示词、答案与结束标记",
+      "对齐下一字符的输入与标签",
+      "忽略提示词标签，保留答案与EOS",
+      "七个有效目标汇入平均损失",
+      "梯度仍能沿上下文路径传回提示词"
+    ]
+  }
+]

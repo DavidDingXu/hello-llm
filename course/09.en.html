@@ -1,0 +1,299 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<meta name="source-sha256" content="49b8bcf9083c2b9093444c79302815629c24dfe45061ea71db1cad12ff3a135e"><meta name="description" content="The training answers are already in the original sentence: shift inputs and targets by one position. Then see how loss scores predictions and why padding must be excluded from the average."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/09.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="09 | Training Targets: How Does a Sentence Become a Learnable Task? · Hello LLM"><meta property="og:description" content="The training answers are already in the original sentence: shift inputs and targets by one position. Then see how loss scores predictions and why padding must be excluded from the average."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/09.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>09 | Training Targets: How Does a Sentence Become a Learnable Task? · Hello LLM</title>
+<link rel="icon" href="../assets/favicon.png" type="image/png">
+<script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
+<script defer src="../code/visuals/reading_site/search-index.en.js?v=11db81a4dd60"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="09" data-alternate-sections="[&quot;原句里已经放着训练答案&quot;, &quot;答案概率升了怎样记成一次进步&quot;, &quot;一整句的成绩不能靠多填空位变好&quot;, &quot;跑完1000次它改善了什么&quot;, &quot;两道检查题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="Open course contents" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></path></svg></button>
+<a class="brand" href="../index.en.html" aria-label="Hello LLM · 学习站首页">
+<img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>Build a Small Model, Understand Large Models</small></span></a>
+<nav class="header-nav" aria-label="Main navigation"><a href="../index.en.html#curriculum">Learning path</a><a href="../index.en.html#experiments">Experiments</a><a href="https://github.com/DavidDingXu/hello-llm" target="_blank" rel="noopener">GitHub <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a></nav>
+<div class="header-controls"><a class="language-switch" href="09.html" lang="zh-CN" aria-label="切换到中文">中文</a><button class="icon-button theme-toggle js-only" type="button" aria-label="Switch to dark theme" title="Switch to dark theme"><span class="theme-light-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A9 9 0 0 1 9.5 3.5a9 9 0 1 0 11 11Z"/></path></svg></span><span class="theme-dark-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/></circle><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></path></svg></span></button>
+<button class="search-trigger js-only" type="button" aria-label="Search course"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/></circle><path d="m16 16 4.5 4.5"/></path></svg><span>Search course</span><kbd>⌘ K</kbd></button>
+</div></div><div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div></header><div class="sidebar-scrim" hidden></div><div class="reader-layout"><aside class="course-sidebar" id="course-sidebar" aria-label="Course contents">
+<div class="sidebar-heading"><a href="../index.en.html">Course contents</a><button class="icon-button menu-close js-only" type="button" aria-label="Close course contents"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></div>
+<nav aria-label="All articles"><div class="sidebar-guides"><a class="lesson-link" data-lesson="intro" href="../course/intro.en.html"><span class="lesson-number">·</span><span>Course introduction</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="00" href="../course/00.en.html"><span class="lesson-number">·</span><span>Before we begin</span><span class="lesson-state" aria-hidden="true"></span></a></div><details class="sidebar-stage"><summary><span class="stage-index">Part I</span>Make a numerical network learn</summary><a class="lesson-link" data-lesson="01" href="../course/01.en.html"><span class="lesson-number">01</span><span>Neurons</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="02" href="../course/02.en.html"><span class="lesson-number">02</span><span>Vectors and Matrices</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="03" href="../course/03.en.html"><span class="lesson-number">03</span><span>Multiple Layers and Nonlinearity</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="04" href="../course/04.en.html"><span class="lesson-number">04</span><span>Gradients and Parameter Updates</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="05" href="../course/05.en.html"><span class="lesson-number">05</span><span>Backpropagation by Hand</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="06" href="../course/06.en.html"><span class="lesson-number">06</span><span>Making the Network Learn</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage" open><summary><span class="stage-index">Part II</span>Bring text into the network</summary><a class="lesson-link" data-lesson="07" href="../course/07.en.html"><span class="lesson-number">07</span><span>Text and Vectors</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="08" href="../course/08.en.html"><span class="lesson-number">08</span><span>Scores and Probabilities</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="09" href="../course/09.en.html" aria-current="page"><span class="lesson-number">09</span><span>Text Training Problems</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part III</span>Read context and assemble the model</summary><a class="lesson-link" data-lesson="10" href="../course/10.en.html"><span class="lesson-number">10</span><span>Single-Head Attention</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="11" href="../course/11.en.html"><span class="lesson-number">11</span><span>Causal masks</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="12" href="../course/12.en.html"><span class="lesson-number">12</span><span>Multi-head attention</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="13" href="../course/13.en.html"><span class="lesson-number">13</span><span>Rotary position embeddings</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="14" href="../course/14.en.html"><span class="lesson-number">14</span><span>Positionwise feed-forward networks</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="15" href="../course/15.en.html"><span class="lesson-number">15</span><span>Residual connections and normalization</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="16" href="../course/16.en.html"><span class="lesson-number">16</span><span>The complete forward pass</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part IV</span>Pretrain, generate, and fine-tune</summary><a class="lesson-link" data-lesson="17" href="../course/17.en.html"><span class="lesson-number">17</span><span>The first pretraining run</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="18" href="../course/18.en.html"><span class="lesson-number">18</span><span>Character-by-character generation</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="19" href="../course/19.en.html"><span class="lesson-number">19</span><span>Question-answer fine-tuning</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="20" href="../course/20.en.html"><span class="lesson-number">20</span><span>The full workflow and checks of the principles</span><span class="lesson-state" aria-hidden="true"></span></a></details><a class="lesson-link" data-lesson="end" href="../course/end.en.html"><span class="lesson-number">·</span><span>Closing thoughts</span><span class="lesson-state" aria-hidden="true"></span></a></nav></aside><main class="reader-main" id="main-content"><div class="article-context"><span>Bring text into the network</span><div class="article-actions"><button type="button" class="copy-page-link js-only">Copy link</button><button type="button" class="focus-toggle js-only" aria-pressed="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></path></svg><span>Focus mode</span></button></div></div>
+<div class="mobile-context"><nav class="reading-route" aria-label="On this page"><details><summary>On this page</summary><div class="toc">
+<ul>
+<li><a href="#the-original-sentence-already-contains-the-answers">The original sentence already contains the answers</a></li>
+<li><a href="#how-should-a-higher-probability-for-the-answer-count-as-progress">How should a higher probability for the answer count as progress?</a></li>
+<li><a href="#a-sentences-score-must-not-improve-merely-by-adding-padding">A sentence's score must not improve merely by adding padding</a></li>
+<li><a href="#what-improved-after-1000-updates">What improved after 1000 updates?</a></li>
+<li><a href="#two-checking-exercises">Two checking exercises</a></li>
+</ul>
+</div>
+</details></nav><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="Decrease text size">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="Increase text size">A+</button></div></div><article id="article-body"><h1 id="09-training-targets-how-does-a-sentence-become-a-learnable-task">09 | Training Targets: How Does a Sentence Become a Learnable Task?</h1>
+<p>Build a Small Model, Understand Large Models · Lesson 09</p>
+<p>The previous lesson exposed the character baseline's limitation: each position reads only its current character, so “小丁喜欢” (“Xiaoding likes”) and “小周喜欢” (“Xiaozhou likes”) produce the same final row of scores.</p>
+<p>Is training such a model useful at all? After 1000 actual updates, training loss falls from about <strong>4.479 to 0.934</strong>, and loss on held-out sentence patterns falls from about <strong>4.532 to 3.000</strong>.</p>
+<p>It still cannot distinguish the names, so which predictions improved? Let us turn a sentence into training problems and find out where the lower loss comes from.</p>
+<h2 id="the-original-sentence-already-contains-the-answers">The original sentence already contains the answers</h2>
+<p>Use the short sentence “小丁喜欢苹果。” (“Xiaoding likes apples.”) to demonstrate how we construct the problems. Place BOS at the beginning and EOS at the end to obtain the full sequence:</p>
+<pre><code class="language-text">BOS 小 丁 喜 欢 苹 果 。 EOS
+</code></pre>
+<p>BOS lets the model predict the first character; EOS teaches it where a sentence ends. Now make two rows: remove the last item for the input and the first item for the target.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Position t</th>
+<th>Input x[t] at this position</th>
+<th>Target y[t] at this position</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>BOS</td>
+<td>小</td>
+</tr>
+<tr>
+<td>1</td>
+<td>小</td>
+<td>丁</td>
+</tr>
+<tr>
+<td>2</td>
+<td>丁</td>
+<td>喜</td>
+</tr>
+<tr>
+<td>3</td>
+<td>喜</td>
+<td>欢</td>
+</tr>
+<tr>
+<td>4</td>
+<td>欢</td>
+<td>苹</td>
+</tr>
+<tr>
+<td>5</td>
+<td>苹</td>
+<td>果</td>
+</tr>
+<tr>
+<td>6</td>
+<td>果</td>
+<td>。</td>
+</tr>
+<tr>
+<td>7</td>
+<td>。</td>
+<td>EOS</td>
+</tr>
+</tbody>
+</table></div>
+<p>The first row asks “predict 小 from the start,” and the last asks “predict the end after the full stop.” <strong>The output at position t must be compared with y[t], not x[t].</strong> Using the input unchanged as the target would teach the model to copy the current character.</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/09-training-targets/images/en/web/01-%E6%9C%BA%E5%88%B6.svg" width="1504" height="791.8"><img alt="One BOS–characters–EOS sequence is shifted by one item to form inputs and targets, connecting each position's scores to the next character" src="../chapters/09-training-targets/images/en/01-%E6%9C%BA%E5%88%B6.svg"  width="1080" height="1710" loading="eager" decoding="async" /></picture></p>
+<p>The rightward shift in the arrows identifies the answer position. A later model that uses context also needs restrictions on which inputs it may read; Lesson 11 handles that separately. Shifted targets define the task, but do not automatically prevent the model from reading future answers.</p>
+<p>The slices in the code correspond directly to these two rows:</p>
+<pre><code class="language-python">from tiny_lm.tokenizer import CharTokenizer
+
+tokenizer = CharTokenizer.for_course()
+# 1 是 BOS，2 是 EOS；先构造完整序列，再从同一序列错开一格。
+full = [1] + tokenizer.encode(&quot;小丁喜欢苹果。&quot;) + [2]
+# 输入不含最后的 EOS，目标不含开头的 BOS；x[t] 对应紧邻的下一项 y[t]。
+x_list = full[:-1]
+y_list = full[1:]
+print(x_list)  # [1, 27, 6, 22, 44, 58, 39, 5]
+print(y_list)  # [27, 6, 22, 44, 58, 39, 5, 2]
+assert len(x_list) == len(y_list) == 8
+</code></pre>
+<p>The target ID tells the loss function which candidate is correct. It is not written directly into the parameters; parameters still change through loss calculation, backpropagation, and updates.</p>
+<h2 id="how-should-a-higher-probability-for-the-answer-count-as-progress">How should a higher probability for the answer count as progress?</h2>
+<p>Suppose the correct answer to one problem is “苹”. One model assigns it probability 0.5, while another assigns only 0.25. Set aside how the remaining probability is distributed: we want the second model to receive a larger penalty.</p>
+<p>We could record only “right or wrong,” but a correct answer's probability might rise from 0.1 to 0.4 without becoming the top candidate, leaving that score unchanged. Parameters have moved in a useful direction, and we want the score to recognize it.</p>
+<p>This series uses <strong>−ln(p)</strong>, where <code>p</code> is the probability of the current correct answer and <code>ln</code> denotes the natural logarithm.</p>
+<p>The previous lesson used exponentials to turn scores into positive numbers. A logarithm reverses that conversion: <strong>if exp(a)=b, then ln(b)=a.</strong> For example, <code>exp(0)=1</code>, so <code>ln(1)=0</code>; <code>exp(0.693147…)≈2</code>, so <code>ln(2)≈0.693147</code>.</p>
+<p>When a probability is less than 1, its logarithm is negative. Adding a minus sign gives a nonnegative penalty:</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Correct-answer probability p</th>
+<th>−ln(p), approximately</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>0.5</td>
+<td>0.693147, or ln2</td>
+</tr>
+<tr>
+<td>0.25</td>
+<td>1.386294, or ln4</td>
+</tr>
+<tr>
+<td>0.1</td>
+<td>2.302585</td>
+</tr>
+</tbody>
+</table></div>
+<p>When the correct answer's probability falls from 0.5 to 0.25, loss rises from ln2 to ln4. As the probability approaches 0, the penalty grows. Here, 0 is a limiting case; the code does not directly take the logarithm of 0.</p>
+<p>This is the <strong>negative log loss</strong> for one problem. With a single definite candidate as the target, it is also the cross-entropy loss used here. A sentence supplies several such problems.</p>
+<p>Giving high probability only to a sentence's first character is not enough. We want the entire correct continuation to become more likely.</p>
+<p>Consider the branching below: the first step assigns “苹” probability 0.5; <strong>conditioned on having already appended “苹”</strong>, the second step assigns “果” probability 0.25. The probability of the full path is <code>0.5×0.25=0.125</code>. The second probability already includes the first step's condition; we are not assuming that the two predictions are independent.</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/09-training-targets/images/en/web/03-%E6%8E%A5%E7%BB%AD%E6%A6%82%E7%8E%87%E7%9A%84%E5%88%86%E6%B5%81.svg" width="1504" height="846.2"><img alt="The prefix branches to 苹 with probability 0.5, then after 苹 to 果 with probability 0.25; the whole path has probability 0.125, shown as one quarter of one half" src="../chapters/09-training-targets/images/en/03-%E6%8E%A5%E7%BB%AD%E6%A6%82%E7%8E%87%E7%9A%84%E5%88%86%E6%B5%81.svg"  width="1080" height="2040" loading="lazy" decoding="async" /></picture></p>
+<p>The teal area is one quarter of one half. We can increase the whole continuation's probability by increasing the probabilities of its correct successive steps. Logarithms satisfy <code>ln(a×b)=ln(a)+ln(b)</code>, so:</p>
+<p><strong>−ln(0.125)=−ln(0.5)−ln(0.25).</strong></p>
+<p>A product of continuation probabilities becomes a sum of losses, one per problem. With the minus sign, reducing total loss corresponds to increasing the probability of the full correct continuation. Once combined into a scalar, the loss can use the same backward calculations as in earlier lessons.</p>
+<h2 id="a-sentences-score-must-not-improve-merely-by-adding-padding">A sentence's score must not improve merely by adding padding</h2>
+<p>One short sentence supplies 8 problems. For each, take the correct candidate's probability, calculate its negative logarithm, and average. With multiple samples, average over all valid positions together.</p>
+<p>What if lengths differ? Pad the right side of inputs with PAD=0 to reach a common length. Pad the corresponding target positions with <strong>−100</strong>, telling the loss function to skip them.</p>
+<p>−100 is not vocabulary entry −100, nor a character the model should predict. It is only the loss interface's marker for “do not score this position.” The last valid target is still EOS and must not be skipped.</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/09-training-targets/images/en/web/02-%E9%AA%8C%E8%AF%81.svg" width="1504" height="809.6"><img alt="Correct-target probabilities become negative-log losses; padding labels are marked −100 and excluded from the average over valid positions" src="../chapters/09-training-targets/images/en/02-%E9%AA%8C%E8%AF%81.svg"  width="1080" height="1830" loading="lazy" decoding="async" /></picture></p>
+<p>For example, two valid problems with losses 0.693147 and 1.386294 have an average of approximately 1.039721. Adding ten pure-padding positions changes neither the numerator nor the valid-position denominator, so the result stays the same. Incorrectly dividing by total length would make “add more empty positions” look like model improvement.</p>
+<p>We average over valid problems, so longer sentences supply more problems and contribute more. Averaging each sentence first, then averaging those means, would measure a different score and could not be compared directly.</p>
+<p>In PyTorch, input scores have shape <code>[B, T, V]</code>, and targets have shape <code>[B, T]</code>. <code>B</code> and <code>T</code> still count samples and positions; <code>V</code> is vocabulary size, which is 79 in this course. Flattening the first two axes simply places all problems together. The last, candidate axis must remain intact.</p>
+<pre><code class="language-python">import torch
+import torch.nn.functional as F
+
+def token_loss(logits, targets):
+    &quot;&quot;&quot;[B,T,V] 原始分数与 [B,T] 下一项编号，返回有效位置的平均损失。&quot;&quot;&quot;
+    if logits.ndim != 3 or targets.shape != logits.shape[:2]:
+        raise ValueError(&quot;分数应为[B,T,V]，目标应为[B,T]&quot;)
+    # -100 只标记“不计分”，不能把它当候选编号；全被忽略就没有均值可算。
+    if not (targets != -100).any():
+        raise ValueError(&quot;没有有效题目，无法计算平均损失&quot;)
+    # 合并样本轴与位置轴，把每题排成一行，保留 V 个候选；标签按同序展平。
+    # 接口内部计算对数概率，默认只对非 -100 目标求平均，无需先做 Softmax。
+    return F.cross_entropy(
+        logits.reshape(-1, logits.shape[-1]),
+        targets.reshape(-1), ignore_index=-100)
+</code></pre>
+<p><code>logits.shape[-1]</code> retrieves the final axis's size, <code>V</code>. <code>reshape(-1, V)</code> puts each of the <code>B×T</code> problems in one row; <code>-1</code> lets PyTorch infer the row count from the total number of elements. Targets are flattened in the same order, so each score row still matches its original answer.</p>
+<p><code>cross_entropy</code> takes <strong>raw logits</strong>, internally calculating log probabilities in a numerically stable way. Do not apply Softmax first: otherwise it treats the probabilities as another set of scores and computes a different loss.</p>
+<p>Substituting Softmax into the negative logarithm also explains the interface: <strong>loss=ln(the sum of all candidates' exponential values)−the correct candidate's score</strong>. Direct exponentiation may overflow when the sum is large. The tool uses a stable transformation equivalent to subtracting the maximum first, avoiding the need to form a probability that has already underflowed to 0 before taking its logarithm.</p>
+<p>Check an example that can be calculated exactly by hand. The three scores are <code>[0, ln2, ln3]</code>, whose exponentials are <code>[1, 2, 3]</code>; normalization gives <code>[1/6, 2/6, 3/6]</code>. If the target is the third candidate, with ID 2, the loss is <code>−ln(3/6)=ln2</code>:</p>
+<pre><code class="language-python">import math
+
+# 沿用前段的 torch 与 token_loss：一条样本、一个位置、三个候选。
+# 指数后为 [1,2,3]，第三个候选的概率是 3/6，所以目标编号取 2。
+scores = torch.tensor([[[0., math.log(2.), math.log(3.)]]])
+target = torch.tensor([[2]])
+value = token_loss(scores, target)
+print(value.item())  # 约0.693147
+assert abs(value.item() - math.log(2.)) &lt; 1e-6
+
+# 沿位置轴多添一道填充题；-100 将它同时排除在损失之和与有效题数之外。
+padded_scores = torch.cat([scores, torch.zeros(1, 1, 3)], dim=1)
+padded_target = torch.tensor([[2, -100]])
+assert torch.allclose(token_loss(padded_scores, padded_target), value)
+</code></pre>
+<p>This scoring also connects to the earlier backward calculations. Let PyTorch track these three scores, then inspect the gradients returned by the loss:</p>
+<pre><code class="language-python"># 接着上一段的 scores、target；此处直接查看损失对分数的梯度。
+scores.requires_grad_()
+# 重新计算损失再反向；只有一个有效目标，三个分数的梯度为 p 减正确项标记。
+token_loss(scores, target).backward()
+print(scores.grad)  # 约为 [[[0.166667, 0.333333, -0.5]]]
+</code></pre>
+<p>With just one valid problem, the combined Softmax and negative-log gradient is “probability minus the correct-answer indicator.” The first two entries are not the answer, so subtract 0 to get <code>1/6</code> and <code>2/6</code>. The third is the answer, so subtract 1 to get <code>3/6−1=−0.5</code>. Automatic differentiation checks this result in the code.</p>
+<p>The first two gradients are positive, while the correct third entry's gradient is negative. If scores themselves could be updated independently, following Lesson 04's negative-gradient direction would lower incorrect scores and raise the correct one. In an actual model, these effects must flow through the computation graph to shared parameters. One update can affect many problems at once, so it still cannot guarantee that every individual loss decreases.</p>
+<h2 id="what-improved-after-1000-updates">What improved after 1000 updates?</h2>
+<p>Wrap the lookup and output projection in a class, and we can train them using the problems and loss above. <code>self</code> stores parameters that are reused on every forward pass:</p>
+<pre><code class="language-python">from torch import nn
+
+class CharBaseline(nn.Module):
+    &quot;&quot;&quot;输入 [B,T] 字符编号，逐位置返回 [B,T,V] 分数，暂不读取前文。&quot;&quot;&quot;
+    def __init__(self, vocab_size, width=16):
+        super().__init__()
+        # 每个编号选一行可训练向量；输出层另有一组参数，对全部候选打分。
+        self.embedding = nn.Embedding(vocab_size, width)
+        self.output = nn.Linear(width, vocab_size, bias=False)
+
+    def forward(self, ids):
+        # 各位置只查自己的行再做投影；返回原始分数，交叉熵会接着处理。
+        return self.output(self.embedding(ids))
+</code></pre>
+<p>This small baseline has width 16, rather than the full model's later width of 64. Both models output <code>[B, T, 79]</code>; the shared interface lets them reuse the same labels and loss.</p>
+<p>Below, only the training split is used for updates. The split was already made by whole templates before encoding; held-out examples do not enter the loop.</p>
+<pre><code class="language-python">from tiny_lm.data import build_records, make_pretrain_batch
+
+# 沿用前段的 tokenizer、CharBaseline、token_loss；固定种子以重现参数初值。
+torch.manual_seed(42)
+torch.set_num_threads(1)
+groups = build_records()
+# 只拿训练组：x 是补齐后的字符编号，y 已错位，填充标签为 -100。
+x, y = make_pretrain_batch(groups[&quot;pretrain_train&quot;], tokenizer,
+                           max_len=32)
+model = CharBaseline(tokenizer.vocab_size, width=16)
+optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
+
+print(&quot;更新前&quot;, token_loss(model(x), y).item())
+for _ in range(1000):
+    # 清掉上一轮梯度，每次用当前参数重新前向；样本与目标始终不变。
+    optimizer.zero_grad()
+    logits = model(x)
+    loss = token_loss(logits, y)
+    # 损失只平均有效标签，梯度传回 Embedding 与输出投影两份参数。
+    loss.backward()
+    # 反向只算梯度，这里才用 SGD 修改参数。
+    optimizer.step()
+print(&quot;更新后&quot;, token_loss(model(x), y).item())
+</code></pre>
+<p>The loop still follows Lesson 06's sequence: clear gradients, run forward, calculate loss, run backward, and update. What changes is the meaning of inputs, labels, and loss. The model now adjusts embedding and projection parameters based on errors in predicting the next character in text.</p>
+<p>This SGD code actually produces training loss <strong>4.479492→0.934471</strong>. The companion entry point also scores the held-out split without updating parameters, recording held-out loss <strong>4.531882→3.000230</strong>. See the original <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/artifacts/lessons/l09.json">character-baseline experiment</a>.</p>
+<p>Held-out loss did not decrease throughout the recorded run: after 500 updates it was approximately <strong>2.887950</strong>, but after 1000 it had risen to <strong>3.000230</strong>, while training loss continued to fall. Further fitting of the training problems did not keep improving these held-out problems. Training loss alone cannot establish effectiveness.</p>
+<p>Now feed the two opening prefixes to the trained model and compare the probabilities at the last position:</p>
+<pre><code class="language-python"># 接着训练后的 model：两个前缀人名不同，最后一个字符都为“欢”。
+prefixes = torch.tensor([
+    [1] + tokenizer.encode(&quot;小丁喜欢&quot;),
+    [1] + tokenizer.encode(&quot;小周喜欢&quot;),
+])
+with torch.no_grad():
+    # 取各样本最后位置的整行分数，再沿词表候选轴转换成概率。
+    last_probabilities = torch.softmax(model(prefixes)[:, -1], dim=-1)
+# 逐候选比较两行分布，最大差值为 0 就说明分布完全相同。
+difference = (last_probabilities[0] - last_probabilities[1]).abs().max()
+print(&quot;两个人的最后一行概率差&quot;, difference.item())  # 0.0
+assert difference.item() == 0.
+</code></pre>
+<p>The higher-probability candidates after “欢” now include 紫, 绿, 黄, and 红—purple, green, yellow, and red—at approximately 0.180, 0.163, 0.119, and 0.118. The model is learning which characters commonly follow “欢” in this dataset, which is enough to reduce loss on some problems.</p>
+<p>But <code>forward</code> reveals why it still cannot distinguish the two people: each position runs only <code>embedding(ids)</code> followed by output projection. Both occurrences of “欢” have ID 44, so they get the same vector and scores. No computation path carries the preceding name to this position.</p>
+<p>Thus, “红” after “小丁喜欢” and “黄” after “小周喜欢” collapse into the same input problem, which sees only “欢”. The model can adjust one mixed distribution but cannot answer separately by name. Improving these predictions requires connecting preceding text to the forward calculation. More training steps alone cannot create that missing connection.</p>
+<h2 id="two-checking-exercises">Two checking exercises</h2>
+<ol>
+<li>If targets change from <code>full[1:]</code> to <code>full[2:]</code>, while inputs change to <code>full[:-2]</code>, is the model still learning the next character?</li>
+<li>Keep scores <code>[0, ln2, ln3]</code>, but make the second candidate the target. What is the loss? What happens if three more positions with target −100 are added?</li>
+</ol>
+<details class="answer">
+<summary>Reference answers</summary>
+<p>Answers: For the first exercise, the task becomes predicting the character two positions ahead, skipping the immediately following item. BOS, for example, now targets “丁” rather than “小”. For the second, the second candidate's probability is <code>2/6=1/3</code>, so the loss is <code>ln3≈1.098612</code>. Pure padding does not participate in the valid-position average, so the loss stays unchanged.</p>
+</details>
+<p>Before moving to attention, switch to “小周拿着香蕉。” (“Xiaozhou is holding a banana.”) and independently list the inputs and targets from BOS to EOS. Check that the first item predicts “小”, the full stop predicts EOS, and adding PAD leaves the valid-problem count unchanged. Finally, return to “小丁喜欢” and “小周喜欢” and explain in your own words why the character baseline still cannot use the name to distinguish the same “欢”, even as training loss decreases. This stage is complete when all three checks make sense.</p>
+<p>Run the snippets in order from the companion code directory, or execute directly:</p>
+<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+python -m lessons.l09
+</code></pre>
+<p>Complete entry point: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l09.py">Entry point</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/data.py">Data implementation</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/losses.py">Loss implementation</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md">Environment setup</a></p>
+<p>Source navigation: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/data.py#L69">data.py · make_pretrain_batch</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/losses.py#L9">losses.py · token_loss</a>.</p></article><details class="lesson-video video-ready" id="lesson-video"><summary><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></path></svg>Watch the companion video<span class="video-duration">4:32</span><span class="video-language">Chinese audio</span></summary><div class="bilibili-embed"><iframe data-src="https://player.bilibili.com/player.html?bvid=BV1BjHV6sEtf&amp;p=1&amp;autoplay=0&amp;danmaku=0" title="09 | Training Targets: How Does a Sentence Become a Learnable Task? · B站视频" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><p class="video-actions"><a href="https://www.bilibili.com/video/BV1BjHV6sEtf/?p=1" target="_blank" rel="noopener">Watch in HD on Bilibili ↗</a></p></div></details>
+<div class="reader-feedback"><span>Questions about this chapter?</span><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=question.yml&amp;title=%5B%E5%AD%A6%E4%B9%A0%5D+09+%7C+Training+Targets%3A+How+Does+a+Sentence+Become+a+Learnable+Task%3F&amp;location=09+%7C+Training+Targets%3A+How+Does+a+Sentence+Become+a+Learnable+Task%3F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F09.en.html" target="_blank" rel="noopener">Ask a question</a><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=content.yml&amp;title=%5B%E5%8B%98%E8%AF%AF%5D+09+%7C+Training+Targets%3A+How+Does+a+Sentence+Become+a+Learnable+Task%3F&amp;location=09+%7C+Training+Targets%3A+How+Does+a+Sentence+Become+a+Learnable+Task%3F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F09.en.html" target="_blank" rel="noopener">Suggest a correction</a></div><nav class="chapter-nav" aria-label="Previous and next articles"><a href="../course/08.en.html"><span>Previous <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></path></svg></span><strong>08 | Softmax: How Do Scores Become Next-Character Probabilities?</strong></a><a href="../course/10.en.html"><span>Next <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></path></svg></span><strong>10 | Attention: How Does Predicting the Next Character Read Earlier Text?</strong></a></nav><footer class="reader-footer">Hello LLM · Build a Small Model, Understand Large Models<details class="community-mini"><summary>Stay in touch · 好好用 AI</summary><div class="community-section"><div><h2>Stay in touch · 好好用 AI</h2><p>Follow the WeChat account to discuss what you learn and build.</p><p>For bugs and corrections, <a href="https://github.com/DavidDingXu/hello-llm/issues" target="_blank" rel="noopener">open a GitHub issue</a>.</p></div><a class="qr-link" href="../code/assets/wechat-official-account.jpg" target="_blank" rel="noopener" aria-label="Open the 好好用 AI WeChat QR code"><img src="../code/assets/wechat-official-account.jpg" alt="好好用 AI WeChat official account QR code" width="130" height="130" loading="lazy"><p class="qr-caption">Scan in WeChat · Open full image</p></a></div></details></footer></main>
+<aside class="context-sidebar" aria-label="Article navigation and tools"><div class="context-inner"><nav class="reading-route" aria-label="On this page"><details open><summary>On this page</summary><div class="toc">
+<ul>
+<li><a href="#the-original-sentence-already-contains-the-answers">The original sentence already contains the answers</a></li>
+<li><a href="#how-should-a-higher-probability-for-the-answer-count-as-progress">How should a higher probability for the answer count as progress?</a></li>
+<li><a href="#a-sentences-score-must-not-improve-merely-by-adding-padding">A sentence's score must not improve merely by adding padding</a></li>
+<li><a href="#what-improved-after-1000-updates">What improved after 1000 updates?</a></li>
+<li><a href="#two-checking-exercises">Two checking exercises</a></li>
+</ul>
+</div>
+</details></nav>
+<section class="reading-settings"><h2>Reading settings</h2><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="Decrease text size">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="Increase text size">A+</button></div><span>Allow about 40 minutes</span><p class="lesson-goal">Construct shifted targets and explain average loss over valid positions.</p></section>
+</div></aside></div><dialog class="search-dialog" id="search-dialog" aria-labelledby="search-label">
+<form method="dialog" class="search-heading"><label for="course-search" id="search-label"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/></circle><path d="m16 16 4.5 4.5"/></path></svg>Search course</label><button class="icon-button" aria-label="Close search"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></form>
+<input id="course-search" type="search" placeholder="Search concepts, code, or questions…" autocomplete="off" spellcheck="false">
+<p class="search-status" id="search-status" role="status">Search all 23 articles by keyword.</p>
+<div class="search-results" id="search-results"></div><footer>↑ ↓ Select result <span>Enter Open · Esc Close</span></footer></dialog>
+<dialog class="experiment-viewer" id="experiment-viewer" aria-labelledby="experiment-title"><header><strong id="experiment-title">Experiments</strong><div><a id="experiment-standalone" target="_blank" rel="noopener">Open separately <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a><button class="button" id="close-experiment" type="button">Back to reading <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></div></header><iframe id="experiment-frame" title="Experiments" src="about:blank"></iframe></dialog>
+<dialog class="image-viewer" id="image-viewer" aria-label="Enlarge figure">
+<header><span>View figure</span><div class="image-actions"><button type="button" id="image-zoom-out" aria-label="Zoom out">−</button><output id="image-scale" aria-label="Zoom level">100%</output><button type="button" id="image-zoom-in" aria-label="Enlarge figure">＋</button><button type="button" id="image-size">Actual size</button><button type="button" id="close-image" autofocus>Close</button></div></header>
+<div class="image-canvas"><p id="image-status" role="status" hidden></p><img id="large-image" alt=""></div><footer><p id="image-description"></p><a id="original-image" target="_blank" rel="noopener">Open original image <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a></footer></dialog>
+<div class="toast" id="toast" role="status"></div></body></html>

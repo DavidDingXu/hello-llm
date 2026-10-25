@@ -1,0 +1,216 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<meta name="source-sha256" content="5deea9c5389e08b5d0ebe2fb0938059661a680ecd6ff0b123595cef1471cf4f9"><meta name="description" content="Arrange two parameter groups in a table to calculate two outputs at once. Add another input sample and see which numbers need to be duplicated and which parameters remain shared."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/02.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="02 | Vectors and Matrices: Do Two Outputs Require Two Copies of the Code? · Hello LLM"><meta property="og:description" content="Arrange two parameter groups in a table to calculate two outputs at once. Add another input sample and see which numbers need to be duplicated and which parameters remain shared."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/02.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>02 | Vectors and Matrices: Do Two Outputs Require Two Copies of the Code? · Hello LLM</title>
+<link rel="icon" href="../assets/favicon.png" type="image/png">
+<script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
+<script defer src="../code/visuals/reading_site/search-index.en.js?v=11db81a4dd60"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="02" data-alternate-sections="[&quot;把两组参数排成表&quot;, &quot;程序里这张表就是矩阵&quot;, &quot;一个循环算出一个输出&quot;, &quot;不复制算式结果还是-5-和-9-吗&quot;, &quot;再来一份输入参数要不要复制&quot;, &quot;改数检查&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="Open course contents" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></path></svg></button>
+<a class="brand" href="../index.en.html" aria-label="Hello LLM · 学习站首页">
+<img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>Build a Small Model, Understand Large Models</small></span></a>
+<nav class="header-nav" aria-label="Main navigation"><a href="../index.en.html#curriculum">Learning path</a><a href="../index.en.html#experiments">Experiments</a><a href="https://github.com/DavidDingXu/hello-llm" target="_blank" rel="noopener">GitHub <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a></nav>
+<div class="header-controls"><a class="language-switch" href="02.html" lang="zh-CN" aria-label="切换到中文">中文</a><button class="icon-button theme-toggle js-only" type="button" aria-label="Switch to dark theme" title="Switch to dark theme"><span class="theme-light-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A9 9 0 0 1 9.5 3.5a9 9 0 1 0 11 11Z"/></path></svg></span><span class="theme-dark-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/></circle><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></path></svg></span></button>
+<button class="search-trigger js-only" type="button" aria-label="Search course"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/></circle><path d="m16 16 4.5 4.5"/></path></svg><span>Search course</span><kbd>⌘ K</kbd></button>
+</div></div><div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div></header><div class="sidebar-scrim" hidden></div><div class="reader-layout"><aside class="course-sidebar" id="course-sidebar" aria-label="Course contents">
+<div class="sidebar-heading"><a href="../index.en.html">Course contents</a><button class="icon-button menu-close js-only" type="button" aria-label="Close course contents"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></div>
+<nav aria-label="All articles"><div class="sidebar-guides"><a class="lesson-link" data-lesson="intro" href="../course/intro.en.html"><span class="lesson-number">·</span><span>Course introduction</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="00" href="../course/00.en.html"><span class="lesson-number">·</span><span>Before we begin</span><span class="lesson-state" aria-hidden="true"></span></a></div><details class="sidebar-stage" open><summary><span class="stage-index">Part I</span>Make a numerical network learn</summary><a class="lesson-link" data-lesson="01" href="../course/01.en.html"><span class="lesson-number">01</span><span>Neurons</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="02" href="../course/02.en.html" aria-current="page"><span class="lesson-number">02</span><span>Vectors and Matrices</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="03" href="../course/03.en.html"><span class="lesson-number">03</span><span>Multiple Layers and Nonlinearity</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="04" href="../course/04.en.html"><span class="lesson-number">04</span><span>Gradients and Parameter Updates</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="05" href="../course/05.en.html"><span class="lesson-number">05</span><span>Backpropagation by Hand</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="06" href="../course/06.en.html"><span class="lesson-number">06</span><span>Making the Network Learn</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part II</span>Bring text into the network</summary><a class="lesson-link" data-lesson="07" href="../course/07.en.html"><span class="lesson-number">07</span><span>Text and Vectors</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="08" href="../course/08.en.html"><span class="lesson-number">08</span><span>Scores and Probabilities</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="09" href="../course/09.en.html"><span class="lesson-number">09</span><span>Text Training Problems</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part III</span>Read context and assemble the model</summary><a class="lesson-link" data-lesson="10" href="../course/10.en.html"><span class="lesson-number">10</span><span>Single-Head Attention</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="11" href="../course/11.en.html"><span class="lesson-number">11</span><span>Causal masks</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="12" href="../course/12.en.html"><span class="lesson-number">12</span><span>Multi-head attention</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="13" href="../course/13.en.html"><span class="lesson-number">13</span><span>Rotary position embeddings</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="14" href="../course/14.en.html"><span class="lesson-number">14</span><span>Positionwise feed-forward networks</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="15" href="../course/15.en.html"><span class="lesson-number">15</span><span>Residual connections and normalization</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="16" href="../course/16.en.html"><span class="lesson-number">16</span><span>The complete forward pass</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part IV</span>Pretrain, generate, and fine-tune</summary><a class="lesson-link" data-lesson="17" href="../course/17.en.html"><span class="lesson-number">17</span><span>The first pretraining run</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="18" href="../course/18.en.html"><span class="lesson-number">18</span><span>Character-by-character generation</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="19" href="../course/19.en.html"><span class="lesson-number">19</span><span>Question-answer fine-tuning</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="20" href="../course/20.en.html"><span class="lesson-number">20</span><span>The full workflow and checks of the principles</span><span class="lesson-state" aria-hidden="true"></span></a></details><a class="lesson-link" data-lesson="end" href="../course/end.en.html"><span class="lesson-number">·</span><span>Closing thoughts</span><span class="lesson-state" aria-hidden="true"></span></a></nav></aside><main class="reader-main" id="main-content"><div class="article-context"><span>Make a numerical network learn</span><div class="article-actions"><button type="button" class="copy-page-link js-only">Copy link</button><button type="button" class="focus-toggle js-only" aria-pressed="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></path></svg><span>Focus mode</span></button></div></div>
+<div class="mobile-context"><nav class="reading-route" aria-label="On this page"><details><summary>On this page</summary><div class="toc">
+<ul>
+<li><a href="#arrange-the-two-parameter-groups-in-a-table">Arrange the two parameter groups in a table</a></li>
+<li><a href="#in-the-program-this-table-is-a-matrix">In the program, this table is a matrix</a></li>
+<li><a href="#one-loop-calculates-one-output">One loop calculates one output</a></li>
+<li><a href="#without-copying-expressions-do-we-still-get-5-and-9">Without copying expressions, do we still get 5 and 9?</a></li>
+<li><a href="#does-another-input-sample-require-another-copy-of-the-parameters">Does another input sample require another copy of the parameters?</a></li>
+<li><a href="#check-by-changing-the-numbers">Check by changing the numbers</a></li>
+</ul>
+</div>
+</details></nav><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="Decrease text size">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="Increase text size">A+</button></div></div><article id="article-body"><h1 id="02-vectors-and-matrices-do-two-outputs-require-two-copies-of-the-code">02 | Vectors and Matrices: Do Two Outputs Require Two Copies of the Code?</h1>
+<p>Build a Small Model, Understand Large Models · Lesson 02</p>
+<p>Start with two familiar multiply-and-add expressions:</p>
+<p><strong>2×1 + 1×2 + 1 = 5</strong></p>
+<p><strong>2×3 + 1×4 − 1 = 9</strong></p>
+<p>Both use the input <code>[2, 1]</code>; different parameters produce two different results. If we wanted a thousand results, we could copy a thousand lines. But adding one input would then require editing every line, and missing one might not trigger an immediate error.</p>
+<p>Put the parameters in lists and let a loop read each group. Then the calculation needs to be written only once. Vectors and matrices organize exactly these kinds of numbers.</p>
+<h2 id="arrange-the-two-parameter-groups-in-a-table">Arrange the two parameter groups in a table</h2>
+<p>Call the repeated input <code>x</code>, place the two sets of weights in <code>W</code>, and put the two biases in <code>b</code>:</p>
+<pre><code class="language-text">x = [2, 1]
+W = [[1, 2],
+     [3, 4]]
+b = [1, -1]
+</code></pre>
+<p>The first weight row <code>[1, 2]</code>, paired with the first bias 1, produces <code>y₁=5</code>. The second row <code>[3, 4]</code>, paired with the second bias −1, produces <code>y₂=9</code>.</p>
+<p>Both parameter groups read the same input. Calculating the first output does not pass 5 to the second group; their results sit side by side as this layer's output <code>[5, 9]</code>.</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/02-vectors-and-matrices/images/en/web/01-%E6%9C%BA%E5%88%B6.svg" width="1504" height="650"><img alt="The same input is multiplied and added with two weight rows to produce two outputs" src="../chapters/02-vectors-and-matrices/images/en/01-%E6%9C%BA%E5%88%B6.svg"  width="1080" height="1785" loading="eager" decoding="async" /></picture></p>
+<p>Read the first parameter row first: multiply the first input cell by the first cell in this row, and the second by the second; then sum them and add this row's bias. The second row repeats the same rule. The connections here show numbers being read and multiplied; neither output depends on the other's calculation.</p>
+<p>If you change only the first row of <code>W</code>, the second output should remain 9. Try it to check. We will leave out ReLU in this lesson so that we can see exactly which multiply-and-add operations use each parameter group.</p>
+<h2 id="in-the-program-this-table-is-a-matrix">In the program, this table is a matrix</h2>
+<p>A single number, such as 2, is called a <strong>scalar</strong>. An ordered collection of numbers, such as <code>[2, 1]</code>, can represent a <strong>vector</strong>. Each item in a vector is also called a component.</p>
+<p>A “two-dimensional vector” has two components here. Their order matters, because each component is multiplied by its own weight.</p>
+<p>A table of rows of equal length is a <strong>matrix</strong>. Our <code>W</code> has two rows and two columns, so its shape is written <code>[2, 2]</code>.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Object</th>
+<th>Shape</th>
+<th>Meaning of each position</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>x</td>
+<td><code>[2]</code></td>
+<td>Two input components</td>
+</tr>
+<tr>
+<td>W</td>
+<td><code>[2, 2]</code></td>
+<td>Rows select outputs; columns select inputs</td>
+</tr>
+<tr>
+<td>b</td>
+<td><code>[2]</code></td>
+<td>One bias for each output</td>
+</tr>
+<tr>
+<td>y</td>
+<td><code>[2]</code></td>
+<td>This layer's two results</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>One matrix row contains the complete set of weights for one output.</strong> We use this convention throughout the series; the PyTorch parameters later will use the same orientation.</p>
+<p>Mathematical notation often numbers two components 1 and 2; Python starts at 0. Thus the second input is <code>x[1]</code>, and the weight in the first row and second column is <code>W[0][1]</code>. An index only locates a value; it does not introduce a new operation.</p>
+<h2 id="one-loop-calculates-one-output">One loop calculates one output</h2>
+<p>Set the bias aside for a moment. The first weight group and input calculate:</p>
+<p><strong>2×1 + 1×2 = 4</strong></p>
+<p>Multiplying corresponding components of two equal-length vectors and summing the products is called a <strong>dot product</strong>. It takes two collections of numbers and returns one number.</p>
+<p>Each output follows the same rule: take the dot product of the input and one weight row, then add the corresponding bias. One more parameter row gives one more output.</p>
+<p>If the input has <code>D</code> components and we want <code>O</code> outputs, then:</p>
+<pre><code class="language-text">x：[D]
+W：[O, D]
+b：[O]
+y：[O]
+</code></pre>
+<p><code>D</code> is the number of input components, and <code>O</code> is the number of outputs. They are counts, not weights to be trained.</p>
+<p>Why must the number of columns in <code>W</code> equal the number of input components? Each row must pair component by component with the entire input. Two inputs and three weights leave one weight with no input to multiply. Truncating a list just to keep the program running silently changes the calculation we defined.</p>
+<p>Written compactly, this is:</p>
+<p><strong>y = Wx + b</strong></p>
+<p>This uses the mathematical column-vector convention: <code>x</code> is arranged vertically, each row of <code>W</code> multiplies its corresponding components, and the results are arranged vertically too. Expanding it gives exactly the two expressions above.</p>
+<p>Many programs call this layer, including its bias, <code>linear</code>, and we use that name too. Strictly speaking, a transformation with a bias is an <strong>affine transformation</strong>; it is a linear transformation in this sense only when the bias is 0.</p>
+<h2 id="without-copying-expressions-do-we-still-get-5-and-9">Without copying expressions, do we still get 5 and 9?</h2>
+<p>The following code uses only standard Python features. Copy it into a file and run it. <code>dot</code> implements the dot product; <code>linear</code> reads one parameter row at a time to calculate one output.</p>
+<pre><code class="language-python">def dot(left, right):
+    &quot;&quot;&quot;两个等长向量逐项相乘并求和，返回一个标量。&quot;&quot;&quot;
+    if not left or len(left) != len(right):
+        raise ValueError(&quot;点积的两组数必须非空且等长&quot;)
+    total = 0.0
+    for a, b in zip(left, right):
+        total += a * b
+    return total
+
+
+def linear(inputs, weights, biases):
+    &quot;&quot;&quot;[D] 输入配 [O,D] 权重与 [O] 偏置，返回 [O] 输出。&quot;&quot;&quot;
+    if not weights or len(weights) != len(biases):
+        raise ValueError(&quot;每个输出需要一行权重和一个偏置&quot;)
+    outputs = []
+    # 每行参数都读取完整的同一份输入，输出之间不串联。
+    for row, bias in zip(weights, biases):
+        outputs.append(dot(inputs, row) + bias)
+    return outputs
+
+
+# W 每行对应一个输出，每列对应一项输入；b 按输出配对。
+x = [2, 1]
+W = [[1, 2], [3, 4]]
+b = [1, -1]
+print(dot(x, W[0]))       # 4.0
+print(linear(x, W, b))    # [5.0, 9.0]
+</code></pre>
+<p><code>zip</code> pairs values, the loop multiplies and adds, and <code>append</code> puts each row's result into the output list in order. The checks constrain the number of biases and, through <code>dot</code>, each row's length, preventing a matrix row from being one item short.</p>
+<p>The printed result is still <code>[5, 9]</code>. To add a third output later, add only a weight row and a bias. In the companion project, <code>scalar.forward</code> combines the dot product and bias, and <code>scalar.linear</code> calls it for each row. It performs the same calculation.</p>
+<section class="python-lab" id="python-lab" aria-labelledby="python-lab-title">
+<div class="lab-heading"><span>PYTHON · EDITABLE EXPERIMENT</span><h3 id="python-lab-title">Change it. Run it. See what happens.</h3></div>
+<p class="lab-challenge">Change one input and compare both outputs.</p>
+<div class="lab-controls"><label for="lab-x1">First input<input id="lab-x1" data-variable="x1" type="number" value="2" min="-10" max="10" step="1" required></label><label for="lab-x2">Second input<input id="lab-x2" data-variable="x2" type="number" value="1" min="-10" max="10" step="1" required></label></div>
+<details class="lab-editor"><summary>Edit Python code</summary>
+<label class="lab-editor-label" for="lab-code">Python code</label>
+<p class="lab-editor-help" id="lab-code-help">Tab indents; Shift + Tab unindents. Press Esc then Tab to leave the editor. Ctrl / ⌘ + Enter runs the code.</p>
+<textarea id="lab-code" class="lab-code" aria-describedby="lab-code-help" wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" rows="9">from tiny_lm.scalar import linear
+
+x1 = 2
+x2 = 1
+weights = [[1, 2], [3, 4]]
+biases = [1, -1]
+
+print(&quot;outputs =&quot;, linear([x1, x2], weights, biases))
+</textarea>
+</details>
+<div class="lab-actions"><button type="button" class="button primary lab-run" disabled>Run code</button><button type="button" class="button lab-stop" disabled>Stop</button><button type="button" class="button lab-reset" disabled>Reset example</button><button type="button" class="button lab-download" disabled>Download code</button></div>
+<p class="lab-status" role="status">Run the code to see the result below.</p>
+<pre class="lab-output" tabindex="0" aria-label="Program output">Ready to run…</pre>
+<noscript>Enable JavaScript to run here, or copy the example and run locally.</noscript>
+</section><h2 id="does-another-input-sample-require-another-copy-of-the-parameters">Does another input sample require another copy of the parameters?</h2>
+<p>We just added outputs. Now consider a different request: process one more input, <code>[0, 1]</code>, using the original parameters. Predict its result before running:</p>
+<pre><code class="language-python"># 沿用前段的 linear、W、b；每行是一份样本，两份样本共用参数。
+samples = [[2, 1], [0, 1]]
+outputs = [linear(sample, W, b) for sample in samples]
+print(outputs)  # [[5.0, 9.0], [3.0, 3.0]]
+</code></pre>
+<p>The second input can also be checked by hand: <code>0×1+1×2+1=3</code>, and <code>0×3+1×4−1=3</code>.</p>
+<p>A collection of samples processed together is called a <strong>batch</strong>. If <code>B</code> is the number of samples, the input shape is <code>[B, D]</code>. Here it is <code>[2, 2]</code>: the first axis selects a sample, and the second selects an input component within that sample.</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/02-vectors-and-matrices/images/en/web/02-%E9%AA%8C%E8%AF%81.svg" width="1504" height="796.4"><img alt="A batch stores samples in rows; the transposed parameters store each output's weights in columns" src="../chapters/02-vectors-and-matrices/images/en/02-%E9%AA%8C%E8%AF%81.svg"  width="1080" height="1920" loading="lazy" decoding="async" /></picture></p>
+<p>Read this diagram along both axes: moving between rows changes the sample, while moving between columns changes the feature. The input and weights happen to both have shape <code>[2, 2]</code> here, but they mean different things. Always read shapes together with their axis names.</p>
+<p><code>X</code> places each sample horizontally. In matrix multiplication, a row on the left is paired with a column on the right, so we turn each weight row in <code>W</code> into a column. This is called <strong>transposition</strong>, written <code>W.T</code>:</p>
+<pre><code class="language-text">W = [[1, 2],       W.T = [[1, 3],
+     [3, 4]]              [2, 4]]
+</code></pre>
+<p>Transposition swaps row and column positions without changing the values. Thus, when we use tensors later, the same layer will be written:</p>
+<p><strong>Y = X @ W.T + b</strong></p>
+<p><code>@</code> means matrix multiplication. The first cell of output <code>Y</code> is still <code>2×1+1×2+1=5</code>; the algorithm has not changed. Bias <code>b</code> is added to each sample's output, so input <code>[B, D]</code> and weights <code>[O, D]</code> produce <code>[B, O]</code>.</p>
+<p>The Python lists used in this lesson do not directly support this <code>@</code> syntax. Our loops already implement its full meaning. In Lesson 06, tensors will let the library perform these multiply-and-add operations.</p>
+<p>Increasing the number of samples means processing more inputs of the same length. Increasing the number of features means adding a component to every input, which requires adding a weight to every weight group. These are different changes.</p>
+<h2 id="check-by-changing-the-numbers">Check by changing the numbers</h2>
+<ol>
+<li>In the main example, change only <code>W[0][1]</code> from 2 to 5. What are the two outputs? Does the second output change, and why?</li>
+<li>One input has shape <code>[2]</code>, the weights have shape <code>[3, 2]</code>, and the biases have shape <code>[3]</code>. What is the output shape? What if you pass in 4 such samples?</li>
+<li>If you add a third input component to the main example but keep the original <code>W</code>, should the program continue or raise an error?</li>
+</ol>
+<details class="answer">
+<summary>Reference answers</summary>
+<p>Answers: For the first exercise, the first output becomes <strong>2×1+1×5+1=8</strong>, while the second remains <strong>9</strong>. The changed weight belongs to the first row; the second row does not read it. For the second, the output shape is <strong><code>[3]</code></strong> for one sample and <strong><code>[4, 3]</code></strong> for the batch. For the third, the program should raise an error: each weight row also needs three components to pair with the three inputs.</p>
+</details>
+<p>In the next lesson, we will use the four XOR rules to test what a multiply-and-add layer can do.</p>
+<p>Run this from the <code>code</code> directory:</p>
+<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+python -m lessons.l02
+</code></pre>
+<p>Here, <code>python</code> refers to the interpreter prepared using the <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md">installation instructions</a>. Companion resources: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l02.py">Entry point</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/scalar.py">List-based implementation</a></p>
+<p>Source navigation: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/scalar.py#L27">scalar.py · linear</a>.</p></article><details class="lesson-video video-ready" id="lesson-video"><summary><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></path></svg>Watch the companion video<span class="video-duration">5:13</span><span class="video-language">Chinese audio</span></summary><div class="bilibili-embed"><iframe data-src="https://player.bilibili.com/player.html?bvid=BV1fhHg67Epd&amp;p=1&amp;autoplay=0&amp;danmaku=0" title="02 | Vectors and Matrices: Do Two Outputs Require Two Copies of the Code? · B站视频" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><p class="video-actions"><a href="https://www.bilibili.com/video/BV1fhHg67Epd/?p=1" target="_blank" rel="noopener">Watch in HD on Bilibili ↗</a></p></div></details>
+<div class="reader-feedback"><span>Questions about this chapter?</span><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=question.yml&amp;title=%5B%E5%AD%A6%E4%B9%A0%5D+02+%7C+Vectors+and+Matrices%3A+Do+Two+Outputs+Require+Two+Copies+of+the+Code%3F&amp;location=02+%7C+Vectors+and+Matrices%3A+Do+Two+Outputs+Require+Two+Copies+of+the+Code%3F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F02.en.html" target="_blank" rel="noopener">Ask a question</a><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=content.yml&amp;title=%5B%E5%8B%98%E8%AF%AF%5D+02+%7C+Vectors+and+Matrices%3A+Do+Two+Outputs+Require+Two+Copies+of+the+Code%3F&amp;location=02+%7C+Vectors+and+Matrices%3A+Do+Two+Outputs+Require+Two+Copies+of+the+Code%3F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F02.en.html" target="_blank" rel="noopener">Suggest a correction</a></div><nav class="chapter-nav" aria-label="Previous and next articles"><a href="../course/01.en.html"><span>Previous <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></path></svg></span><strong>01 | Neurons: What Does a Model Calculate Before It Writes the Next Character?</strong></a><a href="../course/03.en.html"><span>Next <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></path></svg></span><strong>03 | Nonlinearity: Why Can Multiply-and-Add Not Express Four Simple Rules?</strong></a></nav><footer class="reader-footer">Hello LLM · Build a Small Model, Understand Large Models<details class="community-mini"><summary>Stay in touch · 好好用 AI</summary><div class="community-section"><div><h2>Stay in touch · 好好用 AI</h2><p>Follow the WeChat account to discuss what you learn and build.</p><p>For bugs and corrections, <a href="https://github.com/DavidDingXu/hello-llm/issues" target="_blank" rel="noopener">open a GitHub issue</a>.</p></div><a class="qr-link" href="../code/assets/wechat-official-account.jpg" target="_blank" rel="noopener" aria-label="Open the 好好用 AI WeChat QR code"><img src="../code/assets/wechat-official-account.jpg" alt="好好用 AI WeChat official account QR code" width="130" height="130" loading="lazy"><p class="qr-caption">Scan in WeChat · Open full image</p></a></div></details></footer></main>
+<aside class="context-sidebar" aria-label="Article navigation and tools"><div class="context-inner"><nav class="reading-route" aria-label="On this page"><details open><summary>On this page</summary><div class="toc">
+<ul>
+<li><a href="#arrange-the-two-parameter-groups-in-a-table">Arrange the two parameter groups in a table</a></li>
+<li><a href="#in-the-program-this-table-is-a-matrix">In the program, this table is a matrix</a></li>
+<li><a href="#one-loop-calculates-one-output">One loop calculates one output</a></li>
+<li><a href="#without-copying-expressions-do-we-still-get-5-and-9">Without copying expressions, do we still get 5 and 9?</a></li>
+<li><a href="#does-another-input-sample-require-another-copy-of-the-parameters">Does another input sample require another copy of the parameters?</a></li>
+<li><a href="#check-by-changing-the-numbers">Check by changing the numbers</a></li>
+</ul>
+</div>
+</details></nav>
+<section class="reading-settings"><h2>Reading settings</h2><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="Decrease text size">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="Increase text size">A+</button></div><span>Allow about 30 minutes</span><p class="lesson-goal">Explain input, parameter, and output shapes axis by axis.</p></section>
+</div></aside></div><dialog class="search-dialog" id="search-dialog" aria-labelledby="search-label">
+<form method="dialog" class="search-heading"><label for="course-search" id="search-label"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/></circle><path d="m16 16 4.5 4.5"/></path></svg>Search course</label><button class="icon-button" aria-label="Close search"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></form>
+<input id="course-search" type="search" placeholder="Search concepts, code, or questions…" autocomplete="off" spellcheck="false">
+<p class="search-status" id="search-status" role="status">Search all 23 articles by keyword.</p>
+<div class="search-results" id="search-results"></div><footer>↑ ↓ Select result <span>Enter Open · Esc Close</span></footer></dialog>
+<dialog class="experiment-viewer" id="experiment-viewer" aria-labelledby="experiment-title"><header><strong id="experiment-title">Experiments</strong><div><a id="experiment-standalone" target="_blank" rel="noopener">Open separately <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a><button class="button" id="close-experiment" type="button">Back to reading <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></div></header><iframe id="experiment-frame" title="Experiments" src="about:blank"></iframe></dialog>
+<dialog class="image-viewer" id="image-viewer" aria-label="Enlarge figure">
+<header><span>View figure</span><div class="image-actions"><button type="button" id="image-zoom-out" aria-label="Zoom out">−</button><output id="image-scale" aria-label="Zoom level">100%</output><button type="button" id="image-zoom-in" aria-label="Enlarge figure">＋</button><button type="button" id="image-size">Actual size</button><button type="button" id="close-image" autofocus>Close</button></div></header>
+<div class="image-canvas"><p id="image-status" role="status" hidden></p><img id="large-image" alt=""></div><footer><p id="image-description"></p><a id="original-image" target="_blank" rel="noopener">Open original image <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a></footer></dialog>
+<div class="toast" id="toast" role="status"></div></body></html>

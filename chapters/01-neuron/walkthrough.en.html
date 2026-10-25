@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Neuron Calculation Lab · 好好用 AI</title>
+<style>
+:root{color-scheme:light;--bg:#FFFFFF;--ink:#222A35;--muted:#606C7B;--green:#187B79;--parameter:#8056A5;--blue:#3267A4}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:'Hiragino Sans GB','PingFang SC','Microsoft YaHei',Arial,sans-serif;line-height:1.7}main{max-width:1160px;margin:auto;padding:38px 36px 60px}.brand{font-size:13px;letter-spacing:.13em;color:var(--green)}h1{font-size:clamp(26px,3.6vw,36px);letter-spacing:-.04em;line-height:1.3;margin:22px 0 14px}p{margin:10px 0}.intro{max-width:750px;color:var(--muted)}.workbench{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:44px;margin-top:34px;align-items:start}.picture{border-top:1px solid var(--ink);padding-top:14px}#scene svg{display:block;width:100%;height:auto}button{font:inherit;font-size:14px;border:1px solid #BEC6D1;border-radius:4px;padding:9px 14px;background:transparent;color:var(--ink);cursor:pointer}button:hover{background:#F1F5FC}button:focus-visible,input:focus-visible{outline:3px solid #8056A5;outline-offset:4px}button:disabled{opacity:.4;cursor:default}.primary{background:var(--green);color:white;border-color:var(--green)}.primary:hover{background:#155F61}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}.step{font-size:14px;color:var(--muted);margin:0 0 12px}.reading{border-top:1px solid var(--ink);padding:18px 0 24px}.reading small{display:block;font-size:13px;color:var(--muted)}#answer{font-size:70px;line-height:1.25;color:var(--green);font-weight:650;font-variant-numeric:tabular-nums}#equation{font-size:17px;overflow-wrap:anywhere}.controls h2{font-size:18px;margin:18px 0 12px}.controls h2 span{font-weight:400;font-size:13px;color:var(--muted)}label{display:grid;grid-template-columns:1fr 44px;gap:8px;margin-top:14px;font-size:15px}label output{text-align:right;font-weight:650;font-variant-numeric:tabular-nums}input[type=range]{grid-column:1/-1;width:100%;margin:0;height:28px;accent-color:var(--blue)}.parameters input{accent-color:var(--parameter)}.parameters{border-top:1px solid #DDE2E8;margin-top:20px;padding-top:4px}.presets{border-top:1px solid #DDE2E8;margin-top:26px;padding-top:12px;display:flex;gap:8px;flex-wrap:wrap}.note{font-size:13px;color:var(--muted);margin-top:18px}.explanation{margin-top:28px;padding:22px 0;border-top:1px solid #DDE2E8;max-width:820px}.explanation strong{color:var(--green)}footer{font-size:12px;color:var(--muted);margin-top:30px}a{color:var(--green)}@media(max-width:750px){main{padding:24px 20px 40px}.workbench{grid-template-columns:1fr;gap:26px;margin-top:24px}.controls{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}.reading,.presets,.note{grid-column:1/-1}.parameters{margin:0;border:0;padding:0}.controls h2{margin-top:8px}.picture{max-width:600px}.reading{display:grid;grid-template-columns:100px 1fr;gap:0 20px}.reading small{grid-column:1/-1}#answer{font-size:60px}#equation{align-self:center;font-size:16px}h1{margin-top:18px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+<!-- experiment-shell:start --><link rel="stylesheet" href="../../code/visuals/reading_site/experiment-ui.css"><link rel="stylesheet" href="../../code/visuals/reading_site/experiment-special.css"><script src="../../code/visuals/reading_site/experiment-ui.js" defer></script><script src="../../code/visuals/reading_site/experiment-special.js" defer></script><!-- experiment-shell:end --><main><div class="brand">好好用 AI / Build a Small Model, Understand Large Models · Lesson 01</div>
+<h1>One neuron, step by step.</h1>
+<p class="intro">Follow the numbers once, then change them yourself. Blue marks the inputs, purple the parameters, and teal the output. Edit values directly on this page; no Python installation is needed.</p>
+<div class="workbench"><section class="picture" aria-label="Neuron calculation steps">
+<div class="toolbar"><button id="restart">Restart</button><button id="prev">Previous</button><button class="primary" id="next">Next</button><button id="play">Play</button></div>
+<p class="step" id="stepLabel" aria-live="polite"></p><div id="scene"></div></section>
+<aside class="controls" aria-label="Adjust inputs and parameters"><div class="reading" aria-live="polite"><small>Complete result for these values</small><div id="answer">4</div><div id="equation"></div></div>
+<section><h2>Inputs <span>Data supplied to the function</span></h2>
+<label for="x1">First input x₁<output id="x1v" for="x1">2</output><input id="x1" type="range" min="-4" max="4" step="1" value="2"></label>
+<label for="x2">Second input x₂<output id="x2v" for="x2">1</output><input id="x2" type="range" min="-4" max="4" step="1" value="1"></label></section>
+<section class="parameters"><h2>Parameters <span>Determine the calculation</span></h2>
+<label for="w1">First weight w₁<output id="w1v" for="w1">1</output><input id="w1" type="range" min="-4" max="4" step="1" value="1"></label>
+<label for="w2">Second weight w₂<output id="w2v" for="w2">3</output><input id="w2" type="range" min="-4" max="4" step="1" value="3"></label>
+<label for="b">Bias b<output id="bv" for="b">-1</output><input id="b" type="range" min="-8" max="8" step="1" value="-1"></label></section>
+<div class="presets" aria-label="Comparison experiments"><button data-preset="0">Original example</button><button data-preset="1">Change input only → 7</button><button data-preset="2">Change bias only → 5</button><button data-preset="3">Negative value through ReLU</button></div>
+<p class="note">Moving a parameter slider is a manual experiment. Training automatically updates parameters from errors; later lessons build that process step by step.</p></aside></div>
+<div class="explanation"><strong>Make sure you can work through this calculation.</strong><p>Multiply once on each path, add the products, add the bias, and apply ReLU: keep positive values, turn negative values into 0, and leave 0 at 0. Faded nodes show steps not yet reached.</p><p>Try changing only the second input from 1 to 2. The extra 1 is first multiplied by weight 3, so the output increases by 3.</p></div>
+<footer>You can also save this page and open it offline. <a href="index.en.html">Read the lesson</a></footer></main>
+<script>// 精确教材图：SVG、动画和离线演示共用；前向阶段不改参数。
+const palette = {
+  bg:'#FFFFFF', ink:'#222A35', muted:'#606C7B', line:'#8F9BA8',
+  input:'#3267A4', inputLight:'#F1F5FC', parameter:'#8056A5',
+  parameterLight:'#F7F2FB', output:'#187B79', outputLight:'#EFF8F7',
+};
+const steps=["Inputs and parameters","First multiplication","Second multiplication","Add the two products","Add the bias","Apply ReLU; get the output"];
+const figureHeights={roles:975,products:900,chain:900,flow:1500,network:1095};
+function calculate(d){
+  const {inputs:x,weights:w,bias:b}=d;
+  if(x.length!==2||w.length!==2||![...x,...w,b].every(Number.isFinite))throw new Error("Two finite inputs, two weights, and one bias are required.");
+  const products=[x[0]*w[0],x[1]*w[1]],sum=products[0]+products[1],z=sum+b;
+  return {products,sum,z,output:Math.max(0,z)};
+}
+const fmt=n=>Number.isInteger(n)?String(n):String(Number(n.toFixed(3)));
+const esc=s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+const tx=(x,y,text,size=44,fill=palette.ink,anchor='middle',weight=400)=>`<text x="${x}" y="${y}" text-anchor="${anchor}" fill="${fill}" font-size="${size}" font-weight="${weight}">${esc(text)}</text>`;
+const math=(x,y,text,size=60,fill=palette.ink,anchor='middle')=>`<text class="math" x="${x}" y="${y}" text-anchor="${anchor}" fill="${fill}" font-size="${size}">${esc(text)}</text>`;
+const line=(d,color=palette.line,width=2.8,arrow=true)=>`<path d="${d}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round"${arrow?' marker-end="url(#arrow)"':''}/>`;
+const round=(x,y,w,h,fill,stroke=palette.ink,r=8)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${fill}" stroke="${stroke}" stroke-width="2.2"/>`;
+const circle=(x,y,r,value,fill='#FFF',stroke=palette.ink,size=64)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="2.4"/>`+math(x,y+size*.3,value,size,stroke);
+const pill=(x,y,w,h,value,fill,color=palette.ink,size=54)=>round(x,y,w,h,fill,color)+math(x+w/2,y+h/2+size*.3,value,size,color);
+const group=(visible,content)=>`<g opacity="${visible?1:.12}">${content}</g>`;
+function header(title,subtitle){
+  return tx(48,78,title,52,palette.ink,'start',500)+tx(48,143,subtitle,50,palette.muted,'start');
+}
+function legend(y){
+  return line(`M64 ${y-12} H94`,palette.input,5,false)+tx(110,y,"Inputs",50,palette.input,'start')+
+    line(`M300 ${y-12} H330`,palette.parameter,5,false)+tx(346,y,"Params",50,palette.parameter,'start')+
+    line(`M536 ${y-12} H566`,palette.output,5,false)+tx(582,y,"Output",50,palette.output,'start');
+}
+function wrap(body,height,title){
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 ${height}" role="img" aria-label="${esc(title)}"><defs><marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1 L10 6 L1 11" fill="none" stroke="context-stroke" stroke-width="1.5"/></marker></defs><style>text{font-family:'Hiragino Sans GB','PingFang SC','Microsoft YaHei',Arial,sans-serif;font-variant-numeric:tabular-nums}.math{font-weight:400;font-variant-numeric:tabular-nums}</style><rect width="1080" height="${height}" fill="${palette.bg}"/>${body}</svg>`;
+}
+// 静态图以 720 单位排版，再放大到 1080 像素导出；关键标签至少 36 单位。
+function miniHeader(title){return tx(30,56,title,36,palette.ink,'start',500);}
+function roles(d){
+  const c=calculate(d);
+  let s=miniHeader("Inputs, parameters, output");
+  s+=tx(35,120,"Input x",36,palette.input,'start')+pill(35,145,255,150,`[${d.inputs.map(fmt).join(', ')}]`,palette.inputLight,palette.input,54);
+  s+=tx(380,120,"Parameters w, b",36,palette.parameter,'start')+round(380,145,305,150,palette.parameterLight,palette.parameter);
+  s+=math(532,205,`w = [${d.weights.map(fmt).join(', ')}]`,38,palette.parameter)+math(532,263,`b = ${fmt(d.bias)}`,38,palette.parameter);
+  s+=line('M160 310 V335 H260 V350',palette.input)+line('M532 310 V335 H470 V350',palette.parameter);
+  s+=round(125,365,470,100,'#FFF')+tx(360,427,"Apply the parameters",40);
+  s+=line('M360 480 V525',palette.output)+tx(205,593,"Output y",36,palette.output)+pill(300,545,180,80,fmt(c.output),palette.outputLight,palette.output,54);
+  return s;
+}
+function products(d){
+  const c=calculate(d);
+  let s=miniHeader("Multiply each input by its weight");
+  for(let i=0;i<2;i++){
+    const x=180+i*360;
+    s+=tx(x,125,`Input x${i===0?'₁':'₂'}`,36,palette.input)+circle(x,200,44,fmt(d.inputs[i]),palette.inputLight,palette.input,56);
+    s+=line(`M${x} 265 V320`,palette.input);
+    s+=pill(x-83,340,166,80,`× ${fmt(d.weights[i])}`,palette.parameterLight,palette.parameter,48);
+    s+=tx(x+108,394,`w${i===0?'₁':'₂'}`,36,palette.parameter,'start');
+    s+=line(`M${x} 440 V475`)+circle(x,540,43,fmt(c.products[i]),'#FFF',palette.ink,54);
+  }
+  return s;
+}
+function chain(d){
+  const c=calculate(d),second=Math.max(0,c.output*.5+1);
+  let s=miniHeader("One output becomes the next input");
+  s+=tx(30,110,`Neuron 1: input [${d.inputs.map(fmt).join(', ')}]`,36,palette.ink,'start');
+  s+=round(30,135,660,135,'#FFF');
+  s+=math(360,195,`${fmt(d.inputs[0])}×${fmt(d.weights[0])} + ${fmt(d.inputs[1])}×${fmt(d.weights[1])} + (${fmt(d.bias)}) = ${fmt(c.z)}`,38);
+  s+=tx(360,248,`After ReLU: ${fmt(c.output)}`,36,palette.output);
+  s+=line('M360 290 V350',palette.output)+tx(400,334,`Read ${fmt(c.output)}`,36,palette.output,'start');
+  s+=tx(30,402,`Neuron 2: input [${fmt(c.output)}]`,36,palette.ink,'start');
+  s+=round(30,430,660,135,'#FFF');
+  s+=math(360,490,`${fmt(c.output)} × 0.5 + 1 = ${fmt(c.output*.5+1)}`,42)+tx(360,543,`After ReLU: ${fmt(second)}`,36,palette.output);
+  return s;
+}
+function network(){
+  let s=miniHeader("Connect neurons in layers");
+  s+=tx(75,130,"Input",36,palette.input)+tx(350,130,"Hidden",36)+tx(640,130,"Output",36);
+  const nodes={x1:{x:75,y:250,r:36},x2:{x:75,y:460,r:36},
+    a:{x:350,y:250,r:60},b:{x:350,y:460,r:60},c:{x:640,y:355,r:60}};
+  const edges=[['x1','a'],['x1','b'],['x2','a'],['x2','b'],['a','c'],['b','c']];
+  for(const [from,to] of edges){
+    const a=nodes[from],b=nodes[to],dx=b.x-a.x,dy=b.y-a.y,length=Math.hypot(dx,dy);
+    const sx=a.x+dx/length*(a.r+10),sy=a.y+dy/length*(a.r+10);
+    const ex=b.x-dx/length*(b.r+10),ey=b.y-dy/length*(b.r+10);
+    s+=line(`M${sx} ${sy} L${ex} ${ey}`,palette.line,2.8);
+  }
+  s+=circle(75,250,36,'x₁',palette.inputLight,palette.input,44)+circle(75,460,36,'x₂',palette.inputLight,palette.input,44);
+  for(const [key,name] of [['a','A'],['b','B'],['c','C']]){
+    const {x,y,r}=nodes[key];
+    s+=tx(x,y-80,`Neuron ${name}`,36);
+    s+=`<circle cx="${x}" cy="${y}" r="${r}" fill="${palette.outputLight}" stroke="${palette.output}" stroke-width="2.4"/>`;
+    s+=tx(x,y-8,"w·x+b",36,palette.output)+tx(x,y+36,'ReLU',36,palette.output);
+  }
+  s+=tx(497,259,"A output",36,palette.output)+tx(497,485,"B output",36,palette.output);
+  s+=line('M640 435 V490',palette.output)+tx(640,540,"Output y",36,palette.output);
+  s+=tx(30,620,"Each input connection: 1 weight",36,palette.parameter,'start');
+  s+=tx(30,685,"Each neuron: 1 bias",36,palette.parameter,'start');
+  return s;
+}
+function flow(d,step=5,progress=1){
+  const c=calculate(d);
+  let s=header(steps[step],"Read inputs and parameters; compute.");
+  for(let i=0;i<2;i++){
+    const x=280+i*520,active=step>=i+1;
+    s+=tx(x,235,`Input x${i===0?'₁':'₂'}`,54,palette.input)+circle(x,330,59,fmt(d.inputs[i]),palette.inputLight,palette.input,70);
+    s+=pill(x-100,470,200,92,`× ${fmt(d.weights[i])}`,palette.parameterLight,palette.parameter,66)+tx(x+122,532,`w${i===0?'₁':'₂'}`,54,palette.parameter,'start');
+    s+=group(active,line(`M${x} 412 V446`,palette.input)+line(`M${x} 585 V625`));
+    s+=group(active,circle(x,710,59,fmt(c.products[i]))+math(x,825,`${fmt(d.inputs[i])} × ${fmt(d.weights[i])}`,54,palette.muted));
+    if(step===i+1&&progress<.7){const y=420+Math.min(progress/.7,1)*200;s+=`<circle cx="${x}" cy="${y}" r="8" fill="${palette.input}"/>`;}
+  }
+  s+=group(step>=3,line('M365 710 H456')+line('M715 710 H624')+circle(540,710,59,fmt(c.sum))+math(540,610,`${fmt(c.products[0])} + ${fmt(c.products[1])}`,54,palette.muted));
+  s+=group(step>=4,line('M540 795 V930')+circle(540,1015,59,fmt(c.z))+
+    pill(790,970,235,90,`b = ${fmt(d.bias)}`,palette.parameterLight,palette.parameter,48)+line('M765 1015 H624',palette.parameter)+math(230,1035,`${fmt(c.sum)} + (${fmt(d.bias)})`,54));
+  s+=group(step>=5,line('M540 1100 V1210',palette.output)+pill(200,1250,680,110,`ReLU(${fmt(c.z)}) = ${fmt(c.output)}`,palette.outputLight,palette.output,62)+tx(540,1430,c.z>=0?"Keep nonnegative values as output.":"Negative values become 0.",54,palette.output));
+  s+=legend(1480);
+  return s;
+}
+function svg(figure,d,step=5,progress=1){
+  const fns={roles,products,chain,flow,network};
+  if(!fns[figure])throw new Error(`Unknown figure: ${figure}`);
+  const title=figure==='flow'?steps[step]:figure==='network'?"Connections between two inputs, two hidden neurons, and one output neuron":"Calculation graph for one neuron";
+  const body=fns[figure](d,step,progress);
+  return wrap(figure==='flow'?body:`<g transform="scale(1.5)">${body}</g>`,figureHeights[figure],title);
+}
+
+const initial={"kind":"hand_calc","lesson":1,"inputs":[2,1],"weights":[1,3],"bias":-1,"products":[2,3],"sum":5,"weighted_sum":4,"activation":"ReLU","output":4,"variants":[{"name":"只改输入","inputs":[2,2],"weights":[1,3],"bias":-1,"output":7},{"name":"只改偏置","inputs":[2,1],"weights":[1,3],"bias":0,"output":5},{"name":"负数输入","inputs":[-2,0],"weights":[1,3],"bias":-1,"before_relu":-3,"output":0}],"activation_example":{"kind":"hand_calc","inputs":[0,1,2],"targets":[0,0,1],"affine":{"weight":0,"bias":0,"outputs":[0,0,0]},"relu":{"weight":1,"bias":-1,"before_relu":[-1,0,1],"outputs":[0,0,1]}},"network_example":{"kind":"structure_example","widths":[2,2,1],"weight_count":6,"bias_count":3,"parameter_count":9}};
+const ids=['x1','x2','w1','w2','b'];
+let stage=0,timer=null;
+const get=id=>document.getElementById(id);
+function state(){return {inputs:[+get('x1').value,+get('x2').value],weights:[+get('w1').value,+get('w2').value],bias:+get('b').value};}
+function draw(){const d=state(),c=calculate(d);get('scene').innerHTML=svg('flow',d,stage);get('answer').textContent=fmt(c.output);get('equation').textContent='ReLU('+fmt(d.inputs[0])+' × ('+fmt(d.weights[0])+') + '+fmt(d.inputs[1])+' × ('+fmt(d.weights[1])+') + ('+fmt(d.bias)+')) = '+fmt(c.output);get('stepLabel').textContent=(stage+1)+' / 6 · '+steps[stage];get('prev').disabled=stage===0;get('next').disabled=stage===5;ids.forEach(id=>get(id+'v').value=get(id).value);}
+function pause(){clearInterval(timer);timer=null;get('play').textContent="Play";get('play').setAttribute('aria-pressed','false');}
+get('prev').onclick=()=>{pause();stage=Math.max(0,stage-1);draw();};
+get('next').onclick=()=>{pause();stage=Math.min(5,stage+1);draw();};
+get('restart').onclick=()=>{pause();stage=0;draw();};
+get('play').onclick=()=>{if(timer){pause();return;}if(stage===5)stage=0;draw();get('play').textContent="Pause";get('play').setAttribute('aria-pressed','true');timer=setInterval(()=>{stage=Math.min(5,stage+1);draw();if(stage===5)pause();},2300);};
+ids.forEach(id=>get(id).addEventListener('input',()=>{pause();stage=5;draw();}));
+document.querySelectorAll('[data-preset]').forEach(button=>button.onclick=()=>{pause();const n=+button.dataset.preset;const d=n===0?initial:initial.variants[n-1];const values=[...d.inputs,...d.weights,d.bias];ids.forEach((id,i)=>get(id).value=values[i]);stage=5;draw();});
+draw();
+</script></html>

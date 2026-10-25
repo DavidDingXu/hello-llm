@@ -1,0 +1,209 @@
+/* Scoped to the four enhanced standalone labs; no global clipping or calculation changes. */
+.special-experiment{--special-line:var(--line,#dce3eb);--special-accent:var(--teal,var(--green,#187b79));--special-paper:var(--paper,var(--bg,#fff));font-size:15px;line-height:1.5}
+.special-experiment main{max-width:1200px;padding:16px 20px 24px}
+.special-experiment main>h1{font-size:26px;line-height:1.25;letter-spacing:-.025em;margin:0 0 12px}
+.special-experiment button,.special-experiment select{min-height:34px;max-width:100%;font:inherit;font-size:13px;line-height:1.35}
+.special-experiment button{padding:6px 10px}
+.special-experiment input[type=range]{min-height:28px;margin:2px 0;cursor:pointer}
+.special-experiment .toolbar{gap:6px;margin:0}
+.special-experiment .special-details{margin:10px 0 0;border-top:1px solid var(--special-line);font-size:13px}
+.special-experiment .special-details>summary{padding:8px 0;cursor:pointer;color:var(--special-accent);font-size:13px}
+.special-experiment .special-details-content{padding:2px 0 12px}
+.special-experiment .special-details-content>:first-child{margin-top:0}
+.special-experiment .special-details-content footer{margin:12px 0 0;padding:10px 0 0;font-size:12px}
+.special-experiment .special-details-content .toolbar{margin:10px 0}
+.special-experiment .special-picker{display:flex;align-items:center;gap:9px;margin:0;min-width:0;font-size:12px}
+.special-experiment .special-picker>span{white-space:nowrap;color:var(--muted,#606c7b)}
+.special-experiment .special-picker select{width:100%;min-width:0;border:1px solid var(--special-line);background:var(--special-paper);color:inherit;border-radius:4px;padding:5px 7px}
+.special-experiment .special-scroll-hint{align-self:center;margin-left:auto;color:var(--muted,#606c7b);font-size:11px;white-space:nowrap}
+.special-experiment .special-scroll-hint[hidden]{display:none}
+
+.special-neuron .workbench{grid-template-columns:minmax(0,1fr) 320px;gap:22px;margin-top:0}
+.special-neuron .picture{padding-top:8px;min-width:0}
+.special-neuron .picture .toolbar{margin:0 0 7px}
+.special-neuron .step{min-height:21px;margin:0 0 5px;font-size:13px}
+.special-neuron .special-figure-tools{display:flex;gap:6px;margin:0 0 4px}
+.special-neuron .special-figure-tools button{min-height:29px;padding:4px 9px;font-size:12px}
+.special-neuron .special-figure-tools button[aria-pressed=true]{border-color:var(--special-accent);color:var(--special-accent);background:color-mix(in srgb,var(--special-accent) 8%,transparent)}
+.special-neuron #scene{height:var(--special-region-height,clamp(240px,calc(100dvh - 230px),480px));border:1px solid var(--special-line);border-radius:4px;overflow:auto;background:#fff}
+.special-neuron #scene svg{width:100%;height:100%;min-height:0}
+.special-neuron #scene.special-full-diagram svg{min-height:440px}
+.special-neuron .controls{display:block;min-width:0}
+.special-neuron .reading{display:grid;grid-template-columns:64px minmax(0,1fr);gap:0 10px;padding:7px 0 12px}
+.special-neuron .reading small{grid-column:1/-1;font-size:12px}
+.special-neuron #answer{font-size:42px;line-height:1.3}
+.special-neuron #equation{font-size:13px;align-self:center}
+.special-neuron .controls h2{font-size:14px;margin:9px 0 5px}
+.special-neuron .controls h2 span{font-size:11px}
+.special-neuron label[for]{margin-top:5px;gap:0 8px;font-size:13px}
+.special-neuron .parameters{margin-top:8px;padding-top:3px}
+.special-neuron .special-neuron-picker{display:none}
+.special-neuron .special-reference .presets{margin:0 0 10px;padding-top:8px}
+.special-neuron .special-reference .explanation{margin:10px 0;padding:10px 0}
+
+.special-surface .special-surface-workbench{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(280px,.75fr);gap:18px;align-items:start}
+.special-surface .canvas-wrap{margin:0}
+.special-surface canvas{height:clamp(260px,calc(100dvh - 180px),440px)}
+.special-surface .legend{font-size:11px;gap:6px 14px;padding:0 10px 8px}
+.special-surface .stats{margin:0 0 10px;gap:8px}
+.special-surface .stat{font-size:12px;padding:5px 0}
+.special-surface .stat output{font-size:24px}
+.special-surface .controls{margin:0 0 10px;gap:12px;grid-template-columns:1fr}
+.special-surface .controls label{font-size:13px}
+.special-surface .special-surface-panel>.toolbar{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.special-surface #change{font-size:13px;line-height:1.45;margin:10px 0 0;padding:9px 10px;min-height:0;max-height:150px;overflow:auto;border:1px solid var(--special-line)}
+.special-surface .special-reference .formula{font-size:16px}
+.special-surface .special-reference .formula span{white-space:normal}
+.special-surface .special-reference #gradient{font-size:13px}
+
+.special-xray .sample{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:9px 12px;margin:0 0 10px}
+.special-xray .workspace{display:flex;flex-direction:column;gap:8px}
+.special-xray .step-controls{order:0;align-self:stretch;justify-content:flex-start;margin:0;gap:8px}
+.special-xray .instrument{order:1;width:100%;padding:12px;height:var(--special-region-height,calc(100dvh - 250px));max-height:none;min-height:185px;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;outline-offset:3px}
+.special-xray .stage-info{min-height:0}
+.special-xray .stage-info h2{font-size:19px;line-height:1.3;margin:0 0 8px}
+.special-xray .substeps{gap:5px;margin:5px 0 10px}
+.special-xray .substeps:empty{display:none}
+.special-xray .substeps button{padding:4px 8px;min-height:30px;font-size:12px}
+.special-xray .special-xray-data{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:18px;align-items:start}
+.special-xray .special-xray-readout{display:flex;flex-direction:column;gap:9px;min-width:0}
+.special-xray .inspector{padding:10px;margin:0;min-width:0}
+.special-xray .inspector h3{font-size:13px;line-height:1.4;margin:0}
+.special-xray .inspector .big{font-size:28px;line-height:1.3;margin:5px 0}
+.special-xray .inspector dl{font-size:12px;margin:0}
+.special-xray .inspector dt{margin-top:7px}
+.special-xray .inspector .explain{font-size:12px;margin:8px 0 0;padding-top:8px}
+.special-xray .inspector .live{font-size:11px;margin-top:7px}
+.special-xray .special-coordinate-details{margin-top:4px}
+.special-xray .special-coordinate-details>summary{padding:5px 0;font-size:12px}
+.special-xray .mode{gap:5px;margin:0 0 7px}
+.special-xray .mode button{font-size:12px;padding:4px 8px;min-height:29px}
+.special-xray .grid{margin:0;gap:4px;grid-auto-rows:30px;max-height:268px;overflow:auto;padding:4px;scrollbar-gutter:stable}
+.special-xray .cell{aspect-ratio:auto;min-height:0;height:30px;font-size:11px;padding:0}
+.special-xray .legend{font-size:11px;gap:5px;margin-top:6px}
+.special-xray .fineprint{font-size:11px;margin:6px 0 0}
+.special-xray .relation{margin:0;padding:10px 12px;font-size:12px}
+.special-xray .relation code{font-size:12px;line-height:1.6;margin-top:6px}
+.special-xray .attention{margin-top:10px;padding-top:10px}
+.special-xray .attention h3{font-size:14px;margin:0}
+.special-xray .weights{height:145px}
+.special-xray .candidates{gap:5px;margin-top:5px}
+.special-xray .candidate{grid-template-columns:42px 1fr 70px;gap:7px;padding:6px 8px;min-height:31px}
+.special-xray .candidate-picker{margin-top:7px;padding:5px}
+.special-xray .projection{height:130px;margin-top:7px}
+.special-xray #output-view h3{font-size:13px;margin:10px 0 0!important}
+.special-xray .special-reference .tokens{margin:10px 0}
+.special-xray .special-reference .rail{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin:10px 0}
+.special-xray .special-reference .rail .connector{display:none}
+.special-xray .special-reference .station{padding:8px;min-height:0}
+.special-xray .special-reference .station strong{font-size:12px}
+.special-xray .special-reference .station span{font-size:10px}
+
+.special-replay .special-replay-workspace{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+.special-replay .special-replay-workspace>.special-picker{max-width:560px}
+.special-replay .special-replay-workspace>.toolbar{display:flex;align-items:center;gap:7px;margin:0}
+.special-replay #progress{font-size:12px;margin-left:4px}
+.special-replay .stage{height:var(--special-region-height,clamp(220px,calc(100dvh - 220px),720px));min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:12px 8px 12px 0;font-size:14px;line-height:1.6;outline-offset:3px}
+.special-replay .stage .eyebrow{font-size:12px;margin:0 0 5px}
+.special-replay .stage h2{font-size:20px;line-height:1.35;margin:0 0 12px}
+.special-replay .stage h3{font-size:16px;margin:15px 0 7px}
+.special-replay .stage p{margin:9px 0}
+.special-replay .stage .sample{font-size:21px;line-height:1.55;padding:12px 15px;margin:12px 0}
+.special-replay .stage .metrics{gap:12px;margin:12px 0}
+.special-replay .stage .metrics>div{padding:8px 0}
+.special-replay .stage .metrics small{font-size:12px}
+.special-replay .stage .metrics output{font-size:22px}
+.special-replay .stage .notice{font-size:13px;padding:5px 12px;margin:12px 0}
+.special-replay .stage .formula{font-size:20px;margin:12px 0}
+.special-replay .stage .flow{gap:8px;margin:12px 0}
+.special-replay .stage .flow .node{padding:9px 12px;font-size:13px}
+.special-replay .stage .flow .node small{font-size:11px}
+.special-replay .stage .scroll-table{margin:12px 0}
+.special-replay .stage table{font-size:12px}
+.special-replay .stage th,.special-replay .stage td{padding:6px 8px}
+.special-replay .stage .chart{height:230px;margin:10px 0}
+.special-replay .stage .legend{gap:12px;flex-wrap:wrap;font-size:11px}
+.special-replay .stage .toolbar{margin:8px 0}
+.special-replay .stage .compare{gap:15px;margin:12px 0}
+.special-replay .stage .generated{font-size:17px}
+.special-replay .stage .bar-row{font-size:13px;grid-template-columns:55px 1fr 85px;gap:8px;margin:8px 0}
+.special-replay .special-reference .steps{margin:10px 0}
+.special-replay .special-reference .phases{font-size:13px;margin:12px 0}
+.special-replay .special-reference .steps button{font-size:12px}
+
+@media(max-width:700px){
+ .special-experiment main{padding:12px 12px 18px}
+ .special-experiment main>h1{font-size:22px;margin-bottom:9px}
+ .special-experiment button{padding:5px 8px;font-size:12px}
+ .special-experiment .special-details>summary{font-size:12px;padding:7px 0}
+ .special-neuron .workbench{display:flex;flex-direction:column;gap:8px}
+ .special-neuron .picture,.special-neuron .controls{width:100%;max-width:none}
+ .special-neuron .picture{padding-top:6px}
+ .special-neuron .step{font-size:12px;min-height:18px;line-height:1.4}
+ .special-neuron #scene{height:clamp(150px,29dvh,240px)}
+ .special-neuron .reading{grid-template-columns:48px minmax(0,1fr);padding:5px 0 7px}
+ .special-neuron .reading small{font-size:11px}
+ .special-neuron #answer{font-size:31px}
+ .special-neuron #equation{font-size:12px;line-height:1.4}
+ .special-neuron .special-neuron-picker{display:flex;margin-bottom:4px}
+ .special-neuron .controls h2{display:none}
+ .special-neuron .parameters{margin:0;padding:0;border:0}
+ .special-neuron label[for]{grid-template-columns:1fr 44px;margin:0;gap:0 8px;font-size:12px}
+ .special-neuron .special-unselected,.special-neuron .special-empty-section{display:none!important}
+ .special-surface .special-surface-workbench{display:flex;flex-direction:column;gap:7px}
+ .special-surface .special-surface-visual,.special-surface .special-surface-panel{width:100%}
+ .special-surface canvas{height:clamp(160px,29dvh,245px)}
+ .special-surface .legend{font-size:10px;gap:4px 9px;padding:0 7px 6px}
+ .special-surface .legend span:before{width:14px;margin-right:4px}
+ .special-surface .stats{margin:0 0 5px}
+ .special-surface .stat{font-size:10px;padding:3px 0}
+ .special-surface .stat output{font-size:21px;line-height:1.3}
+ .special-surface .controls{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:5px}
+ .special-surface .controls label{font-size:12px}
+ .special-surface #change{font-size:12px;max-height:72px;padding:6px 8px;margin-top:7px}
+ .special-xray .sample{gap:8px;padding:7px;margin-bottom:7px}
+ .special-xray .sample .special-picker{display:block;font-size:11px}
+ .special-xray .sample .special-picker>span{display:block;margin-bottom:3px}
+ .special-xray .sample select{font-size:12px}
+ .special-xray .instrument{padding:9px;min-height:185px}
+ .special-xray .stage-info h2{font-size:16px;line-height:1.35}
+ .special-xray .special-xray-data{display:flex;flex-direction:column;gap:8px}
+ .special-xray .special-xray-readout{display:grid;grid-template-columns:88px minmax(0,1fr);width:100%;align-items:start;gap:8px}
+ .special-xray .special-xray-readout>.special-picker{display:block;font-size:11px}
+ .special-xray .special-xray-readout>.special-picker>span{display:block;margin-bottom:3px}
+ .special-xray .inspector{padding:6px 8px}
+ .special-xray .inspector h3{font-size:11px}
+ .special-xray .inspector .big{font-size:22px;margin:3px 0}
+ .special-xray .special-coordinate-details>summary{font-size:11px;padding:3px 0}
+ .special-xray .special-xray-values{width:100%;min-width:0}
+ .special-xray .grid{grid-auto-rows:27px;max-height:128px;gap:3px;padding:3px}
+ .special-xray .cell{height:27px;font-size:10px}
+ .special-xray .legend{font-size:10px}
+ .special-xray .fineprint{font-size:10px}
+ .special-xray .substeps{margin-bottom:7px}
+ .special-xray .substeps button{font-size:11px;padding:4px 6px}
+ .special-xray .special-reference .rail{grid-template-columns:1fr 1fr}
+ .special-replay .stage{font-size:13px;padding-top:10px}
+ .special-replay .stage h2{font-size:17px}
+ .special-replay .stage .metrics{gap:8px}
+ .special-replay .stage .metrics output{font-size:18px}
+ .special-replay .stage .metrics small{font-size:10px}
+ .special-replay .stage .sample{font-size:18px;padding:10px 12px}
+ .special-replay .stage .chart{height:200px}
+ .special-replay .stage .compare{grid-template-columns:1fr}
+ .special-replay .stage .bar-row{grid-template-columns:40px 1fr 73px;font-size:12px}
+}
+@media(max-width:360px){
+ .special-surface canvas{height:clamp(145px,27dvh,210px)}
+ .special-surface #change{max-height:64px}
+}
+@media(max-height:620px) and (min-width:701px){
+ .special-experiment main{padding-top:10px}
+ .special-experiment main>h1{font-size:23px;margin-bottom:9px}
+ .special-neuron #scene{min-height:210px}
+ .special-neuron .reading{padding-top:5px;padding-bottom:6px}
+ .special-neuron .controls h2{margin-top:5px}
+ .special-neuron label[for]{margin-top:2px}
+ .special-neuron .parameters{margin-top:4px}
+ .special-surface canvas{height:calc(100dvh - 145px);min-height:240px}
+}

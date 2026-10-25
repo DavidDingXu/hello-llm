@@ -1,0 +1,184 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<meta name="source-sha256" content="bb85898ae1e3673a8281f7fa4f7cb3c5bf55ce7427111407822364533da185cb"><meta name="description" content="The future answer is already in memory. Why can the current position still not read it? Draw the permitted connections, then exclude forbidden scores before normalization."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/11.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="11 | Causal Masks: Why Is Parallel Training Not Peeking at the Answer? · Hello LLM"><meta property="og:description" content="The future answer is already in memory. Why can the current position still not read it? Draw the permitted connections, then exclude forbidden scores before normalization."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/11.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>11 | Causal Masks: Why Is Parallel Training Not Peeking at the Answer? · Hello LLM</title>
+<link rel="icon" href="../assets/favicon.png" type="image/png">
+<script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
+<script defer src="../code/visuals/reading_site/search-index.en.js?v=11db81a4dd60"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="11" data-alternate-sections="[&quot;把可能泄露答案的那一格找出来&quot;, &quot;先把不该存在的连接划掉&quot;, &quot;把未来得分改成-0能不能堵住&quot;, &quot;把限制写进核心代码&quot;, &quot;现在把未来换掉检查它是否还在漏&quot;, &quot;既然各看各的前缀为什么还能一起算&quot;, &quot;两道检查题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="Open course contents" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></path></svg></button>
+<a class="brand" href="../index.en.html" aria-label="Hello LLM · 学习站首页">
+<img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>Build a Small Model, Understand Large Models</small></span></a>
+<nav class="header-nav" aria-label="Main navigation"><a href="../index.en.html#curriculum">Learning path</a><a href="../index.en.html#experiments">Experiments</a><a href="https://github.com/DavidDingXu/hello-llm" target="_blank" rel="noopener">GitHub <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a></nav>
+<div class="header-controls"><a class="language-switch" href="11.html" lang="zh-CN" aria-label="切换到中文">中文</a><button class="icon-button theme-toggle js-only" type="button" aria-label="Switch to dark theme" title="Switch to dark theme"><span class="theme-light-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A9 9 0 0 1 9.5 3.5a9 9 0 1 0 11 11Z"/></path></svg></span><span class="theme-dark-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/></circle><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></path></svg></span></button>
+<button class="search-trigger js-only" type="button" aria-label="Search course"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/></circle><path d="m16 16 4.5 4.5"/></path></svg><span>Search course</span><kbd>⌘ K</kbd></button>
+</div></div><div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div></header><div class="sidebar-scrim" hidden></div><div class="reader-layout"><aside class="course-sidebar" id="course-sidebar" aria-label="Course contents">
+<div class="sidebar-heading"><a href="../index.en.html">Course contents</a><button class="icon-button menu-close js-only" type="button" aria-label="Close course contents"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></div>
+<nav aria-label="All articles"><div class="sidebar-guides"><a class="lesson-link" data-lesson="intro" href="../course/intro.en.html"><span class="lesson-number">·</span><span>Course introduction</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="00" href="../course/00.en.html"><span class="lesson-number">·</span><span>Before we begin</span><span class="lesson-state" aria-hidden="true"></span></a></div><details class="sidebar-stage"><summary><span class="stage-index">Part I</span>Make a numerical network learn</summary><a class="lesson-link" data-lesson="01" href="../course/01.en.html"><span class="lesson-number">01</span><span>Neurons</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="02" href="../course/02.en.html"><span class="lesson-number">02</span><span>Vectors and Matrices</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="03" href="../course/03.en.html"><span class="lesson-number">03</span><span>Multiple Layers and Nonlinearity</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="04" href="../course/04.en.html"><span class="lesson-number">04</span><span>Gradients and Parameter Updates</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="05" href="../course/05.en.html"><span class="lesson-number">05</span><span>Backpropagation by Hand</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="06" href="../course/06.en.html"><span class="lesson-number">06</span><span>Making the Network Learn</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part II</span>Bring text into the network</summary><a class="lesson-link" data-lesson="07" href="../course/07.en.html"><span class="lesson-number">07</span><span>Text and Vectors</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="08" href="../course/08.en.html"><span class="lesson-number">08</span><span>Scores and Probabilities</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="09" href="../course/09.en.html"><span class="lesson-number">09</span><span>Text Training Problems</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage" open><summary><span class="stage-index">Part III</span>Read context and assemble the model</summary><a class="lesson-link" data-lesson="10" href="../course/10.en.html"><span class="lesson-number">10</span><span>Single-Head Attention</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="11" href="../course/11.en.html" aria-current="page"><span class="lesson-number">11</span><span>Causal masks</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="12" href="../course/12.en.html"><span class="lesson-number">12</span><span>Multi-head attention</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="13" href="../course/13.en.html"><span class="lesson-number">13</span><span>Rotary position embeddings</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="14" href="../course/14.en.html"><span class="lesson-number">14</span><span>Positionwise feed-forward networks</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="15" href="../course/15.en.html"><span class="lesson-number">15</span><span>Residual connections and normalization</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="16" href="../course/16.en.html"><span class="lesson-number">16</span><span>The complete forward pass</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part IV</span>Pretrain, generate, and fine-tune</summary><a class="lesson-link" data-lesson="17" href="../course/17.en.html"><span class="lesson-number">17</span><span>The first pretraining run</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="18" href="../course/18.en.html"><span class="lesson-number">18</span><span>Character-by-character generation</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="19" href="../course/19.en.html"><span class="lesson-number">19</span><span>Question-answer fine-tuning</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="20" href="../course/20.en.html"><span class="lesson-number">20</span><span>The full workflow and checks of the principles</span><span class="lesson-state" aria-hidden="true"></span></a></details><a class="lesson-link" data-lesson="end" href="../course/end.en.html"><span class="lesson-number">·</span><span>Closing thoughts</span><span class="lesson-state" aria-hidden="true"></span></a></nav></aside><main class="reader-main" id="main-content"><div class="article-context"><span>Read context and assemble the model</span><div class="article-actions"><button type="button" class="copy-page-link js-only">Copy link</button><button type="button" class="focus-toggle js-only" aria-pressed="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></path></svg><span>Focus mode</span></button></div></div>
+<div class="mobile-context"><nav class="reading-route" aria-label="On this page"><details><summary>On this page</summary><div class="toc">
+<ul>
+<li><a href="#find-the-slot-that-could-leak-the-answer">Find the Slot That Could Leak the Answer</a></li>
+<li><a href="#cross-out-the-connections-that-should-not-exist">Cross Out the Connections That Should Not Exist</a></li>
+<li><a href="#would-setting-future-scores-to-0-block-them">Would Setting Future Scores to 0 Block Them?</a></li>
+<li><a href="#put-the-restriction-into-the-core-code">Put the Restriction into the Core Code</a></li>
+<li><a href="#change-the-future-and-check-for-leakage">Change the Future and Check for Leakage</a></li>
+<li><a href="#if-each-position-has-its-own-prefix-why-can-they-run-together">If Each Position Has Its Own Prefix, Why Can They Run Together?</a></li>
+<li><a href="#two-check-questions">Two Check Questions</a></li>
+</ul>
+</div>
+</details></nav><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="Decrease text size">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="Increase text size">A+</button></div></div><article id="article-body"><h1 id="11-causal-masks-why-is-parallel-training-not-peeking-at-the-answer">11 | Causal Masks: Why Is Parallel Training Not Peeking at the Answer?</h1>
+<p>Build a Small Model, Understand Large Models · Lesson 11</p>
+<p>During training, predicting “苹” after “欢” offers a dangerous shortcut: the next input slot already contains “苹”. If the attention mechanism from the previous lesson reads that slot, a correct prediction may simply mean it has read the answer directly. These are characters in our actual Chinese training data: “欢” completes “喜欢” (“likes”), and “苹” begins “苹果” (“apple”).</p>
+<p>During generation, the following “苹” has not appeared yet, so this shortcut is unavailable. Even a very low training loss would not establish that the model can predict from the preceding text.</p>
+<h2 id="find-the-slot-that-could-leak-the-answer">Find the Slot That Could Leak the Answer</h2>
+<p>Lay out the input and target:</p>
+<pre><code class="language-text">输入：BOS 小 丁 喜 欢 苹 果 。
+目标：小  丁 喜 欢 苹 果 。 EOS
+</code></pre>
+<p>The two rows above are the input and target, respectively. Input position 4 contains “欢”, and its target is “苹”. Reading from BOS through “欢” lets the model predict from the available prefix. Reading “苹” at input position 5 would bring the answer into the computation.</p>
+<p>Shifting the targets by one slot has not closed this route. It tells the loss function <strong>what to predict</strong>, but does not restrict <strong>what the forward pass may use to predict it</strong>. Each position needs a permitted reading range: position t may read only positions 0 through t.</p>
+<p>We allow the current position to remain visible: the “欢” at position 4 is already known when predicting the next character. The first BOS can also read itself, ensuring that the first row has at least one entry to normalize over.</p>
+<h2 id="cross-out-the-connections-that-should-not-exist">Cross Out the Connections That Should Not Exist</h2>
+<p>Reuse the three-position values from the previous lesson:</p>
+<pre><code class="language-text">Q = K = [[1, 0],      V = [[1, 0],
+         [0, 1],           [0, 2],
+         [1, 1]]           [1, 2]]
+</code></pre>
+<p>As before, displayed values are rounded to four decimal places; the computation uses full precision.</p>
+<p>Position 0 may now read only 0; position 1 may read 0 and 1; position 2 may read 0, 1, and 2. Rows represent query positions, and columns represent positions being read. Mark allowed connections with 1 and forbidden connections with 0:</p>
+<pre><code class="language-text">[[1, 0, 0],
+ [1, 1, 0],
+ [1, 1, 1]]
+</code></pre>
+<p>This rule table is a <strong>causal mask</strong>. It is generated from position relationships and is not trained. The diagonal and the region below it are visible; the upper-right region containing future positions is hidden.</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/11-causal-mask/images/en/web/01-%E6%9C%BA%E5%88%B6.svg" width="1540" height="470"><img data-full-figure="../chapters/11-causal-mask/images/en/01-%E6%9C%BA%E5%88%B6.svg" alt="A lower-triangular visibility table maps query positions to readable positions; future scores are replaced with negative infinity before Softmax" src="../chapters/11-causal-mask/images/en/01-%E6%9C%BA%E5%88%B6.svg"  width="1080" height="1950" loading="eager" decoding="async" /></picture></p>
+<p>The gray cells indicate forbidden reads. This differs from −100 in the targets: −100 only determines whether a position contributes a direct loss. Here, we must block an input information path.</p>
+<h2 id="would-setting-future-scores-to-0-block-them">Would Setting Future Scores to 0 Block Them?</h2>
+<p>Start with position 1. Its unmasked scores are <code>[0, 0.7071, 0.7071]</code>. The third entry refers to the future and must receive probability 0.</p>
+<p>The obvious first attempt is to set that third score to 0. But run Softmax again: <code>exp(0)=1</code>, so this position still receives a share. A score of zero is an ordinary score; it does not mean “reading forbidden.”</p>
+<p>For the share to vanish completely, its exponential must be 0. As a score approaches negative infinity, its exponential approaches 0.</p>
+<p>The code represents negative infinity with <code>float("-inf")</code>. Exponentiating it gives 0; dividing that by the sum of the valid terms still gives 0. Position 1's scores therefore become:</p>
+<pre><code class="language-text">[0, 0.7071, -∞]
+</code></pre>
+<p>Its probabilities become <strong>[0.3302,0.6698,0]</strong>. The third entry disappears, and the first two are renormalized so that their sum remains 1.</p>
+<p>Now try “zero the future after Softmax.” That leaves <code>[0.1978, 0.4011, 0]</code>, whose sum is only about 0.5989. The future entry is zero, but the first two entries still use the old denominator, shrinking the aggregate vector unnecessarily. Masking before Softmax lets the visible positions receive the full share again.</p>
+<p>Setting only the future V to all 0 is also insufficient: the future K can still affect the result through the Softmax denominator.</p>
+<p>The first row has only position 0 left, so its weights are <code>[1, 0, 0]</code>. The last row has no future positions and retains the previous lesson's result. The complete weight table is:</p>
+<pre><code class="language-text">[[1.0000, 0.0000, 0.0000],
+ [0.3302, 0.6698, 0.0000],
+ [0.2483, 0.2483, 0.5035]]
+</code></pre>
+<p>The corresponding output is approximately:</p>
+<pre><code class="language-text">[[1.0000, 0.0000],
+ [0.3302, 1.3395],
+ [0.7517, 1.5035]]
+</code></pre>
+<p>Position 1's output comes from <code>0.3302×[1, 0]+0.6698×[0, 2]</code>, with no contribution from the third row of V. The weight table lets us trace the source of every result.</p>
+<h2 id="put-the-restriction-into-the-core-code">Put the Restriction into the Core Code</h2>
+<pre><code class="language-python">import math
+import torch
+
+def attention(q, k, v, causal=True):
+    &quot;&quot;&quot;汇总可见位置的 V；本例输入均为 [T,2]，返回 [T,2] 与 [T,T]。&quot;&quot;&quot;
+    # 行是发起查询的位置，列是被读取的 K 位置；按查询向量宽度缩放点积。
+    scores = q @ k.transpose(-2, -1) / math.sqrt(q.shape[-1])
+    if causal:
+        # True 表示允许读取：下三角包含当前位置和过去，排除未来。
+        visible = torch.ones(scores.shape[-2:], dtype=torch.bool,
+                             device=scores.device).tril()
+        # ~visible 选中未来格；必须在 Softmax 前置为 -inf，使其指数为 0。
+        scores = scores.masked_fill(~visible, float(&quot;-inf&quot;))
+    # 最后一轴是 K 位置，每个查询行独立分配总和为 1 的比例。
+    weights = torch.softmax(scores, dim=-1)
+    return weights @ v, weights
+
+q = torch.tensor([[1., 0.], [0., 1.], [1., 1.]])
+k = q.clone()
+v = torch.tensor([[1., 0.], [0., 2.], [1., 2.]])
+output, weights = attention(q, k, v, causal=True)
+print(weights)
+print(output)
+# 核对未来位置的比例为零，而不是只把它们的 V 向量清零。
+assert weights[0, 1:].eq(0).all()
+assert weights[1, 2].item() == 0.
+assert torch.allclose(weights.sum(dim=-1), torch.ones(3))
+</code></pre>
+<p><code>tril()</code> keeps the lower triangle. Boolean <code>True</code> means visible; <code>~visible</code> flips the Boolean values to select forbidden positions. <code>masked_fill</code> returns a new set of scores with negative infinity in those positions. The code comments and docstrings are preserved in Chinese so that these runnable examples remain identical to the original lesson.</p>
+<p>Do not mask an entire row: when every score is negative infinity, there is no valid normalization denominator. Keeping the diagonal ensures that every row can at least read itself.</p>
+<h2 id="change-the-future-and-check-for-leakage">Change the Future and Check for Leakage</h2>
+<p>Test the mask by modifying the input. Keep the same projections: <code>Q=K=X</code>, and V multiplies the second coordinate by 2. Change the final input position from <code>[1, 1]</code> to <code>[4, 0]</code>. Its Q, K, and V all change, but positions 0 and 1 are not allowed to read it, so their outputs should stay the same.</p>
+<pre><code class="language-python">def run(x, causal):
+    &quot;&quot;&quot;固定投影 Q=K=X，只将 V 的第二坐标乘 2，便于比较可见范围。&quot;&quot;&quot;
+    values = x @ torch.tensor([[1., 0.], [0., 2.]]).T
+    return attention(x, x, values, causal=causal)[0]
+
+x = torch.tensor([[1., 0.], [0., 1.], [1., 1.]])
+changed_x = x.clone()
+# 只替换位置 2；位置 0、1 的输入和计算参数均保持原样。
+changed_x[2] = torch.tensor([4., 0.])
+
+before = run(x, causal=True)
+after = run(changed_x, causal=True)
+assert torch.allclose(before[:2], after[:2])
+print(&quot;因果前缀差值&quot;, (before[:2] - after[:2]).abs().max().item())
+
+# 对照：取消因果限制后，位置 2 可以影响前两行。
+open_before = run(x, causal=False)
+open_after = run(changed_x, causal=False)
+assert not torch.allclose(open_before[:2], open_after[:2])
+</code></pre>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/11-causal-mask/images/en/web/02-%E9%AA%8C%E8%AF%81.svg" width="1504" height="747.2"><img alt="With fixed parameters, replacing only the final position leaves the first two causal-attention rows unchanged; the unmasked control changes" src="../chapters/11-causal-mask/images/en/02-%E9%AA%8C%E8%AF%81.svg"  width="1080" height="1815" loading="lazy" decoding="async" /></picture></p>
+<p>There is no backward pass or parameter update during this comparison. Otherwise, parameter changes could alter the entire prefix even when the future is masked. In the complete model, we must also replace a future token with another ID and check that the earlier <strong>logits</strong> agree, confirming that later components do not reintroduce a path from the future.</p>
+<p>The first two rows differ by 0 in the causal version; they change in the unmasked version. The final row we replaced is allowed to read itself, so its result may change. The printed Chinese label means “causal prefix difference.”</p>
+<p>A multilayer network must obey the same constraint. At layer one, position t reads only inputs at or before t. If layer two also reads only first-layer results at or before t, those results still contain only prefix information. Continuing this argument through the layers establishes that future information cannot take a detour through an intermediate position. Masking the future only at the final layer cannot remove information mixed in earlier.</p>
+<p>Right padding follows the same rule. PAD appears after all valid positions, so earlier valid queries cannot read it. PAD rows still produce outputs, but their labels are −100 and do not contribute to the loss. Protecting the prefix does not depend on their vectors happening to be all zeros.</p>
+<h2 id="if-each-position-has-its-own-prefix-why-can-they-run-together">If Each Position Has Its Own Prefix, Why Can They Run Together?</h2>
+<p>Discussing position 0 before position 1 is an order of explanation, not a dependency that forces the program to wait row by row.</p>
+<p>During training, all inputs are already given, so all Q, K, and V vectors can be computed first. Each row applies its own visibility range to the same known input. Position 1 need not wait for position 0 to generate a new character, and position 2 need not wait for position 1's prediction.</p>
+<p>Blocking the future therefore does not force character-by-character training. A matrix multiplication computes every score, the upper-right region is masked, and each row is normalized to obtain all the predictions together. Whether the model peeks at the answer depends on the permitted connections, not on which row the program computes first.</p>
+<details class="motion-figure"><summary>Watch the animated walkthrough</summary><img alt="Future scores become negative infinity before Softmax computes the weights and causal aggregate outputs" src="../chapters/11-causal-mask/images/en/%E8%BF%87%E7%A8%8B.gif"  width="648" height="1170" loading="lazy" decoding="async" /></details>
+<p>In the <a href="../chapters/11-causal-mask/walkthrough.en.html">interactive demo</a>, inspect the scores and Softmax results before and after masking. All rows in the full matrix are computed in the same forward pass.</p><details class="inline-experiment"><summary><span>Try it here · Step-by-step experiment</span><small>Step through the calculation, forwards or backwards.</small></summary><p><a href="../chapters/11-causal-mask/walkthrough.en.html" class="js-experiment inline-expand">Expand workspace ↗</a> · <a href="../chapters/11-causal-mask/walkthrough.en.html" target="_blank" rel="noopener">Open in a new tab ↗</a></p><dialog class="inline-workspace experiment-viewer" aria-label="Step-by-step experiment"><header><strong>Step-by-step experiment</strong><div><a href="../chapters/11-causal-mask/walkthrough.en.html" target="_blank" rel="noopener">Open in a new tab <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button inline-close" type="button" aria-label="Return to reading">Return to reading <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe data-src="../chapters/11-causal-mask/walkthrough.en.html" title="Step-by-step experiment" loading="lazy"></iframe></dialog></details>
+<p>Generation is different: the next character has not yet been chosen, so its input vector does not exist. The model produces a row of scores, selects a character, appends it to the input, and then computes the next step. <strong>Known training inputs can be processed in parallel; new inputs during generation must still be obtained step by step.</strong> The causal constraint gives prediction the same meaning in both processes.</p>
+<p>During training, the prefix comes from the original sentence. During generation, it includes characters the model itself selected. If one character is wrong, the input to the next step changes as well.</p>
+<h2 id="two-check-questions">Two Check Questions</h2>
+<ol>
+<li>Set position 0's future scores to 0 instead of negative infinity. Its three scores become <code>[0.7071, 0, 0]</code>. Will the final two weights be 0?</li>
+<li>If the input at position 1 changes, should position 0's output change? What about position 2? What happens if only the target label at position 1 changes?</li>
+</ol>
+<details class="answer">
+<summary>Reference answers</summary>
+<p>For question one, no. The weights are approximately <code>[0.5035, 0.2483, 0.2483]</code>, so the future remains visible. For question two, in a causal computation with fixed parameters, position 0 should remain unchanged. Position 2 may read position 1 and may therefore change. If only the target label changes, with inputs and parameters held fixed, all forward outputs remain the same. What changes is the loss and the gradients that may subsequently be computed.</p>
+</details>
+<p>Run this from the companion code directory:</p>
+<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+python -m lessons.l11
+</code></pre>
+<p>Complete entry points: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l11.py">Lesson runner</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/attention.py">Attention component</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md">Environment setup</a></p>
+<p>Source navigation: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/attention.py#L30">attention.py · attention_2d</a>.</p></article><details class="lesson-video video-ready" id="lesson-video"><summary><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></path></svg>Watch the companion video<span class="video-duration">4:09</span><span class="video-language">Chinese audio</span></summary><div class="bilibili-embed"><iframe data-src="https://player.bilibili.com/player.html?bvid=BV1z5HV6dEAr&amp;p=1&amp;autoplay=0&amp;danmaku=0" title="11 | Causal Masks: Why Is Parallel Training Not Peeking at the Answer? · B站视频" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><p class="video-actions"><a href="https://www.bilibili.com/video/BV1z5HV6dEAr/?p=1" target="_blank" rel="noopener">Watch in HD on Bilibili ↗</a></p></div></details>
+<div class="reader-feedback"><span>Questions about this chapter?</span><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=question.yml&amp;title=%5B%E5%AD%A6%E4%B9%A0%5D+11+%7C+Causal+Masks%3A+Why+Is+Parallel+Training+Not+Peeking+at+the+Answer%3F&amp;location=11+%7C+Causal+Masks%3A+Why+Is+Parallel+Training+Not+Peeking+at+the+Answer%3F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F11.en.html" target="_blank" rel="noopener">Ask a question</a><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=content.yml&amp;title=%5B%E5%8B%98%E8%AF%AF%5D+11+%7C+Causal+Masks%3A+Why+Is+Parallel+Training+Not+Peeking+at+the+Answer%3F&amp;location=11+%7C+Causal+Masks%3A+Why+Is+Parallel+Training+Not+Peeking+at+the+Answer%3F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F11.en.html" target="_blank" rel="noopener">Suggest a correction</a></div><nav class="chapter-nav" aria-label="Previous and next articles"><a href="../course/10.en.html"><span>Previous <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></path></svg></span><strong>10 | Attention: How Does Predicting the Next Character Read Earlier Text?</strong></a><a href="../course/12.en.html"><span>Next <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></path></svg></span><strong>12 | Multi-Head Attention: Where Does Each Head Read?</strong></a></nav><footer class="reader-footer">Hello LLM · Build a Small Model, Understand Large Models<details class="community-mini"><summary>Stay in touch · 好好用 AI</summary><div class="community-section"><div><h2>Stay in touch · 好好用 AI</h2><p>Follow the WeChat account to discuss what you learn and build.</p><p>For bugs and corrections, <a href="https://github.com/DavidDingXu/hello-llm/issues" target="_blank" rel="noopener">open a GitHub issue</a>.</p></div><a class="qr-link" href="../code/assets/wechat-official-account.jpg" target="_blank" rel="noopener" aria-label="Open the 好好用 AI WeChat QR code"><img src="../code/assets/wechat-official-account.jpg" alt="好好用 AI WeChat official account QR code" width="130" height="130" loading="lazy"><p class="qr-caption">Scan in WeChat · Open full image</p></a></div></details></footer></main>
+<aside class="context-sidebar" aria-label="Article navigation and tools"><div class="context-inner"><nav class="reading-route" aria-label="On this page"><details open><summary>On this page</summary><div class="toc">
+<ul>
+<li><a href="#find-the-slot-that-could-leak-the-answer">Find the Slot That Could Leak the Answer</a></li>
+<li><a href="#cross-out-the-connections-that-should-not-exist">Cross Out the Connections That Should Not Exist</a></li>
+<li><a href="#would-setting-future-scores-to-0-block-them">Would Setting Future Scores to 0 Block Them?</a></li>
+<li><a href="#put-the-restriction-into-the-core-code">Put the Restriction into the Core Code</a></li>
+<li><a href="#change-the-future-and-check-for-leakage">Change the Future and Check for Leakage</a></li>
+<li><a href="#if-each-position-has-its-own-prefix-why-can-they-run-together">If Each Position Has Its Own Prefix, Why Can They Run Together?</a></li>
+<li><a href="#two-check-questions">Two Check Questions</a></li>
+</ul>
+</div>
+</details></nav>
+<section class="reading-settings"><h2>Reading settings</h2><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="Decrease text size">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="Increase text size">A+</button></div><span>Allow about 35 minutes</span><p class="lesson-goal">Explain causal visibility and the correct placement of the mask.</p></section>
+</div></aside></div><dialog class="search-dialog" id="search-dialog" aria-labelledby="search-label">
+<form method="dialog" class="search-heading"><label for="course-search" id="search-label"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/></circle><path d="m16 16 4.5 4.5"/></path></svg>Search course</label><button class="icon-button" aria-label="Close search"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></form>
+<input id="course-search" type="search" placeholder="Search concepts, code, or questions…" autocomplete="off" spellcheck="false">
+<p class="search-status" id="search-status" role="status">Search all 23 articles by keyword.</p>
+<div class="search-results" id="search-results"></div><footer>↑ ↓ Select result <span>Enter Open · Esc Close</span></footer></dialog>
+<dialog class="experiment-viewer" id="experiment-viewer" aria-labelledby="experiment-title"><header><strong id="experiment-title">Experiments</strong><div><a id="experiment-standalone" target="_blank" rel="noopener">Open separately <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a><button class="button" id="close-experiment" type="button">Back to reading <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></div></header><iframe id="experiment-frame" title="Experiments" src="about:blank"></iframe></dialog>
+<dialog class="image-viewer" id="image-viewer" aria-label="Enlarge figure">
+<header><span>View figure</span><div class="image-actions"><button type="button" id="image-zoom-out" aria-label="Zoom out">−</button><output id="image-scale" aria-label="Zoom level">100%</output><button type="button" id="image-zoom-in" aria-label="Enlarge figure">＋</button><button type="button" id="image-size">Actual size</button><button type="button" id="close-image" autofocus>Close</button></div></header>
+<div class="image-canvas"><p id="image-status" role="status" hidden></p><img id="large-image" alt=""></div><footer><p id="image-description"></p><a id="original-image" target="_blank" rel="noopener">Open original image <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a></footer></dialog>
+<div class="toast" id="toast" role="status"></div></body></html>

@@ -1,0 +1,14 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+node_modules/
+site-export/
+.env
+.env.*
+.hello-llm-export.json
+code/artifacts/my*/
+code/artifacts/ci*/
+/dist/
+/assets/videos/media/
+_build/

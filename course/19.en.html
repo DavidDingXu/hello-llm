@@ -1,0 +1,431 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<meta name="source-sha256" content="c41ad50e15b81a7e97dbadd1674cb113524c8246090bddf3207ba5053e56ac72"><meta name="description" content="A model learns to answer questions while old capabilities may degrade. Align answer labels, then compare learning rates and mixed training on fixed evaluation tasks to measure both gains and costs."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/19.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="19 | Supervised Fine-Tuning: Why Can It Continue Text but Still Fail to Answer? · Hello LLM"><meta property="og:description" content="A model learns to answer questions while old capabilities may degrade. Align answer labels, then compare learning rates and mixed training on fixed evaluation tasks to measure both gains and costs."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/19.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>19 | Supervised Fine-Tuning: Why Can It Continue Text but Still Fail to Answer? · Hello LLM</title>
+<link rel="icon" href="../assets/favicon.png" type="image/png">
+<script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
+<script defer src="../code/visuals/reading_site/search-index.en.js?v=11db81a4dd60"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="19" data-alternate-sections="[&quot;把读问题和写答案放进同一条序列&quot;, &quot;红应当由哪个位置预测&quot;, &quot;不评分的问题还能不能删掉&quot;, &quot;换一组未参加训练的问法还能答对吗&quot;, &quot;回到刚才那两个问题&quot;, &quot;旧续写坏了怎样一步步查&quot;, &quot;查看与重跑&quot;, &quot;两道边界题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="Open course contents" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></path></svg></button>
+<a class="brand" href="../index.en.html" aria-label="Hello LLM · 学习站首页">
+<img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>Build a Small Model, Understand Large Models</small></span></a>
+<nav class="header-nav" aria-label="Main navigation"><a href="../index.en.html#curriculum">Learning path</a><a href="../index.en.html#experiments">Experiments</a><a href="https://github.com/DavidDingXu/hello-llm" target="_blank" rel="noopener">GitHub <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a></nav>
+<div class="header-controls"><a class="language-switch" href="19.html" lang="zh-CN" aria-label="切换到中文">中文</a><button class="icon-button theme-toggle js-only" type="button" aria-label="Switch to dark theme" title="Switch to dark theme"><span class="theme-light-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A9 9 0 0 1 9.5 3.5a9 9 0 1 0 11 11Z"/></path></svg></span><span class="theme-dark-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/></circle><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></path></svg></span></button>
+<button class="search-trigger js-only" type="button" aria-label="Search course"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/></circle><path d="m16 16 4.5 4.5"/></path></svg><span>Search course</span><kbd>⌘ K</kbd></button>
+</div></div><div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div></header><div class="sidebar-scrim" hidden></div><div class="reader-layout"><aside class="course-sidebar" id="course-sidebar" aria-label="Course contents">
+<div class="sidebar-heading"><a href="../index.en.html">Course contents</a><button class="icon-button menu-close js-only" type="button" aria-label="Close course contents"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></div>
+<nav aria-label="All articles"><div class="sidebar-guides"><a class="lesson-link" data-lesson="intro" href="../course/intro.en.html"><span class="lesson-number">·</span><span>Course introduction</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="00" href="../course/00.en.html"><span class="lesson-number">·</span><span>Before we begin</span><span class="lesson-state" aria-hidden="true"></span></a></div><details class="sidebar-stage"><summary><span class="stage-index">Part I</span>Make a numerical network learn</summary><a class="lesson-link" data-lesson="01" href="../course/01.en.html"><span class="lesson-number">01</span><span>Neurons</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="02" href="../course/02.en.html"><span class="lesson-number">02</span><span>Vectors and Matrices</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="03" href="../course/03.en.html"><span class="lesson-number">03</span><span>Multiple Layers and Nonlinearity</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="04" href="../course/04.en.html"><span class="lesson-number">04</span><span>Gradients and Parameter Updates</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="05" href="../course/05.en.html"><span class="lesson-number">05</span><span>Backpropagation by Hand</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="06" href="../course/06.en.html"><span class="lesson-number">06</span><span>Making the Network Learn</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part II</span>Bring text into the network</summary><a class="lesson-link" data-lesson="07" href="../course/07.en.html"><span class="lesson-number">07</span><span>Text and Vectors</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="08" href="../course/08.en.html"><span class="lesson-number">08</span><span>Scores and Probabilities</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="09" href="../course/09.en.html"><span class="lesson-number">09</span><span>Text Training Problems</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part III</span>Read context and assemble the model</summary><a class="lesson-link" data-lesson="10" href="../course/10.en.html"><span class="lesson-number">10</span><span>Single-Head Attention</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="11" href="../course/11.en.html"><span class="lesson-number">11</span><span>Causal masks</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="12" href="../course/12.en.html"><span class="lesson-number">12</span><span>Multi-head attention</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="13" href="../course/13.en.html"><span class="lesson-number">13</span><span>Rotary position embeddings</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="14" href="../course/14.en.html"><span class="lesson-number">14</span><span>Positionwise feed-forward networks</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="15" href="../course/15.en.html"><span class="lesson-number">15</span><span>Residual connections and normalization</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="16" href="../course/16.en.html"><span class="lesson-number">16</span><span>The complete forward pass</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage" open><summary><span class="stage-index">Part IV</span>Pretrain, generate, and fine-tune</summary><a class="lesson-link" data-lesson="17" href="../course/17.en.html"><span class="lesson-number">17</span><span>The first pretraining run</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="18" href="../course/18.en.html"><span class="lesson-number">18</span><span>Character-by-character generation</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="19" href="../course/19.en.html" aria-current="page"><span class="lesson-number">19</span><span>Question-answer fine-tuning</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="20" href="../course/20.en.html"><span class="lesson-number">20</span><span>The full workflow and checks of the principles</span><span class="lesson-state" aria-hidden="true"></span></a></details><a class="lesson-link" data-lesson="end" href="../course/end.en.html"><span class="lesson-number">·</span><span>Closing thoughts</span><span class="lesson-state" aria-hidden="true"></span></a></nav></aside><main class="reader-main" id="main-content"><div class="article-context"><span>Pretrain, generate, and fine-tune</span><div class="article-actions"><button type="button" class="copy-page-link js-only">Copy link</button><button type="button" class="focus-toggle js-only" aria-pressed="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></path></svg><span>Focus mode</span></button></div></div>
+<div class="mobile-context"><nav class="reading-route" aria-label="On this page"><details><summary>On this page</summary><div class="toc">
+<ul>
+<li><a href="#put-reading-the-question-and-writing-the-answer-in-one-sequence">Put Reading the Question and Writing the Answer in One Sequence</a></li>
+<li><a href="#which-position-should-predict-红">Which Position Should Predict “红”?</a></li>
+<li><a href="#can-we-remove-the-unscored-question">Can We Remove the Unscored Question?</a></li>
+<li><a href="#can-it-answer-a-question-format-that-was-not-trained">Can It Answer a Question Format That Was Not Trained?</a></li>
+<li><a href="#return-to-the-two-questions">Return to the Two Questions</a></li>
+<li><a href="#how-do-we-investigate-the-lost-continuation-ability">How Do We Investigate the Lost Continuation Ability?</a></li>
+<li><a href="#inspect-or-rerun">Inspect or Rerun</a></li>
+<li><a href="#two-boundary-questions">Two Boundary Questions</a></li>
+</ul>
+</div>
+</details></nav><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="Decrease text size">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="Increase text size">A+</button></div></div><article id="article-body"><h1 id="19-supervised-fine-tuning-why-can-it-continue-text-but-still-fail-to-answer">19 | Supervised Fine-Tuning: Why Can It Continue Text but Still Fail to Answer?</h1>
+<p>Build a Small Model, Understand Large Models · Lesson 19</p>
+<p>Given <code>早上，小丁喜欢</code> (“In the morning, Xiaoding likes”), the pretrained model continues with “红色的苹果。” (“red apples”). Change the input to <code>问：小丁喜欢什么水果？\n答：</code> (“Question: What fruit does Xiaoding like?\nAnswer:”), and it instead writes “我爱吃香蕉。” (“I love eating bananas.”), a complete sentence with the wrong fruit and answer format.</p>
+<p>The colors and fruits appeared in training, but a question and the beginning of a familiar sentence trigger different predictions. How can we make the model produce the answer we need after it reads “答：” (“Answer:”)?</p>
+<p>We give the existing model 24 question-and-answer records with supplied answers and continue training. It later answers both fixed questions correctly. But an expanded continuation check finds that the familiar prefix “早上，小丁选了” (“In the morning, Xiaoding chose”) now produces “苹果，它是红色的苹果。” (“apples, they are red apples”), repeating the fruit.</p>
+<p>Continuing training on given questions and target answers is <strong>supervised fine-tuning, or SFT</strong>. The model still predicts the next character. We will follow one question-answer sequence to see which positions are scored and how gradients flow back.</p>
+<h2 id="put-reading-the-question-and-writing-the-answer-in-one-sequence">Put Reading the Question and Writing the Answer in One Sequence</h2>
+<p>Expand this record:</p>
+<pre><code class="language-text">问：小丁喜欢什么水果？
+答：红色的苹果。
+</code></pre>
+<p>Split it into two parts: prompt <code>问：小丁喜欢什么水果？\n答：</code>, and answer <code>红色的苹果。</code>. Encode them separately, then join them in this order:</p>
+<p><strong>BOS + prompt + answer + EOS</strong></p>
+<p>Reusing the pretraining loss over all positions would also run. But some loss terms would ask the model to start at BOS and write the question itself. At use time, the question is already supplied. Our intended training behavior is different: after reading it, write the answer and finish.</p>
+<p>We therefore keep the full input but set labels whose next target is still inside the prompt to <code>−100</code>, excluding their direct contributions to cross-entropy.</p>
+<h2 id="which-position-should-predict-红">Which Position Should Predict “红”?</h2>
+<p>Including BOS, the full prefix contains <code>L=15</code> entries, with positions numbered from 0. The final prefix character is the colon in “答：”, at position 14.</p>
+<p>Inputs and labels are still shifted by one: <strong>position 14 reads the colon but already targets the first answer character, “红”.</strong> We do not wait until “红” is the input before training the model to predict “红”.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Input position</th>
+<th>Current input</th>
+<th>Next-item label</th>
+<th>Included in loss?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>BOS</td>
+<td>问</td>
+<td>No</td>
+</tr>
+<tr>
+<td>1</td>
+<td>问</td>
+<td>：</td>
+<td>No</td>
+</tr>
+<tr>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>No</td>
+</tr>
+<tr>
+<td>13</td>
+<td>答</td>
+<td>：</td>
+<td>No</td>
+</tr>
+<tr>
+<td>14</td>
+<td>：</td>
+<td>红</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>15</td>
+<td>红</td>
+<td>色</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>16</td>
+<td>色</td>
+<td>的</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>17</td>
+<td>的</td>
+<td>苹</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>18</td>
+<td>苹</td>
+<td>果</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>19</td>
+<td>果</td>
+<td>。</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>20</td>
+<td>。</td>
+<td>EOS</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table></div>
+<p>Thus label indices <code>0</code> through <code>L−2</code> are ignored, and the first valid label is at <strong>L−1</strong>. This example has 6 answer characters plus EOS, totaling 7 valid targets. When right-padding to 32 entries, the added padding labels are also <code>−100</code>.</p>
+<p>During training, when predicting “色”, the preceding “红” comes from the sample's correct answer. During generation, the program must select “红” itself and append it. Both processes read only the available prefix; the difference is who supplies that prefix.</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/19-fine-tuning/images/en/web/01-%E6%9C%BA%E5%88%B6.svg" width="1540" height="470"><img data-full-figure="../chapters/19-fine-tuning/images/en/01-%E6%9C%BA%E5%88%B6.svg" alt="Prompt, answer, and EOS form one continuous sequence; after shifting, the first answer label is at L minus 1" src="../chapters/19-fine-tuning/images/en/01-%E6%9C%BA%E5%88%B6.svg"  width="1080" height="2205" loading="eager" decoding="async" /></picture></p>
+<p>If we ignore the first 15 labels merely because the prefix has 15 entries, we delete the task of predicting “红”. The program still runs, but the loss omits one target.</p>
+<p>The following code lists the targets actually retained. The batch version does the same for each record, then stacks them into <code>[B, 32]</code>.</p>
+<pre><code class="language-python">import torch
+from tiny_lm.tokenizer import CharTokenizer
+
+def make_sft_example(prompt, answer, tokenizer, max_len=32):
+    &quot;&quot;&quot;把一条问答变成 [1,max_len] 输入和标签；只给答案字符及 EOS 计分。&quot;&quot;&quot;
+    # L=len(prefix) 包括 BOS 与整个问题，本例最后一项是答后冒号。
+    prefix = [1] + tokenizer.encode(prompt)
+    tokens = prefix + tokenizer.encode(answer) + [2]
+    # 仍是下一项预测：输入去末项，目标去首项，EOS 留在最后有效目标中。
+    inputs = tokens[:-1]
+    targets = tokens[1:]
+    # 只忽略 0..L-2；索引 L-1 由冒号预测首个答案字，必须保留。
+    targets[:len(prefix) - 1] = [-100] * (len(prefix) - 1)
+    if len(inputs) &gt; max_len:
+        raise ValueError(&quot;样本超过最大长度，不截断答案&quot;)
+    padding = max_len - len(inputs)
+    # 0 是输入的 PAD 编号；-100 仅供损失函数忽略，不送进 Embedding。
+    inputs += [0] * padding
+    targets += [-100] * padding
+    return torch.tensor([inputs]), torch.tensor([targets])
+
+tokenizer = CharTokenizer.for_course()
+prompt = &quot;问：小丁喜欢什么水果？\n答：&quot;
+answer = &quot;红色的苹果。&quot;
+x, y = make_sft_example(prompt, answer, tokenizer)
+# 本例首答案在标签索引 14，最后有效标签为 EOS；其余位置不直接评分。
+valid = (y[0] != -100).nonzero().flatten().tolist()
+print(valid)  # [14, 15, 16, 17, 18, 19, 20]
+print([tokenizer.itos[int(y[0, i])] for i in valid])
+# ['红', '色', '的', '苹', '果', '。', '&lt;eos&gt;']
+</code></pre>
+<p>Training still computes all logits first; <code>ignore_index=-100</code> then decides which targets enter the average. Here, <code>−100</code> is a loss-function convention, not a vocabulary character ID, and it never enters the model input.</p>
+<h2 id="can-we-remove-the-unscored-question">Can We Remove the Unscored Question?</h2>
+<p>If the prompt is not directly scored, can we remove the question from the computation too? Without it, different questions lose the information that distinguishes them. The model must read the question to condition its answer on it.</p>
+<p>We therefore control two things separately. The causal mask specifies <strong>which inputs may be read</strong>, preventing peeking at the future. The loss mask specifies <strong>which predictions are directly scored</strong>—only the answer and EOS in this case. Ignoring question labels does not prevent answer positions from reading the question through attention.</p>
+<p>Backpropagation follows those reading paths too. Answer loss travels through the output head, model blocks, and attention to affect the prompt's representations and parameters. Only the scoring targets are grayed out; the Embedding is not frozen. Nor do question positions own a separate set of model parameters. Positions share attention, feed-forward, and other components, and the same character always looks up the same Embedding row.</p>
+<details class="motion-figure"><summary>Watch the animated walkthrough</summary><img alt="Full causal visibility paths remain intact while answer loss is highlighted; gradients can still pass through the prompt context" src="../chapters/19-fine-tuning/images/en/%E8%BF%87%E7%A8%8B.gif"  width="648" height="1323" loading="lazy" decoding="async" /></details>
+<p>The <a href="../chapters/19-fine-tuning/walkthrough.en.html">interactive demo</a> reveals the inputs, shifted labels, and answer loss step by step. Compare the first answer index and gradient paths with the static figure above as well.</p><details class="inline-experiment"><summary><span>Try it here · Step-by-step experiment</span><small>Step through the calculation, forwards or backwards.</small></summary><p><a href="../chapters/19-fine-tuning/walkthrough.en.html" class="js-experiment inline-expand">Expand workspace ↗</a> · <a href="../chapters/19-fine-tuning/walkthrough.en.html" target="_blank" rel="noopener">Open in a new tab ↗</a></p><dialog class="inline-workspace experiment-viewer" aria-label="Step-by-step experiment"><header><strong>Step-by-step experiment</strong><div><a href="../chapters/19-fine-tuning/walkthrough.en.html" target="_blank" rel="noopener">Open in a new tab <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button inline-close" type="button" aria-label="Return to reading">Return to reading <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe data-src="../chapters/19-fine-tuning/walkthrough.en.html" title="Step-by-step experiment" loading="lazy"></iframe></dialog></details>
+<p>We can also inspect “问” (“question”), a character that appears only in this record's prompt. The following performs backpropagation only, without updating or saving weights:</p>
+<pre><code class="language-python">from tiny_lm.checkpoint import load_checkpoint
+from tiny_lm.losses import token_loss
+
+# 从预训练权重出发；本段只检查反向路径，没有优化器更新。
+model, tokenizer, _ = load_checkpoint(&quot;artifacts/first_run/pretrain.pt&quot;)
+model.zero_grad(set_to_none=True)
+loss = token_loss(model(x), y)
+loss.backward()
+# “问”仅出现在问题中；答案损失仍可能经过注意力上下文传到这一行参数。
+question_row = tokenizer.stoi[&quot;问&quot;]
+gradient_size = model.embedding.weight.grad[question_row].abs().sum()
+print(float(gradient_size) &gt; 0)  # 本例为 True
+</code></pre>
+<p>Although “问” is absent from this answer, its Embedding row still has a nonzero gradient: answer loss affects those parameters through the context path.</p>
+<h2 id="can-it-answer-a-question-format-that-was-not-trained">Can It Answer a Question Format That Was Not Trained?</h2>
+<p>Checking only the questions just learned makes it difficult to distinguish memorizing a format from using the same facts in another expression. We therefore train on three question formats, each covering 8 people, for 24 records:</p>
+<p><code>小丁喜欢什么水果？</code></p>
+<p>“What fruit does Xiaoding like?”</p>
+<p><code>请说出小丁喜欢的水果。</code></p>
+<p>“Please name the fruit Xiaoding likes.”</p>
+<p><code>小丁爱吃哪种水果？</code></p>
+<p>“Which fruit does Xiaoding enjoy eating?”</p>
+<p>The fourth format, <code>小丁最喜欢的水果是什么？</code> (“What is Xiaoding's favorite fruit?”), is held out in its entirety, yielding 8 records. It tests whether known facts about known people can be retrieved under an untrained question format, not knowledge about entirely unseen fruits.</p>
+<p>The character “最” (“most,” as used in “favorite”) appears in neither the pretraining nor the fine-tuning training text. This set therefore checks both a new question format and a character usage absent from training. Vocabulary membership does not mean the model has learned how to use a character; the scores below describe only these specific questions.</p>
+<p>Training starts from Lesson 17's pretrained model. All parameters continue to be updated, and a fresh optimizer is created:</p>
+<pre><code class="language-python">import random
+from tiny_lm.data import make_sft_batch
+from tiny_lm.train import train_step
+
+def fine_tune(model, tokenizer, records, steps=300):
+    &quot;&quot;&quot;让已加载的预训练模型继续学习 SFT 训练记录，原模型的全部参数参与更新。&quot;&quot;&quot;
+    sampler = random.Random(42)
+    # 继承模型权重，重新建立本阶段的优化器状态，不另造一套问答模型。
+    optimizer = torch.optim.AdamW(
+        model.parameters(), lr=.001, betas=(.9, .99),
+        eps=1e-8, weight_decay=.01)
+    for _ in range(steps):
+        # records 应传训练组；make_sft_batch 保留问题输入，仅给答案与 EOS 计分。
+        selected = sampler.sample(records, min(16, len(records)))
+        x, y = make_sft_batch(selected, tokenizer)
+        # train_step 内部清梯度、前向、反向、裁剪，最后调用 optimizer.step 更新。
+        train_step(model, x, y, optimizer, clip_norm=1.)
+</code></pre>
+<p>The loop does not switch to a new prediction mechanism. Gradients from the question-answer labels modify the same parameters as before, and those parameters also serve the original continuation tasks.</p>
+<h2 id="return-to-the-two-questions">Return to the Two Questions</h2>
+<p>The saved outputs at three stages are below. <code>\n</code> represents a newline:</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Prompt</th>
+<th>Random initialization</th>
+<th>After pretraining</th>
+<th>After fine-tuning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>问：小丁喜欢什么水果？\n答：</code></td>
+<td>爱红绿吃爱梨吴爱</td>
+<td>我爱吃香蕉。</td>
+<td>红色的苹果。</td>
+</tr>
+<tr>
+<td><code>问：小周喜欢什么水果？\n答：</code></td>
+<td>爱红檬果爱梨吴爱</td>
+<td>我爱吃香蕉。</td>
+<td>黄色的香蕉。</td>
+</tr>
+</tbody>
+</table></div>
+<p>The prompts ask which fruit Xiaoding and Xiaozhou like. Fine-tuning produces the correct answers, “red apples” and “yellow bananas.” Before fine-tuning, both outputs say “I love eating bananas.” The table preserves every actual Chinese output, including the nonsensical random-initialization strings.</p>
+<p>The run performs 300 updates with learning rate 0.001, in the same environment as pretraining. The loop and evaluation take approximately 0.96 seconds. Answer losses are:</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Dataset</th>
+<th>Before fine-tuning</th>
+<th>After fine-tuning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>24 training questions</td>
+<td>2.877918</td>
+<td>0.000016</td>
+</tr>
+<tr>
+<td>8 held-out questions</td>
+<td>2.975784</td>
+<td>0.004043</td>
+</tr>
+</tbody>
+</table></div>
+<p>These losses average only over the answer and EOS, so they measure different targets from pretraining text loss. The initial SFT training loss of 2.877918, rather than the earlier 0.372600, does not indicate that the wrong weights were loaded.</p>
+<p>With the same greedy settings, training questions achieve <strong>24/24</strong> exact matches and held-out questions <strong>8/8</strong>. These two held-out examples also receive correct answers:</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Held-out question</th>
+<th>Expected answer</th>
+<th>Actual answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>小周最喜欢的水果是什么？</td>
+<td>黄色的香蕉。</td>
+<td>黄色的香蕉。</td>
+</tr>
+<tr>
+<td>小赵最喜欢的水果是什么？</td>
+<td>黄色的柠檬。</td>
+<td>黄色的柠檬。</td>
+</tr>
+</tbody>
+</table></div>
+<p>These ask for Xiaozhou's and Xiaozhao's favorite fruits and correctly return “yellow bananas” and “yellow lemons.” All eight held-out answers get the color, fruit, and ending right in this run. That establishes success on these specific questions, not arbitrary formats or other knowledge. The absence of training examples for “最” did not prevent success on this set.</p>
+<p>As question answering improves, we must also check the original continuation ability. The two fixed prompts, <code>早上，小丁喜欢</code> and <code>晚上，小周拿着</code> (“In the evening, Xiaozhou is holding”), still produce “红色的苹果。” and “黄色的香蕉。” after fine-tuning. But for another familiar prefix, <code>早上，小丁选了</code>, the pretrained weights generate “苹果，它是红色的。”, while the fine-tuned weights generate <strong>“苹果，它是红色的苹果。”</strong>. Both reach EOS. With a sufficient limit of 16 new entries, the error is an extra occurrence of the fruit.</p>
+<p>The fine-tuning loop updates parameters only from answer loss on these 24 question-answer records, without a separate constraint on the original continuations. Question answering improves while some old continuations degrade; checking only the two fixed prompts would miss the change. These records cannot identify the particular parameter group responsible. The <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/artifacts/first_run/generation_comparison.json">stage-comparison log</a> preserves the four fixed prompts; the expanded per-item results appear in the continuation comparison below.</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/19-fine-tuning/images/en/web/02-%E9%AA%8C%E8%AF%81.svg" width="1504" height="921.4"><img alt="Actual answer-loss curves, exact matches on training and held-out question formats, and continuation results for the fixed prompts" src="../chapters/19-fine-tuning/images/en/02-%E9%AA%8C%E8%AF%81.svg"  width="1080" height="2145" loading="lazy" decoding="async" /></picture></p>
+<h2 id="how-do-we-investigate-the-lost-continuation-ability">How Do We Investigate the Lost Continuation Ability?</h2>
+<p>Do not immediately lower the learning rate. If the run loaded different weights, changed the question format, or truncated generation at a length limit, the apparent degradation may not come from fine-tuning. First verify the starting parameter digest and confirm that all groups use the same pretrained weights. Then fix the prompts, greedy selection, and stopping conditions before comparing training methods.</p>
+<p>Expand the old-capability check to all 256 familiar continuations: 8 people, 8 scenes, and 4 pretraining sentence patterns, continuing after “喜欢” (“likes”), “拿着” (“is holding”), “说：我爱吃” (“says: I love eating”), and “选了” (“chose”). Question answering still uses the original 24 training and 8 held-out questions. Every group requires <strong>generated text to exactly match the target suffix and reach EOS</strong>, with at most 16 new entries, enough for the longest suffix. The held-out format still includes “最”, which was absent from training.</p>
+<p>Fix this evaluation set before beginning the comparison. With the same pretrained weights, old continuations score 256/256, and both question-answer groups score 0. Fine-tuning with the original settings and seed=42 reduces old continuations to 224/256. Every output reaches EOS, so the 32 errors cannot be blamed on unfinished generation.</p>
+<p>The first hypothesis is that updates are too large and disturb existing predictions. Keep the initial weights, 300 steps, batch size 16, sampling order, and AdamW settings unchanged; lower only the learning rate from 0.001 to 0.0001. Old continuations recover to 256/256, but held-out question answers drop from 8/8 to 5/8. Training questions remain 24/24. Looking only at them would miss this cost.</p>
+<p>Next, consider another explanation: the current loss rewards only question answers and places no constraint on old continuations during this stage. Begin another experiment from the same pretrained weights. Keep batch size 16, but use 12 question-answer records plus 4 original pretraining text records, restoring learning rate 0.001. Each data type uses its own labels, and both contribute to one loss:</p>
+<pre><code class="language-python">from tiny_lm.data import make_pretrain_batch
+
+def mixed_update(model, tokenizer, qa_records, text_records,
+                 qa_sampler, text_sampler, optimizer):
+    &quot;&quot;&quot;一次更新仍用16条数据；答案目标与完整正文目标共同约束同一模型。&quot;&quot;&quot;
+    qa = qa_sampler.sample(qa_records, 12)
+    old_text = text_sampler.sample(text_records, 4)
+    # 问答仍只给答案/EOS计分；原正文则给每个有效下一项计分。
+    qx, qy = make_sft_batch(qa, tokenizer)
+    tx, ty = make_pretrain_batch(old_text, tokenizer)
+    # 两类张量均补齐到32项，沿样本轴合批；模型结构与优化器不换。
+    x = torch.cat((qx, tx), dim=0)
+    y = torch.cat((qy, ty), dim=0)
+    return train_step(model, x, y, optimizer, clip_norm=1.)
+</code></pre>
+<p>4/16 is a sample proportion; it does not mean the old task contributes only 25% of the loss. Text records usually contain more valid targets. Across 300 steps with seed=42, question answers supply 25,200 scored targets and text records supply 18,212. Text accounts for about 42% of all valid targets. Even this is a target-count proportion; actual loss contributions also depend on each target's prediction loss. Total steps and batch size are unchanged, but the amount of supervision each task receives has changed.</p>
+<p>Here are the actual seed=42 results. Every method restarts from the same pretrained weights; the three methods are not trained sequentially:</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Training method</th>
+<th>Training questions</th>
+<th>Held-out questions</th>
+<th>Old continuations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Before fine-tuning</td>
+<td>0/24</td>
+<td>0/8</td>
+<td>256/256</td>
+</tr>
+<tr>
+<td>Original learning rate 0.001</td>
+<td>24/24</td>
+<td>8/8</td>
+<td>224/256</td>
+</tr>
+<tr>
+<td>Lower learning rate 0.0001</td>
+<td>24/24</td>
+<td>5/8</td>
+<td>256/256</td>
+</tr>
+<tr>
+<td>12 question-answer records + 4 original text records</td>
+<td>24/24</td>
+<td>3/8</td>
+<td>256/256</td>
+</tr>
+</tbody>
+</table></div>
+<p>Now use the three fixed seeds 42, 43, and 44 to check whether the findings survive a different fine-tuning sampling order. All runs start from the same pretrained weights; the seed does not change the pretraining starting point. Every actual result is retained instead of selecting only the best run.</p>
+<p><img alt="Exact-match rates for old continuations and held-out questions under the original rate, lower rate, and mixed text training across three seeds; each panel shares a 0–100 percent scale" src="../chapters/19-fine-tuning/images/en/03-%E5%BE%AE%E8%B0%83%E5%8F%96%E8%88%8D.svg"  width="1080" height="1837" loading="lazy" decoding="async" /></p>
+<p>With the original learning rate, old continuations score 224, 230, and 226/256. Both the lower learning rate and mixed training give 256/256 in all runs. Held-out questions score 8, 7, and 8/8 for the original setting; 5, 5, and 5/8 for the lower rate; and 3, 3, and 5/8 for mixed training.</p>
+<p>This supports a specific conclusion: lowering the learning rate or adding old-task targets preserves the original behavior on these familiar continuations, but both reduce held-out question performance relative to the original setting with each seed. Neither intervention meets both requirements of preserving old ability and avoiding any decline on held-out questions. Reaching 256/256 on old continuations alone does not solve the entire problem. The second experiment was designed after seeing the first one's results. Reusing the held-out questions makes them development validation; a later formal evaluation should reserve new questions.</p>
+<p>Record both loss and complete matches. With seed=42, mixed training's held-out question loss is 0.269201, above the original setting's 0.004043, while complete matches fall from 8/8 to 3/8. Both metrics indicate worse performance on this question set in the current run. Loss evaluation supplies the true prefix at every position and averages the negative log probabilities of correct labels. Complete matching requires the model to feed back its own chosen characters and generate the entire answer correctly. One measures probabilities assigned to correct labels; the other checks whether actual selections complete the whole answer. They should be recorded separately.</p>
+<p>This investigation leaves four things: fixed evaluation questions, comparisons from identical weights, the benefits and costs of each intervention, and requirements still unmet. When fine-tuning degrades an existing capability, establish these four items before deciding whether to change the data, training targets, or update settings next.</p>
+<p>The complete script reuses the earlier <code>train_step</code>, both label builders, and the generation function. Inspect the nine recorded runs, or rerun them and save separately:</p>
+<pre><code class="language-bash"># 只读作者保存的逐组结果。
+python -m lessons.retention_experiment --inspect
+# 从同一预训练权重重跑三种方法、三个种子；原权重与日志保持原样。
+python -m lessons.retention_experiment --out artifacts/my_retention.json
+</code></pre>
+<p>The <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/retention_experiment.py">experiment source</a> and <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/artifacts/retention_experiment.json">per-question raw records</a> preserve the evaluation set, valid target counts, stopping reasons, and sampling digests.</p>
+<section class="training-lab" id="training-lab" data-default-mode="sft" data-presets="{&quot;pretrain&quot;: {&quot;steps&quot;: 1000, &quot;seed&quot;: 42, &quot;batch_size&quot;: 16, &quot;learning_rate&quot;: 0.003}, &quot;sft&quot;: {&quot;steps&quot;: 300, &quot;seed&quot;: 42, &quot;batch_size&quot;: 16, &quot;learning_rate&quot;: 0.001}, &quot;quick&quot;: {&quot;steps&quot;: 100, &quot;seed&quot;: 42, &quot;batch_size&quot;: 4, &quot;learning_rate&quot;: 0.003}}" data-counts="{&quot;pretrain_train&quot;: 256, &quot;pretrain_val&quot;: 64, &quot;sft_train&quot;: 24, &quot;sft_val&quot;: 8}" aria-labelledby="training-lab-title">
+<div class="lab-heading"><span>TEST THE IDEA · REAL TRAINING</span><h3 id="training-lab-title">Train the model right here</h3></div>
+<p class="training-question">Does fine-tuning improve both answers and familiar continuations? Run the default, then reduce the learning rate and compare.</p>
+<label class="training-mode-label" for="training-mode">Experiment<select id="training-mode"><option value="pretrain" >Pretraining · full dataset</option><option value="sft" selected>Fine-tuning · full dataset</option><option value="pipeline" >Full pipeline · pretrain → fine-tune</option><option value="quick" >Quick experiment · 4 samples</option></select></label>
+<p class="training-recipe" id="training-recipe"></p>
+<details class="training-settings"><summary>Adjust training parameters</summary><div class="training-fields">
+<label><span class="primary-steps-label">Training steps</span><input id="training-steps" type="number" min="1" max="1000" step="1" value="300" required></label>
+<label><span class="primary-lr-label">Learning rate</span><input id="training-lr" type="number" min="0.000001" max="0.1" step="any" value="0.001" required></label>
+<label class="pipeline-field" hidden>Fine-tuning steps<input id="training-sft-steps" type="number" min="1" max="1000" step="1" value="300" required></label>
+<label class="pipeline-field" hidden>Fine-tuning learning rate<input id="training-sft-lr" type="number" min="0.000001" max="0.1" step="any" value="0.001" required></label>
+</div><p class="training-change-note">Change one variable at a time and compare with the default run.</p></details>
+<div class="training-actions"><button class="button primary training-start" type="button" disabled>Start training</button><button class="button training-stop" type="button" disabled>Stop</button><button class="button training-reset" type="button" disabled>Reset</button><button class="button training-download" type="button" disabled>Download results</button></div>
+<p class="training-status" role="status">Choose an experiment and start training.</p>
+<progress class="training-progress" value="0" max="100" aria-label="Training progress" hidden></progress>
+<div class="training-results" hidden><div class="training-chart-tabs" role="group" aria-label="Choose a training stage"></div>
+<figure class="training-plot"><svg class="training-chart" viewBox="0 0 520 230" role="img" aria-label="Training and validation loss curves"></svg><figcaption><span class="train-key">Training</span><span class="validation-key">Validation</span><span class="training-metrics"></span></figcaption></figure>
+<p class="training-answer-scores" hidden></p><div class="training-generations"></div>
+<details class="training-more"><summary>Check more: an unseen question and another familiar continuation</summary><div class="training-extra-generations"></div></details>
+<p class="training-observation"></p><details class="training-explanation"><summary>About this experiment</summary><p class="training-run-note">A fresh training run may differ from the recorded values and wording. Compare both curves and outputs.</p></details>
+<details class="training-comparison" hidden><summary>Compare with the previous run</summary><div></div></details></div>
+<noscript>Enable JavaScript to train here, or run the companion code locally.</noscript>
+</section><h2 id="inspect-or-rerun">Inspect or Rerun</h2>
+<p>From the <code>code</code> companion code directory, inspect the existing records:</p>
+<pre><code class="language-bash"># 查看已保存的实验记录，不重新训练模型。
+python -m lessons.l19 --inspect
+</code></pre>
+<p>If you created your own <code>artifacts/my_run/pretrain.pt</code> in Lesson 17, continue with fine-tuning:</p>
+<pre><code class="language-bash"># 加载预训练权重继续微调，将新的权重和记录另存。
+python -m lessons.l19 --checkpoint artifacts/my_run/pretrain.pt --out artifacts/my_run --sft-steps 300
+</code></pre>
+<p>The original results are stored under <code>artifacts/first_run</code>. The log's parent-weight digest begins with <code>f944cbe2b507</code>, matching the pretrained weights. Prompts, decoding method, and length limits also remain identical when comparing stage outputs.</p>
+<h2 id="two-boundary-questions">Two Boundary Questions</h2>
+<ol>
+<li>If <code>targets[:len(prefix)-1]</code> is mistakenly written as <code>targets[:len(prefix)]</code>, which supervision target is dropped first? Does EOS remain?</li>
+<li>If all labels predicting prompt characters are set to <code>−100</code>, can you freeze the Embedding rows for characters that appear only in questions and claim that training behavior is unchanged?</li>
+</ol>
+<details class="answer">
+<summary>Reference answers</summary>
+<p>For question one, the first answer label, “红”, is ignored, and the first valid target becomes “色”. The later answer labels and EOS remain. Loss may rise or fall because one task has been omitted and the scoring content has changed; that does not make the data more correct. For question two, no. Answer loss can originally update those Embedding rows through context paths. Freezing them blocks those updates and changes the training behavior. Do this only when deliberately choosing to freeze those parameters.</p>
+</details>
+<p>Code and fine-tuning records: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l19.py">Lesson runner</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/data.py">Question-answer batch construction</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/artifacts/first_run/sft_log.json">Actual fine-tuning log</a>.</p>
+<p>Source navigation: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/data.py#L82">data.py · make_sft_batch</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/train.py#L171">train.py · run_sft</a>.</p></article><details class="lesson-video video-ready" id="lesson-video"><summary><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></path></svg>Watch the companion video<span class="video-duration">6:21</span><span class="video-language">Chinese audio</span></summary><div class="bilibili-embed"><iframe data-src="https://player.bilibili.com/player.html?bvid=BV1B7HV69EK6&amp;p=1&amp;autoplay=0&amp;danmaku=0" title="19 | Supervised Fine-Tuning: Why Can It Continue Text but Still Fail to Answer? · B站视频" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><p class="video-actions"><a href="https://www.bilibili.com/video/BV1B7HV69EK6/?p=1" target="_blank" rel="noopener">Watch in HD on Bilibili ↗</a></p></div></details>
+<div class="reader-feedback"><span>Questions about this chapter?</span><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=question.yml&amp;title=%5B%E5%AD%A6%E4%B9%A0%5D+19+%7C+Supervised+Fine-Tuning%3A+Why+Can+It+Continue+Text+but+Still+Fail+to+Answer%3F&amp;location=19+%7C+Supervised+Fine-Tuning%3A+Why+Can+It+Continue+Text+but+Still+Fail+to+Answer%3F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F19.en.html" target="_blank" rel="noopener">Ask a question</a><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=content.yml&amp;title=%5B%E5%8B%98%E8%AF%AF%5D+19+%7C+Supervised+Fine-Tuning%3A+Why+Can+It+Continue+Text+but+Still+Fail+to+Answer%3F&amp;location=19+%7C+Supervised+Fine-Tuning%3A+Why+Can+It+Continue+Text+but+Still+Fail+to+Answer%3F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F19.en.html" target="_blank" rel="noopener">Suggest a correction</a></div><nav class="chapter-nav" aria-label="Previous and next articles"><a href="../course/18.en.html"><span>Previous <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></path></svg></span><strong>18 | Generation: How Many Choices Does One Sentence Take?</strong></a><a href="../course/20.en.html"><span>Next <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></path></svg></span><strong>20 | The Full Workflow: Connect Pretraining, Fine-Tuning, and Generation</strong></a></nav><footer class="reader-footer">Hello LLM · Build a Small Model, Understand Large Models<details class="community-mini"><summary>Stay in touch · 好好用 AI</summary><div class="community-section"><div><h2>Stay in touch · 好好用 AI</h2><p>Follow the WeChat account to discuss what you learn and build.</p><p>For bugs and corrections, <a href="https://github.com/DavidDingXu/hello-llm/issues" target="_blank" rel="noopener">open a GitHub issue</a>.</p></div><a class="qr-link" href="../code/assets/wechat-official-account.jpg" target="_blank" rel="noopener" aria-label="Open the 好好用 AI WeChat QR code"><img src="../code/assets/wechat-official-account.jpg" alt="好好用 AI WeChat official account QR code" width="130" height="130" loading="lazy"><p class="qr-caption">Scan in WeChat · Open full image</p></a></div></details></footer></main>
+<aside class="context-sidebar" aria-label="Article navigation and tools"><div class="context-inner"><nav class="reading-route" aria-label="On this page"><details open><summary>On this page</summary><div class="toc">
+<ul>
+<li><a href="#put-reading-the-question-and-writing-the-answer-in-one-sequence">Put Reading the Question and Writing the Answer in One Sequence</a></li>
+<li><a href="#which-position-should-predict-红">Which Position Should Predict “红”?</a></li>
+<li><a href="#can-we-remove-the-unscored-question">Can We Remove the Unscored Question?</a></li>
+<li><a href="#can-it-answer-a-question-format-that-was-not-trained">Can It Answer a Question Format That Was Not Trained?</a></li>
+<li><a href="#return-to-the-two-questions">Return to the Two Questions</a></li>
+<li><a href="#how-do-we-investigate-the-lost-continuation-ability">How Do We Investigate the Lost Continuation Ability?</a></li>
+<li><a href="#inspect-or-rerun">Inspect or Rerun</a></li>
+<li><a href="#two-boundary-questions">Two Boundary Questions</a></li>
+</ul>
+</div>
+</details></nav>
+<section class="reading-settings"><h2>Reading settings</h2><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="Decrease text size">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="Increase text size">A+</button></div><span>Allow about 70 minutes</span><p class="lesson-goal">Build answer supervision and diagnose fine-tuning tradeoffs with fixed comparisons across three methods and three seeds.</p></section>
+</div></aside></div><dialog class="search-dialog" id="search-dialog" aria-labelledby="search-label">
+<form method="dialog" class="search-heading"><label for="course-search" id="search-label"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/></circle><path d="m16 16 4.5 4.5"/></path></svg>Search course</label><button class="icon-button" aria-label="Close search"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></form>
+<input id="course-search" type="search" placeholder="Search concepts, code, or questions…" autocomplete="off" spellcheck="false">
+<p class="search-status" id="search-status" role="status">Search all 23 articles by keyword.</p>
+<div class="search-results" id="search-results"></div><footer>↑ ↓ Select result <span>Enter Open · Esc Close</span></footer></dialog>
+<dialog class="experiment-viewer" id="experiment-viewer" aria-labelledby="experiment-title"><header><strong id="experiment-title">Experiments</strong><div><a id="experiment-standalone" target="_blank" rel="noopener">Open separately <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a><button class="button" id="close-experiment" type="button">Back to reading <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></div></header><iframe id="experiment-frame" title="Experiments" src="about:blank"></iframe></dialog>
+<dialog class="image-viewer" id="image-viewer" aria-label="Enlarge figure">
+<header><span>View figure</span><div class="image-actions"><button type="button" id="image-zoom-out" aria-label="Zoom out">−</button><output id="image-scale" aria-label="Zoom level">100%</output><button type="button" id="image-zoom-in" aria-label="Enlarge figure">＋</button><button type="button" id="image-size">Actual size</button><button type="button" id="close-image" autofocus>Close</button></div></header>
+<div class="image-canvas"><p id="image-status" role="status" hidden></p><img id="large-image" alt=""></div><footer><p id="image-description"></p><a id="original-image" target="_blank" rel="noopener">Open original image <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a></footer></dialog>
+<div class="toast" id="toast" role="status"></div></body></html>

@@ -1,0 +1,53 @@
+{
+  "kind": "mechanism_check",
+  "seed": 42,
+  "ids": [
+    [
+      1,
+      32,
+      7,
+      76,
+      27,
+      6,
+      22,
+      44,
+      55,
+      57,
+      50,
+      58,
+      39,
+      5
+    ]
+  ],
+  "variant_ids": [
+    [
+      1,
+      32,
+      7,
+      76,
+      27,
+      6,
+      22,
+      44,
+      75,
+      57,
+      50,
+      58,
+      39,
+      5
+    ]
+  ],
+  "future_change": {
+    "position": 8,
+    "prefix_max_difference": 0.0,
+    "suffix_max_difference": 0.4750772714614868
+  },
+  "mask_boundary": {
+    "first_answer_index": 14,
+    "valid_before": 7,
+    "valid_after": 6,
+    "loss_before": 4.35602331161499,
+    "loss_after": 4.359718322753906
+  },
+  "parameter_count": 92352
+}

@@ -1,0 +1,236 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<meta name="source-sha256" content="02bd263ff4a14c4e399facf8a2604fb66ceed046747e4bef78db69870d01923d"><meta name="description" content="One sentence can be read in several ways. Explore the limits of one set of weights, move numbered cells into separate heads, aggregate independently, and merge by position."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/12.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="12 | Multi-Head Attention: Where Does Each Head Read? · Hello LLM"><meta property="og:description" content="One sentence can be read in several ways. Explore the limits of one set of weights, move numbered cells into separate heads, aggregate independently, and merge by position."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/12.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>12 | Multi-Head Attention: Where Does Each Head Read? · Hello LLM</title>
+<link rel="icon" href="../assets/favicon.png" type="image/png">
+<script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
+<script defer src="../code/visuals/reading_site/search-index.en.js?v=11db81a4dd60"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="12" data-alternate-sections="[&quot;一套读取比例会卡在哪里&quot;, &quot;两套比例数组该怎样摆&quot;, &quot;拆出两块还不会自动产生两套读法&quot;, &quot;两个头分别读完结果怎样交给后面&quot;, &quot;两个头会读到哪里&quot;, &quot;头越多参数一定越多吗&quot;, &quot;两道检查题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="Open course contents" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></path></svg></button>
+<a class="brand" href="../index.en.html" aria-label="Hello LLM · 学习站首页">
+<img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>Build a Small Model, Understand Large Models</small></span></a>
+<nav class="header-nav" aria-label="Main navigation"><a href="../index.en.html#curriculum">Learning path</a><a href="../index.en.html#experiments">Experiments</a><a href="https://github.com/DavidDingXu/hello-llm" target="_blank" rel="noopener">GitHub <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a></nav>
+<div class="header-controls"><a class="language-switch" href="12.html" lang="zh-CN" aria-label="切换到中文">中文</a><button class="icon-button theme-toggle js-only" type="button" aria-label="Switch to dark theme" title="Switch to dark theme"><span class="theme-light-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A9 9 0 0 1 9.5 3.5a9 9 0 1 0 11 11Z"/></path></svg></span><span class="theme-dark-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/></circle><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></path></svg></span></button>
+<button class="search-trigger js-only" type="button" aria-label="Search course"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/></circle><path d="m16 16 4.5 4.5"/></path></svg><span>Search course</span><kbd>⌘ K</kbd></button>
+</div></div><div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div></header><div class="sidebar-scrim" hidden></div><div class="reader-layout"><aside class="course-sidebar" id="course-sidebar" aria-label="Course contents">
+<div class="sidebar-heading"><a href="../index.en.html">Course contents</a><button class="icon-button menu-close js-only" type="button" aria-label="Close course contents"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></div>
+<nav aria-label="All articles"><div class="sidebar-guides"><a class="lesson-link" data-lesson="intro" href="../course/intro.en.html"><span class="lesson-number">·</span><span>Course introduction</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="00" href="../course/00.en.html"><span class="lesson-number">·</span><span>Before we begin</span><span class="lesson-state" aria-hidden="true"></span></a></div><details class="sidebar-stage"><summary><span class="stage-index">Part I</span>Make a numerical network learn</summary><a class="lesson-link" data-lesson="01" href="../course/01.en.html"><span class="lesson-number">01</span><span>Neurons</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="02" href="../course/02.en.html"><span class="lesson-number">02</span><span>Vectors and Matrices</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="03" href="../course/03.en.html"><span class="lesson-number">03</span><span>Multiple Layers and Nonlinearity</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="04" href="../course/04.en.html"><span class="lesson-number">04</span><span>Gradients and Parameter Updates</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="05" href="../course/05.en.html"><span class="lesson-number">05</span><span>Backpropagation by Hand</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="06" href="../course/06.en.html"><span class="lesson-number">06</span><span>Making the Network Learn</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part II</span>Bring text into the network</summary><a class="lesson-link" data-lesson="07" href="../course/07.en.html"><span class="lesson-number">07</span><span>Text and Vectors</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="08" href="../course/08.en.html"><span class="lesson-number">08</span><span>Scores and Probabilities</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="09" href="../course/09.en.html"><span class="lesson-number">09</span><span>Text Training Problems</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage" open><summary><span class="stage-index">Part III</span>Read context and assemble the model</summary><a class="lesson-link" data-lesson="10" href="../course/10.en.html"><span class="lesson-number">10</span><span>Single-Head Attention</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="11" href="../course/11.en.html"><span class="lesson-number">11</span><span>Causal masks</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="12" href="../course/12.en.html" aria-current="page"><span class="lesson-number">12</span><span>Multi-head attention</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="13" href="../course/13.en.html"><span class="lesson-number">13</span><span>Rotary position embeddings</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="14" href="../course/14.en.html"><span class="lesson-number">14</span><span>Positionwise feed-forward networks</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="15" href="../course/15.en.html"><span class="lesson-number">15</span><span>Residual connections and normalization</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="16" href="../course/16.en.html"><span class="lesson-number">16</span><span>The complete forward pass</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part IV</span>Pretrain, generate, and fine-tune</summary><a class="lesson-link" data-lesson="17" href="../course/17.en.html"><span class="lesson-number">17</span><span>The first pretraining run</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="18" href="../course/18.en.html"><span class="lesson-number">18</span><span>Character-by-character generation</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="19" href="../course/19.en.html"><span class="lesson-number">19</span><span>Question-answer fine-tuning</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="20" href="../course/20.en.html"><span class="lesson-number">20</span><span>The full workflow and checks of the principles</span><span class="lesson-state" aria-hidden="true"></span></a></details><a class="lesson-link" data-lesson="end" href="../course/end.en.html"><span class="lesson-number">·</span><span>Closing thoughts</span><span class="lesson-state" aria-hidden="true"></span></a></nav></aside><main class="reader-main" id="main-content"><div class="article-context"><span>Read context and assemble the model</span><div class="article-actions"><button type="button" class="copy-page-link js-only">Copy link</button><button type="button" class="focus-toggle js-only" aria-pressed="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></path></svg><span>Focus mode</span></button></div></div>
+<div class="mobile-context"><nav class="reading-route" aria-label="On this page"><details><summary>On this page</summary><div class="toc">
+<ul>
+<li><a href="#where-does-a-single-set-of-weights-reach-its-limit">Where Does a Single Set of Weights Reach Its Limit?</a></li>
+<li><a href="#how-should-an-array-hold-two-sets-of-weights">How Should an Array Hold Two Sets of Weights?</a></li>
+<li><a href="#splitting-into-two-pieces-does-not-automatically-create-two-reading-patterns">Splitting into Two Pieces Does Not Automatically Create Two Reading Patterns</a></li>
+<li><a href="#how-do-the-two-heads-pass-their-results-on">How Do the Two Heads Pass Their Results On?</a></li>
+<li><a href="#where-will-the-two-heads-read">Where Will the Two Heads Read?</a></li>
+<li><a href="#do-more-heads-always-mean-more-parameters">Do More Heads Always Mean More Parameters?</a></li>
+<li><a href="#two-check-questions">Two Check Questions</a></li>
+</ul>
+</div>
+</details></nav><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="Decrease text size">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="Increase text size">A+</button></div></div><article id="article-body"><h1 id="12-multi-head-attention-where-does-each-head-read">12 | Multi-Head Attention: Where Does Each Head Read?</h1>
+<p>Build a Small Model, Understand Large Models · Lesson 12</p>
+<p>When reading “小丁拿着红色的苹果。” (“Xiaoding is holding a red apple”), finding “who is holding it” and “what color it is” calls for reading different positions. A sentence can be read in different ways. Can the model preserve several of them at once?</p>
+<p>In the previous lesson, each query produced one row of weights shared by every output coordinate. <strong>Multi-head attention</strong> lets several groups of representations compute their own reading weights and then combines the results. The sentence example only motivates the need; we must inspect trained behavior to determine what each head actually learns to do.</p>
+<h2 id="where-does-a-single-set-of-weights-reach-its-limit">Where Does a Single Set of Weights Reach Its Limit?</h2>
+<p>Fix two content vectors V: <code>[1, 0]</code> and <code>[0, 2]</code>. Suppose we want the aggregate's first coordinate to be 0.8 and its second to be 1.6. First try to achieve this with one row of weights.</p>
+<p>Write the weights as <code>[a, 1−a]</code>. The output is <code>[a, 2(1−a)]</code>. The first coordinate requires <code>a=0.8</code>, while the second requires <code>a=0.2</code>. Both cannot hold at once.</p>
+<p>Attention weights are nonnegative and sum to 1, so <code>a</code> can vary only from 0 to 1. Across all valid values of <code>a</code>, the output can move only along the blue line below; it cannot reach the target point outside that line.</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/12-multi-head-attention/images/en/web/03-%E4%B8%80%E5%A5%97%E6%AF%94%E4%BE%8B%E7%9A%84%E9%99%90%E5%88%B6.svg" width="1504" height="895.8"><img alt="With fixed V, one set of reading weights reaches only the blue line segment, missing the target 0.8 and 1.6; separate weights for two coordinate groups can reach it" src="../chapters/12-multi-head-attention/images/en/03-%E4%B8%80%E5%A5%97%E6%AF%94%E4%BE%8B%E7%9A%84%E9%99%90%E5%88%B6.svg"  width="1080" height="2115" loading="eager" decoding="async" /></picture></p>
+<p>Now give each coordinate group its own weights. Head 0 aggregates the first group using <code>[0.8,0.2]</code>, producing <code>0.8×1+0.2×0=0.8</code>. Head 1 aggregates the second group using <code>[0.2,0.8]</code>, producing <code>0.2×0+0.8×2=1.6</code>. Concatenating them gives exactly <code>[0.8,1.6]</code>. We specified these weights ourselves; they have not been trained.</p>
+<p>This comparison holds V fixed. A real model also learns projections for each head, and changing the projections changes what a single head can reach. The point here is that the architecture can retain several reading patterns at the same time. Next, we will arrange the heads in an array and let each perform its computation.</p>
+<h2 id="how-should-an-array-hold-two-sets-of-weights">How Should an Array Hold Two Sets of Weights?</h2>
+<p>Shrink the shape until we can draw every entry: 1 sample, 3 positions, and 4 features per position. Fill the array with labels 0 through 11 to track coordinates:</p>
+<pre><code class="language-text">X[0] = [[0,  1,  2,  3],
+        [4,  5,  6,  7],
+        [8,  9, 10, 11]]
+</code></pre>
+<p>The shape is <code>[B, T, D]=[1, 3, 4]</code>. These numbers only track cells. They are not character IDs or learned semantic features.</p>
+<p>Split the features into 2 heads, each of width <code>d=D/H=4/2=2</code>. The first two entries at each position go to head 0; the last two go to head 1:</p>
+<pre><code class="language-text">头0：[[0, 1],       头1：[[ 2,  3],
+      [4, 5],             [ 6,  7],
+      [8, 9]]             [10, 11]]
+</code></pre>
+<p>The Chinese labels above mean “head 0” and “head 1.” Notice that each head still has all three positions. We split the feature axis, not the positions into “head 0 sees the first two characters, head 1 sees the last two.”</p>
+<details class="motion-figure"><summary>Watch the animated walkthrough</summary><img alt="Cells labeled 0 through 11 split along the feature axis into two heads, each retaining all three positions, then merge back by position without changing their values" src="../chapters/12-multi-head-attention/images/en/%E8%BF%87%E7%A8%8B.gif"  width="648" height="1080" loading="lazy" decoding="async" /></details>
+<p>Blue cells are the first two entries at each position; teal cells are the last two. Follow 4 and 5 first: they move together to position 1 in head 0. Entries 6 and 7 move to the same position in head 1. This is only splitting and merging, with no projection or summation. To pause and inspect it, see the <a href="../chapters/12-multi-head-attention/images/en/04-%E5%8F%AA%E7%9C%8B%E6%A0%BC%E5%AD%90%E6%80%8E%E6%A0%B7%E6%8B%86.png">static splitting diagram</a>.</p>
+<p>After splitting, the axes are <strong>[B,H,T,d]=[1,2,3,2]</strong>. Selecting one head along the head axis gives three positions with two coordinates each, ready for the attention calculation from the previous two lessons.</p>
+<p>Open the <a href="../chapters/12-multi-head-attention/lab3d.en.html">3D tensor lab</a> to follow the number 4 through splitting the feature axis, swapping head and position axes, and merging. Select any number to inspect its index at each step. This lab only rearranges the 12 values; it does not compute projections or attention.</p><details class="inline-experiment"><summary><span>Try it here · 3D tensor lab</span><small>Follow one number through splitting, transposing, and merging heads.</small></summary><p><a href="../chapters/12-multi-head-attention/lab3d.en.html" class="js-experiment inline-expand">Expand workspace ↗</a> · <a href="../chapters/12-multi-head-attention/lab3d.en.html" target="_blank" rel="noopener">Open in a new tab ↗</a></p><dialog class="inline-workspace experiment-viewer" aria-label="3D tensor lab"><header><strong>3D tensor lab</strong><div><a href="../chapters/12-multi-head-attention/lab3d.en.html" target="_blank" rel="noopener">Open in a new tab <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button inline-close" type="button" aria-label="Return to reading">Return to reading <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe data-src="../chapters/12-multi-head-attention/lab3d.en.html" title="3D tensor lab" loading="lazy"></iframe></dialog></details>
+<p>The rearrangement itself adds no parameters and changes no values. The code needs two steps: split the last axis into “head” and “coordinate within a head,” then move the head axis before the position axis.</p>
+<pre><code class="language-python">import torch
+
+def split_heads(x, heads):
+    &quot;&quot;&quot;把 [B,T,D] 的特征分为 H 组，返回 [B,H,T,d]，其中 d=D/H。&quot;&quot;&quot;
+    batch, positions, width = x.shape
+    if heads &lt;= 0 or width % heads != 0:
+        raise ValueError(&quot;表示宽度必须能被头数整除&quot;)
+    # 先得到 [B,T,H,d]，再交换位置轴与头轴；每个头仍保留全部位置。
+    return x.reshape(batch, positions, heads,
+                     width // heads).transpose(1, 2)
+
+def merge_heads(x):
+    &quot;&quot;&quot;逆转分头重排，将同一位置的各头结果拼成 [B,T,H*d]。&quot;&quot;&quot;
+    batch, heads, positions, width = x.shape
+    # contiguous 仅整理交换轴后的内存布局，不改变坐标对应的数值。
+    return x.transpose(1, 2).contiguous().reshape(
+        batch, positions, heads * width)
+
+# 0—11 用来追踪坐标，不是字符编号；一个样本、三个位置、四维表示。
+x = torch.arange(12, dtype=torch.float32).reshape(1, 3, 4)
+heads = split_heads(x, 2)
+print(heads)
+assert heads.shape == (1, 2, 3, 2)
+# 除了形状与往返，还要核对具体位置，防止两次错误重排恰好互相抵消。
+assert heads[0, 0, 1].tolist() == [4., 5.]
+assert heads[0, 1, 1].tolist() == [6., 7.]
+assert torch.equal(merge_heads(heads), x)
+</code></pre>
+<p><code>reshape</code> first produces <code>[B, T, H, d]</code>, and <code>transpose(1, 2)</code> swaps the position and head axes. Merging reverses the process. <code>contiguous()</code> organizes the transposed data into a contiguous layout suitable for the subsequent reshape; it does not alter the numerical relationships represented by the array.</p>
+<p>Checking only that splitting and merging recover the original is insufficient. Opposite mistakes in the two functions could cancel out, so we also check that position 1 in head 0 really receives <code>[4, 5]</code>.</p>
+<h2 id="splitting-into-two-pieces-does-not-automatically-create-two-reading-patterns">Splitting into Two Pieces Does Not Automatically Create Two Reading Patterns</h2>
+<p>So far we have only moved cells; we have not decided how each head reads. To address the two needs at the start, each head must use its own parameters to produce representations. Apply three trainable projections to X to obtain Q, K, and V with shape <code>[B, T, D]</code>, then split each into <code>[B, H, T, d]</code>.</p>
+<p>Although the code represents each projection with one large matrix, different heads receive different parameter rows from that matrix. A Q coordinate in one head can combine all D original input coordinates; it is not permanently restricted to the first two original input entries.</p>
+<p>Each head thus has its own <code>Q_h/K_h/V_h</code>, computes its own <code>[T, T]</code> score table, applies the same causal constraint, and then normalizes and aggregates.</p>
+<p><strong>Head h output = Softmax(Q_h @ K_hᵀ / √d + causal mask) @ V_h.</strong></p>
+<p>With two heads, the combined score table is <code>[1, 2, 3, 3]</code>. Its last two axes are query position and position being read; Softmax operates along the final, read-position axis. One head's aggregate has shape <code>[1, 3, 2]</code>. Combining all heads' aggregates gives <code>[1, 2, 3, 2]</code>, whose final two axes are position and feature within a head.</p>
+<p>Scaling by the full width 4 would use the wrong dimension. Each head's dot product actually contains 2 terms, so this example divides by <code>√2</code>. The full model uses <code>D=64, H=2, d=32</code> and divides by <code>√32</code>.</p>
+<h2 id="how-do-the-two-heads-pass-their-results-on">How Do the Two Heads Pass Their Results On?</h2>
+<p>Suppose the two head outputs at one position are <code>[a, b]</code> and <code>[c, d]</code>. Concatenation yields <code>[a, b, c, d]</code>. It does not add them into <code>[a+c, b+d]</code>, and it does not concatenate position 0 with position 1.</p>
+<p>Concatenation simply collects each head's result into one position vector. A set of <strong>Wo output projection parameters</strong> then allows each subsequent coordinate to combine results from different heads.</p>
+<p>This is the output projection inside attention, mixing head outputs back into a <code>D</code>-dimensional position representation. The vocabulary projection from Lesson 08 comes later and turns that representation into 79 candidate scores. We have not yet chosen the next character.</p>
+<p>For example, a projection row <code>[1, 0, 1, 0]</code> computes <code>a+c</code> from the concatenated vector. This mixing across heads is trainable; concatenation itself has no trainable parameters.</p>
+<p>After projection, the head results return to <code>[B, T, D]</code>, ready for the rest of the network.</p>
+<h2 id="where-will-the-two-heads-read">Where Will the Two Heads Read?</h2>
+<p>Try a fixed set of random parameters first. Position 1 can read only position 0 and itself. How will the two heads divide their weights? This run gives:</p>
+<ul>
+<li>Head 0: approximately <code>[0.002978, 0.997022, 0]</code>, almost entirely on position 1.</li>
+<li>Head 1: approximately <code>[0.999998, 0.000002, 0]</code>, almost entirely on position 0.</li>
+</ul>
+<p>With the same input and the same query position, the two heads already use different reading weights. Each produces a two-dimensional result, and the results are merged by position into four dimensions.</p>
+<p><img alt="Two heads aggregate V at the same position using separate weights, concatenate their two-coordinate results into four coordinates, and apply Wo" src="../chapters/12-multi-head-attention/images/en/05-%E4%B8%A4%E5%A4%B4%E6%B1%87%E6%80%BB%E5%86%8D%E6%8B%BC%E5%9B%9E.svg"  width="1080" height="1230" loading="lazy" decoding="async" /></p>
+<p>The code below recomputes the aggregates and checks that computing all heads at once agrees with looping over them individually. It prints only the result shape; inspect <code>projected_weights</code> in the complete lesson runner to verify the two weight rows above. Position rotation is not included yet. The next lesson will add it after splitting Q and K into heads.</p>
+<pre><code class="language-python">import math
+from torch import nn
+
+def attend(q, k, v):
+    &quot;&quot;&quot;对 [...,T,d] 做因果注意力；样本、头等前导轴各自独立计算。&quot;&quot;&quot;
+    # Q/K 分头后为 [B,H,T,d]，得分为 [B,H,T,T]；缩放用 d 而非总宽度。
+    scores = q @ k.transpose(-2, -1) / math.sqrt(q.shape[-1])
+    length = q.shape[-2]
+    # True 是可读位置；这张 [T,T] 掩码会广播到所有样本和头。
+    visible = torch.ones(length, length, dtype=torch.bool,
+                         device=q.device).tril()
+    # 沿最后的 K 位置轴归一化；未来先置 -inf，才会分到零比例。
+    weights = torch.softmax(
+        scores.masked_fill(~visible, float(&quot;-inf&quot;)), dim=-1)
+    return weights @ v
+
+torch.manual_seed(42)
+# 四个 Linear 保存各自的参数，前三个生成 Q/K/V，最后一个混合各头结果。
+q_proj = nn.Linear(4, 4, bias=False)
+k_proj = nn.Linear(4, 4, bias=False)
+v_proj = nn.Linear(4, 4, bias=False)
+out_proj = nn.Linear(4, 4, bias=False)
+
+# 投影 [1,3,4] 后再分头，每个 Q/K/V 均为 [1,2,3,2]。
+q = split_heads(q_proj(x), 2)
+k = split_heads(k_proj(x), 2)
+v = split_heads(v_proj(x), 2)
+context = attend(q, k, v)
+# 先按位置拼回四维，再经输出投影；不是把两个头逐项相加。
+output = out_proj(merge_heads(context))
+
+# 参考路径每次取一个头，输入形状变成 [B,T,d]。
+reference_heads = []
+for head in range(2):
+    reference_heads.append(attend(q[:, head], k[:, head],
+                                  v[:, head]))
+# stack 在轴 1 恢复头轴，与一次批量计算的 [B,H,T,d] 对齐。
+reference = torch.stack(reference_heads, dim=1)
+assert torch.allclose(context, reference)
+assert output.shape == x.shape
+print(context.shape, output.shape)
+</code></pre>
+<p>Run this after the preceding snippet. Matrix multiplication operates on the last two axes; the leading sample and head axes are processed independently. The same lower-triangular mask is applied to every sample and head.</p>
+<p><code>stack(..., dim=1)</code> collects the individual results along the head axis. The assertion verifies that separate calls per head produce the same aggregates as one batched calculation.</p>
+<p>The full model uses 64 dimensions and 2 heads, with 32 dimensions per head, and splits and merges in the same way. Read shapes by the meaning of their axes: the final axis of an aggregate contains features, while the final axis of attention scores contains positions being read. Equal axis lengths do not make the axes interchangeable.</p>
+<p>Return to the two checks in the code:</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result in this run</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Individual heads versus one batched aggregation</td>
+<td>Equal; maximum difference 0</td>
+</tr>
+<tr>
+<td>Head outputs merged by position</td>
+<td>Shape <code>[1,3,4]</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>For entry-by-entry inspection, see the <a href="../chapters/12-multi-head-attention/images/en/02-%E9%AA%8C%E8%AF%81.png">complete numerical comparison</a>.</p>
+<p>Q/K/V come from projections with fixed random parameters, intended to verify organization and computation. These outputs do not justify labeling one head a “syntax head” and the other a “common-sense head.” A head's role depends on the trained model's overall behavior, and one head may represent several relationships.</p>
+<p>During backpropagation, the output projection sends gradients to the concatenated vector, and concatenation routes gradients from the corresponding coordinates to each head. Splitting and merging have no parameters but still belong to the computation graph. They preserve coordinate correspondence rather than making gradients disappear. Training updates the three input projection matrices and the one output projection matrix.</p>
+<p>In the <a href="../chapters/12-multi-head-attention/walkthrough.en.html">interactive demo</a>, select a cell and use its sample, position, and feature indices to track where it goes during splitting and merging.</p><details class="inline-experiment"><summary><span>Try it here · Step-by-step experiment</span><small>Step through the calculation, forwards or backwards.</small></summary><p><a href="../chapters/12-multi-head-attention/walkthrough.en.html" class="js-experiment inline-expand">Expand workspace ↗</a> · <a href="../chapters/12-multi-head-attention/walkthrough.en.html" target="_blank" rel="noopener">Open in a new tab ↗</a></p><dialog class="inline-workspace experiment-viewer" aria-label="Step-by-step experiment"><header><strong>Step-by-step experiment</strong><div><a href="../chapters/12-multi-head-attention/walkthrough.en.html" target="_blank" rel="noopener">Open in a new tab <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button inline-close" type="button" aria-label="Return to reading">Return to reading <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe data-src="../chapters/12-multi-head-attention/walkthrough.en.html" title="Step-by-step experiment" loading="lazy"></iframe></dialog></details>
+<h2 id="do-more-heads-always-mean-more-parameters">Do More Heads Always Mean More Parameters?</h2>
+<p>In this series' implementation, total width D is fixed and divided equally among heads. The Q/K/V and output projections are all <code>[D, D]</code>, with no bias, for a total of <code>4D²</code> parameters. Changing from 2 heads to 4 mainly changes the width and grouping of each head; it does not change the total parameter count of these four matrices.</p>
+<p>The organization of the computation does change. Each head still has a score table containing <code>T×T</code> entries, so more heads mean storing more such tables, while each head has fewer coordinates to use. More heads do not automatically improve results; width, data, and training must also be considered.</p>
+<p>The total width must be divisible by the number of heads. For example, dividing 5 dimensions into 2 equal-width heads has no integer solution. This implementation raises an error instead of silently discarding the last coordinate.</p>
+<p>The causal mask already specifies where reading is forbidden, but the dot product does not yet explicitly include a position difference. The next lesson adds it through rotations of Q/K.</p>
+<h2 id="two-check-questions">Two Check Questions</h2>
+<ol>
+<li>Keep the values 0 through 11 in <code>X</code>, but use only 1 head. What is its shape? Which numbers are at position 1 in head 0? For the full configuration of 64 dimensions and 2 heads, what are the width per head and the total number of parameters in the four projections?</li>
+<li>Use two positions, <code>X[0]=[[0,1,2,3],[4,5,6,7]]</code>, still split into 2 heads. If <code>transpose(1, 2)</code> is omitted, the shape remains <code>[1,2,2,2]</code>. Does that prove the split is correct? Write the two values at “head 0, position 1” for both the correct and incorrect results.</li>
+</ol>
+<details class="answer">
+<summary>Reference answers</summary>
+<p>For question one, the shape is <code>[1, 1, 3, 4]</code>, and position 1 contains <code>[4, 5, 6, 7]</code>. In the full model, each head has width 32, and the four projections contain <code>4×64×64=16384</code> parameters in total.</p>
+<p>For question two, no. In the correct result, head 0 receives <code>[0,1]</code> and <code>[4,5]</code> at its two positions. Without swapping the axes, it receives <code>[0,1]</code> and <code>[2,3]</code>, mistaking another feature group from position 0 for position 1. The two axes happen to have equal lengths, so a shape check cannot detect the mistake.</p>
+<pre><code class="language-python"># 沿用前面的 split_heads；这次让位置数与头数都为2，避免只靠形状判定。
+short_x = torch.arange(8, dtype=torch.float32).reshape(1, 2, 4)
+correct = split_heads(short_x, 2)
+# 故意漏掉 transpose：轴的长度没变，头与位置的含义却被混淆了。
+wrong = short_x.reshape(1, 2, 2, 2)
+assert correct.shape == wrong.shape == (1, 2, 2, 2)
+print(&quot;头0、位置1：&quot;, correct[0, 0, 1], wrong[0, 0, 1])
+assert correct[0, 0, 1].tolist() == [4., 5.]
+assert wrong[0, 0, 1].tolist() == [2., 3.]
+</code></pre>
+<p>If you get these axes reversed, label the two length-2 axes “position” and “head,” then swap them in the order used by <code>split_heads</code>. Shape numbers tell you how many cells there are; axis meanings tell you what belongs in them.</p>
+</details>
+<p>Run this from the companion code directory:</p>
+<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+python -m lessons.l12
+</code></pre>
+<p>Complete entry points: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l12.py">Lesson runner</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/attention.py">Multi-head component</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md">Environment setup</a></p>
+<p>Source navigation: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/attention.py#L15">attention.py · split_heads</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/attention.py#L49">attention.py · CausalSelfAttention</a>.</p></article><details class="lesson-video video-ready" id="lesson-video"><summary><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></path></svg>Watch the companion video<span class="video-duration">4:16</span><span class="video-language">Chinese audio</span></summary><div class="bilibili-embed"><iframe data-src="https://player.bilibili.com/player.html?bvid=BV1z5HV6dEPK&amp;p=1&amp;autoplay=0&amp;danmaku=0" title="12 | Multi-Head Attention: Where Does Each Head Read? · B站视频" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><p class="video-actions"><a href="https://www.bilibili.com/video/BV1z5HV6dEPK/?p=1" target="_blank" rel="noopener">Watch in HD on Bilibili ↗</a></p></div></details>
+<div class="reader-feedback"><span>Questions about this chapter?</span><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=question.yml&amp;title=%5B%E5%AD%A6%E4%B9%A0%5D+12+%7C+Multi-Head+Attention%3A+Where+Does+Each+Head+Read%3F&amp;location=12+%7C+Multi-Head+Attention%3A+Where+Does+Each+Head+Read%3F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F12.en.html" target="_blank" rel="noopener">Ask a question</a><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=content.yml&amp;title=%5B%E5%8B%98%E8%AF%AF%5D+12+%7C+Multi-Head+Attention%3A+Where+Does+Each+Head+Read%3F&amp;location=12+%7C+Multi-Head+Attention%3A+Where+Does+Each+Head+Read%3F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F12.en.html" target="_blank" rel="noopener">Suggest a correction</a></div><nav class="chapter-nav" aria-label="Previous and next articles"><a href="../course/11.en.html"><span>Previous <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></path></svg></span><strong>11 | Causal Masks: Why Is Parallel Training Not Peeking at the Answer?</strong></a><a href="../course/13.en.html"><span>Next <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></path></svg></span><strong>13 | RoPE: How Does the Model Know the Order?</strong></a></nav><footer class="reader-footer">Hello LLM · Build a Small Model, Understand Large Models<details class="community-mini"><summary>Stay in touch · 好好用 AI</summary><div class="community-section"><div><h2>Stay in touch · 好好用 AI</h2><p>Follow the WeChat account to discuss what you learn and build.</p><p>For bugs and corrections, <a href="https://github.com/DavidDingXu/hello-llm/issues" target="_blank" rel="noopener">open a GitHub issue</a>.</p></div><a class="qr-link" href="../code/assets/wechat-official-account.jpg" target="_blank" rel="noopener" aria-label="Open the 好好用 AI WeChat QR code"><img src="../code/assets/wechat-official-account.jpg" alt="好好用 AI WeChat official account QR code" width="130" height="130" loading="lazy"><p class="qr-caption">Scan in WeChat · Open full image</p></a></div></details></footer></main>
+<aside class="context-sidebar" aria-label="Article navigation and tools"><div class="context-inner"><nav class="reading-route" aria-label="On this page"><details open><summary>On this page</summary><div class="toc">
+<ul>
+<li><a href="#where-does-a-single-set-of-weights-reach-its-limit">Where Does a Single Set of Weights Reach Its Limit?</a></li>
+<li><a href="#how-should-an-array-hold-two-sets-of-weights">How Should an Array Hold Two Sets of Weights?</a></li>
+<li><a href="#splitting-into-two-pieces-does-not-automatically-create-two-reading-patterns">Splitting into Two Pieces Does Not Automatically Create Two Reading Patterns</a></li>
+<li><a href="#how-do-the-two-heads-pass-their-results-on">How Do the Two Heads Pass Their Results On?</a></li>
+<li><a href="#where-will-the-two-heads-read">Where Will the Two Heads Read?</a></li>
+<li><a href="#do-more-heads-always-mean-more-parameters">Do More Heads Always Mean More Parameters?</a></li>
+<li><a href="#two-check-questions">Two Check Questions</a></li>
+</ul>
+</div>
+</details></nav>
+<section class="reading-settings"><h2>Reading settings</h2><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="Decrease text size">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="Increase text size">A+</button></div><span>Allow about 45 minutes</span><p class="lesson-goal">Explain head splitting, independent attention weights, and merging, and identify incorrect axes even when shapes match.</p></section>
+</div></aside></div><dialog class="search-dialog" id="search-dialog" aria-labelledby="search-label">
+<form method="dialog" class="search-heading"><label for="course-search" id="search-label"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/></circle><path d="m16 16 4.5 4.5"/></path></svg>Search course</label><button class="icon-button" aria-label="Close search"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></form>
+<input id="course-search" type="search" placeholder="Search concepts, code, or questions…" autocomplete="off" spellcheck="false">
+<p class="search-status" id="search-status" role="status">Search all 23 articles by keyword.</p>
+<div class="search-results" id="search-results"></div><footer>↑ ↓ Select result <span>Enter Open · Esc Close</span></footer></dialog>
+<dialog class="experiment-viewer" id="experiment-viewer" aria-labelledby="experiment-title"><header><strong id="experiment-title">Experiments</strong><div><a id="experiment-standalone" target="_blank" rel="noopener">Open separately <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a><button class="button" id="close-experiment" type="button">Back to reading <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></div></header><iframe id="experiment-frame" title="Experiments" src="about:blank"></iframe></dialog>
+<dialog class="image-viewer" id="image-viewer" aria-label="Enlarge figure">
+<header><span>View figure</span><div class="image-actions"><button type="button" id="image-zoom-out" aria-label="Zoom out">−</button><output id="image-scale" aria-label="Zoom level">100%</output><button type="button" id="image-zoom-in" aria-label="Enlarge figure">＋</button><button type="button" id="image-size">Actual size</button><button type="button" id="close-image" autofocus>Close</button></div></header>
+<div class="image-canvas"><p id="image-status" role="status" hidden></p><img id="large-image" alt=""></div><footer><p id="image-description"></p><a id="original-image" target="_blank" rel="noopener">Open original image <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a></footer></dialog>
+<div class="toast" id="toast" role="status"></div></body></html>

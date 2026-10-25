@@ -1,0 +1,315 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<meta name="source-sha256" content="616c3abe5c08c868278cc0d3b090fd427eb1fa909bdf06bb2e915bd43178520a"><meta name="description" content="Start with 14 IDs and follow the row for “欢”: how do its 64 representation values change, and how do they finally produce 79 candidate scores?"><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/16.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="16 | The Complete Model: Follow the Character “欢” Through Every Step · Hello LLM"><meta property="og:description" content="Start with 14 IDs and follow the row for “欢”: how do its 64 representation values change, and how do they finally produce 79 candidate scores?"><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/16.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>16 | The Complete Model: Follow the Character “欢” Through Every Step · Hello LLM</title>
+<link rel="icon" href="../assets/favicon.png" type="image/png">
+<script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
+<script defer src="../code/visuals/reading_site/search-index.en.js?v=11db81a4dd60"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="16" data-alternate-sections="[&quot;从这14个编号进入&quot;, &quot;跟住欢的这一行&quot;, &quot;把沿途节点接成一个-forward&quot;, &quot;在保存的记录里逐站停下&quot;, &quot;只换前文同一个欢会怎样&quot;, &quot;再看红的64项乘加&quot;, &quot;一路产生这么多数哪些会被训练改变&quot;, &quot;检查搭好的网络能否传回梯度&quot;, &quot;两道定位题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="Open course contents" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></path></svg></button>
+<a class="brand" href="../index.en.html" aria-label="Hello LLM · 学习站首页">
+<img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>Build a Small Model, Understand Large Models</small></span></a>
+<nav class="header-nav" aria-label="Main navigation"><a href="../index.en.html#curriculum">Learning path</a><a href="../index.en.html#experiments">Experiments</a><a href="https://github.com/DavidDingXu/hello-llm" target="_blank" rel="noopener">GitHub <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a></nav>
+<div class="header-controls"><a class="language-switch" href="16.html" lang="zh-CN" aria-label="切换到中文">中文</a><button class="icon-button theme-toggle js-only" type="button" aria-label="Switch to dark theme" title="Switch to dark theme"><span class="theme-light-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A9 9 0 0 1 9.5 3.5a9 9 0 1 0 11 11Z"/></path></svg></span><span class="theme-dark-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/></circle><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></path></svg></span></button>
+<button class="search-trigger js-only" type="button" aria-label="Search course"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/></circle><path d="m16 16 4.5 4.5"/></path></svg><span>Search course</span><kbd>⌘ K</kbd></button>
+</div></div><div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div></header><div class="sidebar-scrim" hidden></div><div class="reader-layout"><aside class="course-sidebar" id="course-sidebar" aria-label="Course contents">
+<div class="sidebar-heading"><a href="../index.en.html">Course contents</a><button class="icon-button menu-close js-only" type="button" aria-label="Close course contents"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></div>
+<nav aria-label="All articles"><div class="sidebar-guides"><a class="lesson-link" data-lesson="intro" href="../course/intro.en.html"><span class="lesson-number">·</span><span>Course introduction</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="00" href="../course/00.en.html"><span class="lesson-number">·</span><span>Before we begin</span><span class="lesson-state" aria-hidden="true"></span></a></div><details class="sidebar-stage"><summary><span class="stage-index">Part I</span>Make a numerical network learn</summary><a class="lesson-link" data-lesson="01" href="../course/01.en.html"><span class="lesson-number">01</span><span>Neurons</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="02" href="../course/02.en.html"><span class="lesson-number">02</span><span>Vectors and Matrices</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="03" href="../course/03.en.html"><span class="lesson-number">03</span><span>Multiple Layers and Nonlinearity</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="04" href="../course/04.en.html"><span class="lesson-number">04</span><span>Gradients and Parameter Updates</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="05" href="../course/05.en.html"><span class="lesson-number">05</span><span>Backpropagation by Hand</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="06" href="../course/06.en.html"><span class="lesson-number">06</span><span>Making the Network Learn</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part II</span>Bring text into the network</summary><a class="lesson-link" data-lesson="07" href="../course/07.en.html"><span class="lesson-number">07</span><span>Text and Vectors</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="08" href="../course/08.en.html"><span class="lesson-number">08</span><span>Scores and Probabilities</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="09" href="../course/09.en.html"><span class="lesson-number">09</span><span>Text Training Problems</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage" open><summary><span class="stage-index">Part III</span>Read context and assemble the model</summary><a class="lesson-link" data-lesson="10" href="../course/10.en.html"><span class="lesson-number">10</span><span>Single-Head Attention</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="11" href="../course/11.en.html"><span class="lesson-number">11</span><span>Causal masks</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="12" href="../course/12.en.html"><span class="lesson-number">12</span><span>Multi-head attention</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="13" href="../course/13.en.html"><span class="lesson-number">13</span><span>Rotary position embeddings</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="14" href="../course/14.en.html"><span class="lesson-number">14</span><span>Positionwise feed-forward networks</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="15" href="../course/15.en.html"><span class="lesson-number">15</span><span>Residual connections and normalization</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="16" href="../course/16.en.html" aria-current="page"><span class="lesson-number">16</span><span>The complete forward pass</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part IV</span>Pretrain, generate, and fine-tune</summary><a class="lesson-link" data-lesson="17" href="../course/17.en.html"><span class="lesson-number">17</span><span>The first pretraining run</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="18" href="../course/18.en.html"><span class="lesson-number">18</span><span>Character-by-character generation</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="19" href="../course/19.en.html"><span class="lesson-number">19</span><span>Question-answer fine-tuning</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="20" href="../course/20.en.html"><span class="lesson-number">20</span><span>The full workflow and checks of the principles</span><span class="lesson-state" aria-hidden="true"></span></a></details><a class="lesson-link" data-lesson="end" href="../course/end.en.html"><span class="lesson-number">·</span><span>Closing thoughts</span><span class="lesson-state" aria-hidden="true"></span></a></nav></aside><main class="reader-main" id="main-content"><div class="article-context"><span>Read context and assemble the model</span><div class="article-actions"><button type="button" class="copy-page-link js-only">Copy link</button><button type="button" class="focus-toggle js-only" aria-pressed="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></path></svg><span>Focus mode</span></button></div></div>
+<div class="mobile-context"><nav class="reading-route" aria-label="On this page"><details><summary>On this page</summary><div class="toc">
+<ul>
+<li><a href="#start-with-these-14-ids">Start with These 14 IDs</a></li>
+<li><a href="#stay-with-the-row-for-欢">Stay with the Row for “欢”</a></li>
+<li><a href="#connect-the-checkpoints-in-one-forward-method">Connect the Checkpoints in One forward Method</a></li>
+<li><a href="#stop-at-each-checkpoint-in-the-saved-record">Stop at Each Checkpoint in the Saved Record</a></li>
+<li><a href="#change-only-the-prefix-what-happens-to-the-same-欢">Change Only the Prefix: What Happens to the Same “欢”?</a></li>
+<li><a href="#inspect-the-64-term-weighted-sum-for-红">Inspect the 64-Term Weighted Sum for “红”</a></li>
+<li><a href="#of-all-these-numbers-which-ones-does-training-change">Of All These Numbers, Which Ones Does Training Change?</a></li>
+<li><a href="#check-that-the-assembled-network-can-propagate-gradients">Check That the Assembled Network Can Propagate Gradients</a></li>
+<li><a href="#two-questions-about-position-and-structure">Two Questions About Position and Structure</a></li>
+</ul>
+</div>
+</details></nav><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="Decrease text size">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="Increase text size">A+</button></div></div><article id="article-body"><h1 id="16-the-complete-model-follow-the-character-欢-through-every-step">16 | The Complete Model: Follow the Character “欢” Through Every Step</h1>
+<p>Build a Small Model, Understand Large Models · Lesson 16</p>
+<p>In Lesson 09, looking only at the final character “欢” could not distinguish whether the preceding person was Xiaoding or Xiaozhou. Now, when the complete model reads “早上，小丁喜欢” (“In the morning, Xiaoding likes”), it assigns the next character “红” (“red”) probability <strong>0.999765</strong>. How did the added components change the prediction?</p>
+<p>For this lesson, we borrow parameters from a completed pretraining run to observe how the components work together. The next lesson will examine how those parameters were trained. As when debugging a program, we hold the input and parameters fixed and stop at several points: are the input IDs correct, when does the row for “欢” change, and which step finally produces candidate-character scores?</p>
+<h2 id="start-with-these-14-ids">Start with These 14 IDs</h2>
+<p>Our fixed text is:</p>
+<p><code>早上，小丁喜欢红色的苹果。</code></p>
+<p>It means “In the morning, Xiaoding likes red apples.” The series encodes text character by character. Adding BOS before the 13 characters gives 14 IDs:</p>
+<p><code>[1, 32, 7, 76, 27, 6, 22, 44, 55, 57, 50, 58, 39, 5]</code></p>
+<p>Entry 0 is BOS, entry 1 is “早”, entry 7 is “欢”, and entry 13 is “。”. Lock onto position 7 and use that same index at every later checkpoint, so we do not accidentally switch to another character.</p>
+<p>The complete computation follows this route:</p>
+<p><strong>IDs <code>[1, 14]</code> → embedding lookup <code>[1, 14, 64]</code> → two model blocks → final RMSNorm → candidate scores <code>[1, 14, 79]</code></strong></p>
+<p>The first number, 1, is the number of samples; 14 is the number of positions. The internal representation width is 64, and the candidate vocabulary size is 79. They answer different questions: “How many numbers represent each position?” and “How many candidates need scores?” They are not interchangeable.</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/16-transformer/images/en/web/01-%E6%9C%BA%E5%88%B6.svg" width="1540" height="470"><img data-full-figure="../chapters/16-transformer/images/en/01-%E6%9C%BA%E5%88%B6.svg" alt="The same text passes from IDs through embedding lookup, two model blocks, final normalization, and output projection" src="../chapters/16-transformer/images/en/01-%E6%9C%BA%E5%88%B6.svg"  width="1080" height="2115" loading="eager" decoding="async" /></picture></p>
+<p>The number of positions remains 14 throughout. What changes is the content of each row: first one ID, then 64 representation values, and finally 79 candidate scores. Position 7 can use the prefix from BOS through “欢”, but cannot read the following “红色的苹果。” (“red apples”). Holding the whole sentence in one tensor does not remove this restriction.</p>
+<p>The <a href="../chapters/16-transformer/lab3d.en.html">3D model inspector</a> arranges these checkpoints in layers. Select a position and coordinate, then compare stages to inspect residual addition, final normalization, and how the 64 entries contribute to a candidate's score. It reads the same verified pretrained record; changing views does not train the model. The tables and code below also provide the complete verification path.</p><details class="inline-experiment"><summary><span>Try it here · 3D model inspector</span><small>Follow one token through real representations, attention and candidate scores.</small></summary><p><a href="../chapters/16-transformer/lab3d.en.html" class="js-experiment inline-expand">Expand workspace ↗</a> · <a href="../chapters/16-transformer/lab3d.en.html" target="_blank" rel="noopener">Open in a new tab ↗</a></p><dialog class="inline-workspace experiment-viewer" aria-label="3D model inspector"><header><strong>3D model inspector</strong><div><a href="../chapters/16-transformer/lab3d.en.html" target="_blank" rel="noopener">Open in a new tab <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button inline-close" type="button" aria-label="Return to reading">Return to reading <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe data-src="../chapters/16-transformer/lab3d.en.html" title="3D model inspector" loading="lazy"></iframe></dialog></details>
+<h2 id="stay-with-the-row-for-欢">Stay with the Row for “欢”</h2>
+<p>The first stop is the lookup. The ID for “欢”, 44, selects row 44 of the Embedding table. These 64 values depend only on the character and the table's parameters; they have not read “小丁” (“Xiaoding”). Stopping here lets us compare them with the representations after contextual processing.</p>
+<p>The first block gives this row a path for reading the prefix, then processes the aggregated coordinates with the feed-forward network. Two residual connections preserve direct paths for the incoming representations. The second block receives that result and processes it again with another set of parameters. Both block outputs still have shape <code>[1, 14, 64]</code>, so a shape check alone cannot reveal that their values have changed. We will inspect actual slices shortly.</p>
+<p>The 64 internal coordinates do not map one-to-one to characters. Scoring the 79 vocabulary candidates requires a final projection.</p>
+<p>After the second block, another RMSNorm is applied. A bias-free linear layer then projects each 64-entry vector to 79 scores. For candidate <code>j</code>, this is:</p>
+<p><strong>logit_j=h₁W_j1+h₂W_j2+…+h₆₄W_j64</strong></p>
+<p>Here, <code>h</code> is the final normalized vector, and <code>W_j</code> is the output matrix row for candidate <code>j</code>. This is exactly the row-by-row weighted sum from Lesson 2, now with 64 input values instead of two.</p>
+<p>This is where <code>[1, 14, 64]</code> becomes <code>[1, 14, 79]</code>. The returned <strong>logits are scores that have not been normalized into probabilities</strong>. Training sends them to cross-entropy; inspecting candidates or selecting a character uses Softmax. The probability of “红” at the start of the lesson comes from this entire row of scores.</p>
+<h2 id="connect-the-checkpoints-in-one-forward-method">Connect the Checkpoints in One forward Method</h2>
+<p>First write the route in code and create an untrained <code>random_model</code>, checking only its structure, shapes, and parameter count. The <code>pretrain_trace</code> read later is the record of the pretrained model from the opening; these two models have different parameters.</p>
+<p>The variable <code>x</code> is reassigned along the route. Each step must produce the shape the next step expects:</p>
+<pre><code class="language-python">import torch
+from torch import nn
+from tiny_lm.model import ModelConfig
+from tiny_lm.layers import RMSNorm, TransformerBlock
+from tiny_lm.tokenizer import CharTokenizer
+
+class TinyLM(nn.Module):
+    &quot;&quot;&quot;将整数编号 [B,T] 转为原始候选分数 [B,T,V]，不在前向内选字。&quot;&quot;&quot;
+    def __init__(self, config):
+        super().__init__()
+        self.config = config
+        self.embedding = nn.Embedding(config.vocab_size, config.d_model)
+        # ModuleList 注册各块的独立参数，模型的优化器才能找到它们。
+        self.blocks = nn.ModuleList([
+            TransformerBlock(config) for _ in range(config.n_layers)])
+        self.final_norm = RMSNorm(config.d_model, config.norm_eps)
+        self.output = nn.Linear(config.d_model, config.vocab_size,
+                                bias=False)
+        self.apply(self._initialize)
+
+    @staticmethod
+    def _initialize(module):
+        # 随机填写 Linear/Embedding；RMSNorm 的缩放参数保留初值 1。
+        if isinstance(module, (nn.Linear, nn.Embedding)):
+            nn.init.normal_(module.weight, mean=0., std=.02)
+
+    def forward(self, ids):
+        # 这里只接受一批编号，不把标签或损失计算混进模型前向。
+        if ids.ndim != 2 or not 0 &lt; ids.shape[1] &lt;= self.config.max_seq_len:
+            raise ValueError(&quot;需要 [B,T]，且 1 &lt;= T &lt;= 32&quot;)
+        x = self.embedding(ids)  # [B,T] → [B,T,D]，按编号读取参数表行。
+        # 各块改写位置表示，保留 [B,T,D] 的轴与宽度。
+        for block in self.blocks:
+            x = block(x)
+        # 最后归一后，将 D 项内部坐标映射成 V 个候选分数；此处没有 Softmax。
+        return self.output(self.final_norm(x))
+
+torch.manual_seed(42)
+tokenizer = CharTokenizer.for_course()
+# 这是一份新建的随机模型，尚未训练；不要与下段的预训练记录混为一份参数。
+random_model = TinyLM(ModelConfig(vocab_size=tokenizer.vocab_size))
+text = &quot;早上，小丁喜欢红色的苹果。&quot;
+ids = torch.tensor([tokenizer.encode(text, add_bos=True)])
+logits = random_model(ids)
+print(ids.shape)     # torch.Size([1, 14])
+print(logits.shape)  # torch.Size([1, 14, 79])
+print(sum(p.numel() for p in random_model.parameters()))  # 92352
+</code></pre>
+<p><code>ModuleList</code> registers both blocks as model submodules. A plain Python list can be iterated over but does not integrate them into the model's parameter management in the same way. <code>apply</code> visits modules and fills the linear and embedding weights with random values of mean 0 and standard deviation 0.02. The RMSNorm scale parameters still start at 1.</p>
+<h2 id="stop-at-each-checkpoint-in-the-saved-record">Stop at Each Checkpoint in the Saved Record</h2>
+<p>Read the pretrained model's forward record for this same sentence and select position 7. We display only the first four coordinates at each checkpoint; the other 60 still participate in the actual computation:</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Checkpoint at position 7</th>
+<th>First four entries, rounded to six decimal places</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Embedding</td>
+<td>[−0.094927, 0.018641, 0.043246, 0.040713]</td>
+</tr>
+<tr>
+<td>First block output</td>
+<td>[−0.844999, −0.217363, −0.441488, −0.389308]</td>
+</tr>
+<tr>
+<td>Second block output</td>
+<td>[−0.840967, −0.695858, −0.620723, −0.608694]</td>
+</tr>
+<tr>
+<td>Final RMSNorm</td>
+<td>[−1.184615, −1.003421, −1.015668, −0.869593]</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="change-only-the-prefix-what-happens-to-the-same-欢">Change Only the Prefix: What Happens to the Same “欢”?</h2>
+<p>Changed values alone do not establish that the prefix had an effect. Using the same pretrained weights, compare <code>早上，小丁喜欢</code> and <code>早上，小周喜欢</code>—“In the morning, Xiaoding likes” and “In the morning, Xiaozhou likes.” Supply only the prefixes, without their following answers.</p>
+<p>Both end in “欢”, with ID 44, so their initial 64-entry lookup vectors are identical. After two blocks, the preceding “丁” and “周” have paths that can affect this row, and the outputs differ.</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/16-transformer/images/en/web/06-%E5%90%8C%E4%B8%80%E4%B8%AA%E6%AC%A2%E4%B8%8D%E5%90%8C%E7%9A%84%E5%89%8D%E6%96%87.svg" width="1504" height="1017.8"><img alt="With the same pretrained weights, the Xiaoding and Xiaozhou prefixes begin with identical embeddings at “欢” but produce different block outputs and different next-character probabilities for red and yellow" src="../chapters/16-transformer/images/en/06-%E5%90%8C%E4%B8%80%E4%B8%AA%E6%AC%A2%E4%B8%8D%E5%90%8C%E7%9A%84%E5%89%8D%E6%96%87.svg"  width="1080" height="2265" loading="lazy" decoding="async" /></picture></p>
+<p>The two grids share a color scale: teal is positive, purple is negative, and deeper color means a larger absolute value. Each 8×8 grid is still one 64-dimensional vector, not 64 characters. A cell's color alone does not justify calling it a “fruit feature.”</p>
+<p>With the “小丁” prefix, “红” has probability about 99.9765%. With “小周”, “黄” (“yellow”) has probability about 99.9736%. The character baseline in Lesson 09 looked up only the current “欢” and gave both people the same distribution. The prefix now truly changes the next-character prediction. No parameters were updated between the two runs; the input and the representations computed along the way changed.</p>
+<details class="optional">
+<summary>Expand the full coordinates and the code for this name comparison</summary>
+<p>Below, compare all 64 coordinates after lookup and after the second block for the “小丁” input alone. The two grids again share a color scale. The labels 0–63 are coordinate indices; arranging them in 8 rows and 8 columns is only a viewing aid.</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/16-transformer/images/en/web/04-%E4%B8%80%E4%B8%AA%E4%BD%8D%E7%BD%AE%E7%9A%8464%E9%A1%B9%E5%8F%98%E5%8C%96.svg" width="1504" height="1136.4"><img alt="The 64 actual values at one position differ after lookup and after the second block; both grids share a color scale, and 0 through 63 label coordinate indices" src="../chapters/16-transformer/images/en/04-%E4%B8%80%E4%B8%AA%E4%BD%8D%E7%BD%AE%E7%9A%8464%E9%A1%B9%E5%8F%98%E5%8C%96.svg"  width="1080" height="2805" loading="lazy" decoding="async" /></picture></p>
+<p>To repeat the two-name comparison, load the saved weights directly. We name this model <code>context_model</code> to distinguish it from the newly initialized <code>random_model</code> above:</p>
+<pre><code class="language-python">from tiny_lm.checkpoint import load_checkpoint
+from tiny_lm.trace import parameter_digest
+
+# 加载同一份预训练权重；本段没有标签、反向或优化器更新。
+context_model, context_tokenizer, _ = load_checkpoint(
+    &quot;artifacts/first_run/pretrain.pt&quot;)
+before_digest = parameter_digest(context_model)
+embeddings, representations = [], []
+for prefix in [&quot;早上，小丁喜欢&quot;, &quot;早上，小周喜欢&quot;]:
+    # 两个前缀都以“欢”结尾，只在前面的人名处差一个字。
+    prefix_ids = torch.tensor([context_tokenizer.encode(prefix, add_bos=True)])
+    with torch.no_grad():
+        scores, detail = context_model(prefix_ids, return_trace=True)
+    embeddings.append(detail[&quot;embedding&quot;][0, -1])
+    representations.append(detail[&quot;blocks&quot;][-1][&quot;block_output&quot;][0, -1])
+    # 对最后位置的完整79项归一化，再查看“红”和“黄”，不单独重分这两项。
+    probabilities = scores[0, -1].softmax(-1)
+    print(prefix, {c: float(probabilities[context_tokenizer.stoi[c]])
+                   for c in [&quot;红&quot;, &quot;黄&quot;]})
+
+assert torch.equal(embeddings[0], embeddings[1])  # 当前字符相同，查表结果完全相同。
+assert not torch.allclose(representations[0], representations[1])
+assert parameter_digest(context_model) == before_digest  # 比较期间参数没有改变。
+</code></pre>
+</details>
+<h2 id="inspect-the-64-term-weighted-sum-for-红">Inspect the 64-Term Weighted Sum for “红”</h2>
+<p>At this position, the output head gives “红” a logit of about <strong>13.768686</strong> and “紫” (“purple”) about <strong>0.992895</strong>. Softmax over all 79 entries gives “红” probability <strong>0.999765</strong>. This is a measured prediction from a trained model, and it happens to match the actual next character.</p>
+<p>We can also break down 13.768686. Each bar below is one term <code>hᵢ×W红,ᵢ</code>: positive contributions appear above zero, and negative contributions below. All 64 terms must be summed to obtain the score for “红”. Each of the other 78 candidates has its own parameter row and requires the same computation.</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/16-transformer/images/en/web/05-%E4%B8%80%E4%B8%AA%E5%80%99%E9%80%89%E7%9A%8464%E9%A1%B9%E4%B9%98%E5%8A%A0.svg" width="1504" height="786.8"><img alt="The actual normalized vector is multiplied elementwise by the output weights for “红”; 64 signed contributions sum to 13.768686 before normalization with the other 78 scores" src="../chapters/16-transformer/images/en/05-%E4%B8%80%E4%B8%AA%E5%80%99%E9%80%89%E7%9A%8464%E9%A1%B9%E4%B9%98%E5%8A%A0.svg"  width="1080" height="1935" loading="lazy" decoding="async" /></picture></p>
+<p>No character has been selected or appended yet. The generation loop in Lesson 18 masks PAD, BOS, and UNK before renormalizing, so its probability for the same candidate differs slightly. Do not combine the last decimal places from these two contexts as though they came from one distribution.</p>
+<p>Read the original record directly with the following code, without retraining:</p>
+<pre><code class="language-python">import json
+from pathlib import Path
+
+# JSON 保存已训练模型的一次前向结果；读取它不会给 random_model 加载权重。
+pretrain_record = json.loads(Path(
+    &quot;artifacts/first_run/forward_trace.json&quot;).read_text(encoding=&quot;utf-8&quot;))
+pretrain_trace = pretrain_record[&quot;trace&quot;]
+assert pretrain_record[&quot;stage&quot;] == &quot;pretrain&quot;
+position = 7
+# 取样本 0 的位置 7（欢），只显示前四个坐标，其余坐标仍参与原计算。
+print(pretrain_trace[&quot;embedding&quot;][0][position][:4])
+print(pretrain_trace[&quot;blocks&quot;][0][&quot;block_output&quot;][0][position][:4])
+scores = torch.tensor(pretrain_trace[&quot;logits&quot;][0][position])
+# red 索引的是词表候选轴，不是 64 维表示中的某个坐标。
+red = tokenizer.stoi[&quot;红&quot;]
+print(float(scores[red]), float(scores.softmax(-1)[red]))
+</code></pre>
+<p>When debugging, if the output still has only 64 entries, check whether the vocabulary projection was omitted. If decoded IDs produce the wrong characters, check the vocabulary paired with the model. The checkpoint records above help locate the step where something went wrong.</p>
+<p>In the <a href="../chapters/16-transformer/model-inspector.en.html">model inspection demo</a>, you can select another input position and inspect its embedding lookup, each block's attention and two residual additions, and the final candidate scores. Clicking a coordinate shows its value. The page uses the saved forward record from this lesson; it does not retrain a model in the browser.</p><details class="inline-experiment"><summary><span>Try it here · Model X-ray</span><small>Inspect real tensors throughout one forward pass.</small></summary><p><a href="../chapters/16-transformer/model-inspector.en.html" class="js-experiment inline-expand">Expand workspace ↗</a> · <a href="../chapters/16-transformer/model-inspector.en.html" target="_blank" rel="noopener">Open in a new tab ↗</a></p><dialog class="inline-workspace experiment-viewer" aria-label="Model X-ray"><header><strong>Model X-ray</strong><div><a href="../chapters/16-transformer/model-inspector.en.html" target="_blank" rel="noopener">Open in a new tab <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button inline-close" type="button" aria-label="Return to reading">Return to reading <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe data-src="../chapters/16-transformer/model-inspector.en.html" title="Model X-ray" loading="lazy"></iframe></dialog></details>
+<h2 id="of-all-these-numbers-which-ones-does-training-change">Of All These Numbers, Which Ones Does Training Change?</h2>
+<p>The vectors in the table are regenerated from the input. What the model stores long-term and modifies during training are its parameter groups. Counting them also helps detect an unregistered layer or an accidentally shared matrix. Let <code>V</code> be the vocabulary size, <code>D</code> the internal width, <code>L</code> the number of blocks, and <code>F</code> the intermediate feed-forward width. The input and output matrices are not shared, and all linear layers are bias-free.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Formula</th>
+<th>Parameters in this model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Input Embedding</td>
+<td>VD = 79×64</td>
+<td>5,056</td>
+</tr>
+<tr>
+<td>Q, K, V, and output projections per block</td>
+<td>4D² = 4×64²</td>
+<td>16,384</td>
+</tr>
+<tr>
+<td>SwiGLU per block</td>
+<td>3DF = 3×64×128</td>
+<td>24,576</td>
+</tr>
+<tr>
+<td>Two RMSNorm layers per block</td>
+<td>2D</td>
+<td>128</td>
+</tr>
+<tr>
+<td>Two complete blocks</td>
+<td>2×41,088</td>
+<td>82,176</td>
+</tr>
+<tr>
+<td>Final RMSNorm</td>
+<td>D</td>
+<td>64</td>
+</tr>
+<tr>
+<td>Output projection</td>
+<td>DV = 64×79</td>
+<td>5,056</td>
+</tr>
+</tbody>
+</table></div>
+<p>The total is therefore:</p>
+<p><strong>2VD+L(4D²+3DF+2D)+D=92,352</strong></p>
+<p>The “per block” rows describe one block's components; in the final total, count “two complete blocks” only once. The 2 heads divide width 64 into width 32 per head, so do not multiply <code>4D²</code> by the head count again. Fixed RoPE frequencies, input IDs, intermediate results, and the causal mask are not trainable parameters.</p>
+<h2 id="check-that-the-assembled-network-can-propagate-gradients">Check That the Assembled Network Can Propagate Gradients</h2>
+<p>Return to the <code>random_model</code> we built earlier. Supply targets shifted by one position, compute the loss, and backpropagate to check that every trainable parameter is connected to the loss. Reading a JSON record does not alter this model's parameters. The following checks connectivity only; no training has occurred yet:</p>
+<pre><code class="language-python">from tiny_lm.losses import token_loss
+
+# 输入为 BOS+原文；标签向后错一格，成为原文+EOS，两者同为 [1,14]。
+targets = torch.tensor([tokenizer.encode(text) + [2]])  # 末尾是 EOS
+# 回到前面新建的随机模型，只检查它的全部参数是否接到了损失。
+random_model.zero_grad(set_to_none=True)
+loss = token_loss(random_model(ids), targets)
+loss.backward()
+# backward 只填写梯度；这里没有优化器 step，随机参数仍未更新。
+assert all(p.grad is not None and torch.isfinite(p.grad).all()
+           for p in random_model.parameters())
+print(float(loss.detach()))
+</code></pre>
+<p>This confirms that the parameters connect to the loss and that all gradients in this pass are finite. Unused vocabulary rows may have zero gradients. Whether the network can learn well still requires actual training.</p>
+<details class="optional">
+<summary>Optional: apply the same tracing method to a public model</summary>
+<p>The same tracing method works with public models. We sent “天空是什么颜色？” (“What color is the sky?”) to Qwen3-0.6B and recorded a real forward pass. Including the chat format, the input contains 16 tokens. They pass through 28 blocks and produce candidate scores of shape <code>[1, 16, 151936]</code>.</p>
+<p>Below are the actual weights from the first attention head in the first layer. The horizontal axis selects the position being read; the vertical axis selects the query position. The upper-right region is all 0, enforcing the same causal restriction we implemented by hand.</p>
+<p><img alt="Actual 16-by-16 attention weights from Qwen3-0.6B's first layer and first head, with zeros in the future region" src="../chapters/16-transformer/images/en/03-%E5%85%AC%E5%BC%80%E6%A8%A1%E5%9E%8B.svg"  width="1080" height="1350" loading="lazy" decoding="async" /></p>
+<p>Its internal width is 1024. It has 16 query groups but only 8 K/V groups, so every two query groups share one set of reading material. Our handwritten model gives each head its own K/V. The public model also has additional normalization and parameter sharing that this series does not implement one by one. This observation checks the computation path and causal restriction; simply increasing 64 would not reproduce its full design.</p>
+<p>At the last position, this run assigns the token “天空” (“sky”) probability approximately 0.997092. That probability comes from the output head; the shading in the figure shows one attention head's weights for reading the prefix. They serve different purposes. Consult the <a href="https://huggingface.co/Qwen/Qwen3-0.6B">official model description</a> for the design and the <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/artifacts/reference/qwen3_trace.json">measured trace</a> for this run.</p>
+</details>
+<h2 id="two-questions-about-position-and-structure">Two Questions About Position and Structure</h2>
+<ol>
+<li>What should the scores at the BOS position predict? What should the final valid position, containing the period, predict?</li>
+<li>If only the internal width changes from 64 to 128, keeping two heads, how many parameters are in one attention block's four projection matrices? Should you multiply by the head count again?</li>
+</ol>
+<details class="answer">
+<summary>Reference answers</summary>
+<p>For question one, the BOS position targets the first character, “早”; the period position targets EOS. Both input and labels have 14 entries. The period is not being asked to predict itself. For question two, the answer is <strong>4×128²=65,536</strong>, four times the original 16,384. Each head now has width 64. The four projections already cover the full 128 dimensions, so do not multiply by the number of heads again.</p>
+</details>
+<p>Before training, give your model two ID sequences of length 5. Write down the expected output shape, then run the forward pass. Change only the character ID at position index 3 in one sequence, and verify that positions 0–2 of that sequence and every output in the other sample remain unchanged. Finally, compute a loss, backpropagate, and check that the parameters receive finite gradients. If a check fails, investigate axes, visibility, or parameter registration before increasing the training steps.</p>
+<p>Run this from the <code>code</code> companion code directory:</p>
+<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+python -m lessons.l16
+</code></pre>
+<p>Code and run records: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l16.py">Lesson runner</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/model.py">Complete model source</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/artifacts/first_run/forward_trace.json">Actual forward record</a>.</p>
+<p>Source navigation: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/model.py#L39">model.py · TinyLM</a>.</p></article><details class="lesson-video video-ready" id="lesson-video"><summary><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></path></svg>Watch the companion video<span class="video-duration">4:42</span><span class="video-language">Chinese audio</span></summary><div class="bilibili-embed"><iframe data-src="https://player.bilibili.com/player.html?bvid=BV1oJHV6pEMN&amp;p=1&amp;autoplay=0&amp;danmaku=0" title="16 | The Complete Model: Follow the Character “欢” Through Every Step · B站视频" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><p class="video-actions"><a href="https://www.bilibili.com/video/BV1oJHV6pEMN/?p=1" target="_blank" rel="noopener">Watch in HD on Bilibili ↗</a></p></div></details>
+<div class="reader-feedback"><span>Questions about this chapter?</span><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=question.yml&amp;title=%5B%E5%AD%A6%E4%B9%A0%5D+16+%7C+The+Complete+Model%3A+Follow+the+Character+%E2%80%9C%E6%AC%A2%E2%80%9D+Through+Every+Step&amp;location=16+%7C+The+Complete+Model%3A+Follow+the+Character+%E2%80%9C%E6%AC%A2%E2%80%9D+Through+Every+Step+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F16.en.html" target="_blank" rel="noopener">Ask a question</a><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=content.yml&amp;title=%5B%E5%8B%98%E8%AF%AF%5D+16+%7C+The+Complete+Model%3A+Follow+the+Character+%E2%80%9C%E6%AC%A2%E2%80%9D+Through+Every+Step&amp;location=16+%7C+The+Complete+Model%3A+Follow+the+Character+%E2%80%9C%E6%AC%A2%E2%80%9D+Through+Every+Step+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F16.en.html" target="_blank" rel="noopener">Suggest a correction</a></div><nav class="chapter-nav" aria-label="Previous and next articles"><a href="../course/15.en.html"><span>Previous <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></path></svg></span><strong>15 | Residual Connections and RMSNorm: Why Keep a Direct Path?</strong></a><a href="../course/17.en.html"><span>Next <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></path></svg></span><strong>17 | Pretraining: Why Can New Questions Get Worse as Training Questions Improve?</strong></a></nav><footer class="reader-footer">Hello LLM · Build a Small Model, Understand Large Models<details class="community-mini"><summary>Stay in touch · 好好用 AI</summary><div class="community-section"><div><h2>Stay in touch · 好好用 AI</h2><p>Follow the WeChat account to discuss what you learn and build.</p><p>For bugs and corrections, <a href="https://github.com/DavidDingXu/hello-llm/issues" target="_blank" rel="noopener">open a GitHub issue</a>.</p></div><a class="qr-link" href="../code/assets/wechat-official-account.jpg" target="_blank" rel="noopener" aria-label="Open the 好好用 AI WeChat QR code"><img src="../code/assets/wechat-official-account.jpg" alt="好好用 AI WeChat official account QR code" width="130" height="130" loading="lazy"><p class="qr-caption">Scan in WeChat · Open full image</p></a></div></details></footer></main>
+<aside class="context-sidebar" aria-label="Article navigation and tools"><div class="context-inner"><nav class="reading-route" aria-label="On this page"><details open><summary>On this page</summary><div class="toc">
+<ul>
+<li><a href="#start-with-these-14-ids">Start with These 14 IDs</a></li>
+<li><a href="#stay-with-the-row-for-欢">Stay with the Row for “欢”</a></li>
+<li><a href="#connect-the-checkpoints-in-one-forward-method">Connect the Checkpoints in One forward Method</a></li>
+<li><a href="#stop-at-each-checkpoint-in-the-saved-record">Stop at Each Checkpoint in the Saved Record</a></li>
+<li><a href="#change-only-the-prefix-what-happens-to-the-same-欢">Change Only the Prefix: What Happens to the Same “欢”?</a></li>
+<li><a href="#inspect-the-64-term-weighted-sum-for-红">Inspect the 64-Term Weighted Sum for “红”</a></li>
+<li><a href="#of-all-these-numbers-which-ones-does-training-change">Of All These Numbers, Which Ones Does Training Change?</a></li>
+<li><a href="#check-that-the-assembled-network-can-propagate-gradients">Check That the Assembled Network Can Propagate Gradients</a></li>
+<li><a href="#two-questions-about-position-and-structure">Two Questions About Position and Structure</a></li>
+</ul>
+</div>
+</details></nav>
+<section class="reading-settings"><h2>Reading settings</h2><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="Decrease text size">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="Increase text size">A+</button></div><span>Allow about 50 minutes</span><p class="lesson-goal">Assemble the complete model and distinguish representations, parameters, and vocabulary scores.</p></section>
+</div></aside></div><dialog class="search-dialog" id="search-dialog" aria-labelledby="search-label">
+<form method="dialog" class="search-heading"><label for="course-search" id="search-label"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/></circle><path d="m16 16 4.5 4.5"/></path></svg>Search course</label><button class="icon-button" aria-label="Close search"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></form>
+<input id="course-search" type="search" placeholder="Search concepts, code, or questions…" autocomplete="off" spellcheck="false">
+<p class="search-status" id="search-status" role="status">Search all 23 articles by keyword.</p>
+<div class="search-results" id="search-results"></div><footer>↑ ↓ Select result <span>Enter Open · Esc Close</span></footer></dialog>
+<dialog class="experiment-viewer" id="experiment-viewer" aria-labelledby="experiment-title"><header><strong id="experiment-title">Experiments</strong><div><a id="experiment-standalone" target="_blank" rel="noopener">Open separately <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a><button class="button" id="close-experiment" type="button">Back to reading <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></div></header><iframe id="experiment-frame" title="Experiments" src="about:blank"></iframe></dialog>
+<dialog class="image-viewer" id="image-viewer" aria-label="Enlarge figure">
+<header><span>View figure</span><div class="image-actions"><button type="button" id="image-zoom-out" aria-label="Zoom out">−</button><output id="image-scale" aria-label="Zoom level">100%</output><button type="button" id="image-zoom-in" aria-label="Enlarge figure">＋</button><button type="button" id="image-size">Actual size</button><button type="button" id="close-image" autofocus>Close</button></div></header>
+<div class="image-canvas"><p id="image-status" role="status" hidden></p><img id="large-image" alt=""></div><footer><p id="image-description"></p><a id="original-image" target="_blank" rel="noopener">Open original image <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a></footer></dialog>
+<div class="toast" id="toast" role="status"></div></body></html>

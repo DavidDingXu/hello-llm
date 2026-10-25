@@ -1,0 +1,27 @@
+{
+  "records": [
+    {
+      "record_id": "p-3-0-0",
+      "template_id": 3,
+      "text": "早上，小丁选了香蕉，它是黄色的。"
+    },
+    {
+      "record_id": "p-3-0-1",
+      "template_id": 3,
+      "text": "早上，小周选了苹果，它是红色的。"
+    },
+    {
+      "record_id": "p-3-0-2",
+      "template_id": 3,
+      "text": "早上，小陈选了葡萄，它是紫色的。"
+    },
+    {
+      "record_id": "p-3-0-3",
+      "template_id": 3,
+      "text": "早上，小李选了梨子，它是绿色的。"
+    }
+  ],
+  "steps": 240,
+  "initial_loss": 4.403276443481445,
+  "final_loss": 0.0835774764418602
+}

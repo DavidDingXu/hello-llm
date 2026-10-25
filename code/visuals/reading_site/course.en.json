@@ -1,0 +1,165 @@
+{
+  "articles": [
+    {
+      "id": "intro",
+      "title": "Build a Small Model, Understand Large Models",
+      "topic": "Course introduction",
+      "goal": "Understand why model mechanisms matter and which development and verification skills this course builds.",
+      "short_summary": "When a model gets an answer wrong, should you inspect the input, generation, or training? Start with a model you can calculate by hand and build a basis for those decisions."
+    },
+    {
+      "id": "00",
+      "title": "Before We Begin | Test the Finished Model, Then Build It from Scratch",
+      "topic": "Before we begin",
+      "goal": "Distinguish training from generation and find the starting point for the course.",
+      "short_summary": "The same opening produces nonsense from random weights and a meaningful continuation after training. Asking a question fails again. Inspect these changes, then run the first numerical example."
+    },
+    {
+      "id": "01",
+      "title": "01 | Neurons: What Does a Model Calculate Before It Writes the Next Character?",
+      "topic": "Neurons",
+      "goal": "Explain the roles of inputs, parameters, and activation.",
+      "short_summary": "How do two inputs, two weights, and one bias produce 4? Then use an impossible target to see why activation functions are needed."
+    },
+    {
+      "id": "02",
+      "title": "02 | Vectors and Matrices: Do Two Outputs Require Two Copies of the Code?",
+      "topic": "Vectors and Matrices",
+      "goal": "Explain input, parameter, and output shapes axis by axis.",
+      "short_summary": "Arrange two parameter groups in a table to calculate two outputs at once. Add another input sample and see which numbers need to be duplicated and which parameters remain shared."
+    },
+    {
+      "id": "03",
+      "title": "03 | Nonlinearity: Why Can Multiply-and-Add Not Express Four Simple Rules?",
+      "topic": "Multiple Layers and Nonlinearity",
+      "goal": "Explain the difference between stacking layers and adding nonlinearity.",
+      "short_summary": "The first three rules can all be satisfied, but the fourth must fail. Follow the four inputs to see why another layer is not enough and what ReLU changes."
+    },
+    {
+      "id": "04",
+      "title": "04 | Gradients: Why Can an Update in the Right Direction Make Things Worse?",
+      "topic": "Gradients and Parameter Updates",
+      "goal": "Distinguish the local direction given by a gradient from the actual update step size.",
+      "short_summary": "With the same negative gradient, a small update reduces error while a large one overshoots the target. Use a reproducible curve to understand local direction and learning rate."
+    },
+    {
+      "id": "05",
+      "title": "05 | Backpropagation: Must We Test All 9 Parameters One by One?",
+      "topic": "Backpropagation by Hand",
+      "goal": "Calculate one backward path by hand and explain how branch contributions combine before parameters are updated together.",
+      "short_summary": "The forward pass produces −1 and a loss of 4. Trace one path backward: why does a weight whose value is 0 have a gradient of −8?"
+    },
+    {
+      "id": "06",
+      "title": "06 | The Training Loop: What Happens to Four Predictions After 500 Updates?",
+      "topic": "Making the Network Learn",
+      "goal": "Write one training iteration, explain gradient clearing, and identify incorrect comparisons caused by broadcasting.",
+      "short_summary": "Have the same small network repeatedly run forward, calculate loss, backpropagate, and update. Observe 500 updates, then uncover a shape error that leaves a nonzero loss even when every prediction is correct."
+    },
+    {
+      "id": "07",
+      "title": "07 | Embedding: How Does Text Become a Network Input?",
+      "topic": "Text and Vectors",
+      "goal": "Distinguish character IDs, embedding vectors, and the three tensor axes.",
+      "short_summary": "The ID 44 is not the meaning of “欢”. Give characters addresses, then retrieve vector rows from a trainable table to connect text to numerical computation."
+    },
+    {
+      "id": "08",
+      "title": "08 | Softmax: How Do Scores Become Next-Character Probabilities?",
+      "topic": "Scores and Probabilities",
+      "goal": "Explain candidate scores, relative competition, and normalization.",
+      "short_summary": "The score for “红” stays the same, but its probability decreases. Put red, yellow, and green in the same competition and calculate exponentials and normalization step by step."
+    },
+    {
+      "id": "09",
+      "title": "09 | Training Targets: How Does a Sentence Become a Learnable Task?",
+      "topic": "Text Training Problems",
+      "goal": "Construct shifted targets and explain average loss over valid positions.",
+      "short_summary": "The training answers are already in the original sentence: shift inputs and targets by one position. Then see how loss scores predictions and why padding must be excluded from the average."
+    },
+    {
+      "id": "10",
+      "title": "10 | Attention: How Does Predicting the Next Character Read Earlier Text?",
+      "topic": "Single-Head Attention",
+      "goal": "Calculate one attention row and distinguish reading proportions from the content being read.",
+      "short_summary": "Putting preceding text in an array does not necessarily connect it to the current prediction. First read three positions in chosen proportions, then see how Q and K calculate those proportions."
+    },
+    {
+      "id": "11",
+      "title": "11 | Causal Masks: Why Is Parallel Training Not Peeking at the Answer?",
+      "topic": "Causal masks",
+      "goal": "Explain causal visibility and the correct placement of the mask.",
+      "short_summary": "The future answer is already in memory. Why can the current position still not read it? Draw the permitted connections, then exclude forbidden scores before normalization."
+    },
+    {
+      "id": "12",
+      "title": "12 | Multi-Head Attention: Where Does Each Head Read?",
+      "topic": "Multi-head attention",
+      "goal": "Explain head splitting, independent attention weights, and merging, and identify incorrect axes even when shapes match.",
+      "short_summary": "One sentence can be read in several ways. Explore the limits of one set of weights, move numbered cells into separate heads, aggregate independently, and merge by position."
+    },
+    {
+      "id": "13",
+      "title": "13 | RoPE: How Does the Model Know the Order?",
+      "topic": "Rotary position embeddings",
+      "goal": "Connect the two-dimensional rotation formula to relative positions and Q/K dot products.",
+      "short_summary": "Reordering content can leave an attention result unchanged. Use two rotating arrows to connect coordinates, radians, and relative position step by step."
+    },
+    {
+      "id": "14",
+      "title": "14 | SwiGLU: What Happens After Reading the Prefix?",
+      "topic": "Positionwise feed-forward networks",
+      "goal": "Explain input-dependent gating and positionwise processing.",
+      "short_summary": "How can two conditions jointly affect one output? Compute multipliers from the current input and observe sign changes, zeroing, shrinking, and amplification."
+    },
+    {
+      "id": "15",
+      "title": "15 | Residual Connections and RMSNorm: Why Keep a Direct Path?",
+      "topic": "Residual connections and normalization",
+      "goal": "Assemble head splitting, rotation, and causal aggregation into an attention component, then add residual connections and a Pre-Norm model block.",
+      "short_summary": "If a new branch returns zero, does the earlier information survive? See what the direct path preserves, then adjust the scale of the values entering the branch."
+    },
+    {
+      "id": "16",
+      "title": "16 | The Complete Model: Follow the Character “欢” Through Every Step",
+      "topic": "The complete forward pass",
+      "goal": "Assemble the complete model and distinguish representations, parameters, and vocabulary scores.",
+      "short_summary": "Start with 14 IDs and follow the row for “欢”: how do its 64 representation values change, and how do they finally produce 79 candidate scores?"
+    },
+    {
+      "id": "17",
+      "title": "17 | Pretraining: Why Can New Questions Get Worse as Training Questions Improve?",
+      "topic": "The first pretraining run",
+      "goal": "Complete pretraining and use differences in the data to explain changes in evaluation results.",
+      "short_summary": "Training loss keeps falling while held-out loss rises. Inspect how the two sets differ, then follow one batch through an actual parameter update."
+    },
+    {
+      "id": "18",
+      "title": "18 | Generation: How Many Choices Does One Sentence Take?",
+      "topic": "Character-by-character generation",
+      "goal": "Write a generation loop and explain random selection and stopping conditions.",
+      "short_summary": "Six visible characters require seven choices. Feed each selected character back into the input and trace the growing prefix, sampling, and the final EOS."
+    },
+    {
+      "id": "19",
+      "title": "19 | Supervised Fine-Tuning: Why Can It Continue Text but Still Fail to Answer?",
+      "topic": "Question-answer fine-tuning",
+      "goal": "Build answer supervision and diagnose fine-tuning tradeoffs with fixed comparisons across three methods and three seeds.",
+      "short_summary": "A model learns to answer questions while old capabilities may degrade. Align answer labels, then compare learning rates and mixed training on fixed evaluation tasks to measure both gains and costs."
+    },
+    {
+      "id": "20",
+      "title": "20 | The Full Workflow: Connect Pretraining, Fine-Tuning, and Generation",
+      "topic": "The full workflow and checks of the principles",
+      "goal": "Independently complete a transfer experiment covering data, vocabulary, model construction, training, and reloading, and explain both successes and failures.",
+      "short_summary": "Reconnect inputs, labels, parameters, and saved weights across the full workflow. Swap facts and retrain, then add Xiaotang and tangerines yourself to verify your implementation and explain missing words in a new sentence pattern."
+    },
+    {
+      "id": "end",
+      "title": "Closing Thoughts | You Can Now Explain Those “Red Apples”",
+      "topic": "Closing thoughts",
+      "goal": "Bring together what you learned and choose a concrete, testable next experiment.",
+      "short_summary": "Revisit the opening example, trace the difference between training and generation, and plan a next step using your own data, a new task, or a publicly available model."
+    }
+  ]
+}

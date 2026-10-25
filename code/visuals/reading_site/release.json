@@ -1,0 +1,9 @@
+{
+  "version": "0.1.0-rc.1",
+  "date": "2026-10-24",
+  "title": "手写小模型，看懂大模型",
+  "subtitle": "从一个神经元到语言模型",
+  "author": "好好用 AI",
+  "repository": "https://github.com/DavidDingXu/hello-llm",
+  "release_notes": "20 章语言模型教程，包含中英文正文、交互图解、逐章代码、完整模型网页训练和真实训练记录。PDF、EPUB 与同名源码标签对应；23 支中文讲解视频在 B 站观看。"
+}

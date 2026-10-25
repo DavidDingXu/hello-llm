@@ -1,0 +1,4 @@
+# 可选：只用于作者的公开权重观察实验，课程训练不需要安装。
+transformers==4.57.1
+safetensors==0.8.0
+sentencepiece==0.2.2

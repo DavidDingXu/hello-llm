@@ -1,0 +1,356 @@
+{
+  "stage": "sft",
+  "seed": 42,
+  "steps": 300,
+  "learning_rate": 0.001,
+  "batch_size": 16,
+  "seconds": 1.9922550829942338,
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.9.1",
+    "platform": "macOS-26.5.1-arm64-arm-64bit",
+    "machine": "arm64",
+    "device": "cpu",
+    "dtype": "float32",
+    "threads": 1
+  },
+  "parent_parameter_sha256": "b0d843d3cc74f512293e992b6af26f2976f3238fe1c732730f554bc7bd8bd6cf",
+  "dataset_hash": "6ea1a2f6c5291a1e17ea887ee6234176825630c8a8681efec59553244e95aba6",
+  "history": [
+    {
+      "step": 0,
+      "train_loss": 3.3693949381510415,
+      "val_loss": 3.046102523803711
+    },
+    {
+      "step": 50,
+      "train_loss": 0.00016773991228546947,
+      "val_loss": 0.00024024629965424538,
+      "batch_loss": 0.00018628814723342657,
+      "grad_norm_before_clip": 0.00514402287080884,
+      "observed_parameter_before": -0.10295010358095169,
+      "observed_gradient_after_clip": 0.0001072204759111628,
+      "observed_parameter_after": -0.10294707119464874,
+      "observed_update": 3.032386302947998e-06
+    },
+    {
+      "step": 100,
+      "train_loss": 6.800193902260314e-05,
+      "val_loss": 8.58714192872867e-05,
+      "batch_loss": 6.662950909230858e-05,
+      "grad_norm_before_clip": 0.000643856474198401,
+      "observed_parameter_before": -0.10305536538362503,
+      "observed_gradient_after_clip": 2.789058726193616e-06,
+      "observed_parameter_after": -0.10305546224117279,
+      "observed_update": -9.685754776000977e-08
+    },
+    {
+      "step": 150,
+      "train_loss": 4.636856829165481e-05,
+      "val_loss": 5.707170203095302e-05,
+      "batch_loss": 4.8580779548501596e-05,
+      "grad_norm_before_clip": 0.0003746895235963166,
+      "observed_parameter_before": -0.10303129255771637,
+      "observed_gradient_after_clip": 1.1308923149044858e-06,
+      "observed_parameter_after": -0.10303060710430145,
+      "observed_update": 6.854534149169922e-07
+    },
+    {
+      "step": 200,
+      "train_loss": 3.444279354880564e-05,
+      "val_loss": 4.20128671976272e-05,
+      "batch_loss": 3.3185617212438956e-05,
+      "grad_norm_before_clip": 0.0002290963748237118,
+      "observed_parameter_before": -0.10299210995435715,
+      "observed_gradient_after_clip": -2.2760971774005156e-07,
+      "observed_parameter_after": -0.10299114137887955,
+      "observed_update": 9.685754776000977e-07
+    },
+    {
+      "step": 250,
+      "train_loss": 2.670267046293399e-05,
+      "val_loss": 3.265789200668223e-05,
+      "batch_loss": 2.6765832444652915e-05,
+      "grad_norm_before_clip": 0.00016865569341462106,
+      "observed_parameter_before": -0.10294469445943832,
+      "observed_gradient_after_clip": -2.7116732326248894e-07,
+      "observed_parameter_after": -0.10294367372989655,
+      "observed_update": 1.0207295417785645e-06
+    },
+    {
+      "step": 300,
+      "train_loss": 2.114276564194976e-05,
+      "val_loss": 2.602092172310222e-05,
+      "batch_loss": 2.119524469890166e-05,
+      "grad_norm_before_clip": 0.00012510812666732818,
+      "observed_parameter_before": -0.1028933972120285,
+      "observed_gradient_after_clip": 4.4801953436035546e-07,
+      "observed_parameter_after": -0.10289236903190613,
+      "observed_update": 1.0281801223754883e-06
+    }
+  ],
+  "answers": {
+    "sft_train": [
+      {
+        "record_id": "s-0-0",
+        "prompt": "问：小丁喜欢什么水果？\n答：",
+        "expected": "黄色的香蕉。",
+        "actual": "黄色的香蕉。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-0-1",
+        "prompt": "问：小周喜欢什么水果？\n答：",
+        "expected": "红色的苹果。",
+        "actual": "红色的苹果。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-0-2",
+        "prompt": "问：小陈喜欢什么水果？\n答：",
+        "expected": "紫色的葡萄。",
+        "actual": "紫色的葡萄。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-0-3",
+        "prompt": "问：小李喜欢什么水果？\n答：",
+        "expected": "绿色的梨子。",
+        "actual": "绿色的梨子。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-0-4",
+        "prompt": "问：小王喜欢什么水果？\n答：",
+        "expected": "红色的草莓。",
+        "actual": "红色的草莓。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-0-5",
+        "prompt": "问：小赵喜欢什么水果？\n答：",
+        "expected": "黄色的柠檬。",
+        "actual": "黄色的柠檬。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-0-6",
+        "prompt": "问：小吴喜欢什么水果？\n答：",
+        "expected": "绿色的西瓜。",
+        "actual": "绿色的西瓜。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-0-7",
+        "prompt": "问：小何喜欢什么水果？\n答：",
+        "expected": "紫色的桑葚。",
+        "actual": "紫色的桑葚。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-1-0",
+        "prompt": "问：请说出小丁喜欢的水果。\n答：",
+        "expected": "黄色的香蕉。",
+        "actual": "黄色的香蕉。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-1-1",
+        "prompt": "问：请说出小周喜欢的水果。\n答：",
+        "expected": "红色的苹果。",
+        "actual": "红色的苹果。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-1-2",
+        "prompt": "问：请说出小陈喜欢的水果。\n答：",
+        "expected": "紫色的葡萄。",
+        "actual": "紫色的葡萄。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-1-3",
+        "prompt": "问：请说出小李喜欢的水果。\n答：",
+        "expected": "绿色的梨子。",
+        "actual": "绿色的梨子。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-1-4",
+        "prompt": "问：请说出小王喜欢的水果。\n答：",
+        "expected": "红色的草莓。",
+        "actual": "红色的草莓。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-1-5",
+        "prompt": "问：请说出小赵喜欢的水果。\n答：",
+        "expected": "黄色的柠檬。",
+        "actual": "黄色的柠檬。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-1-6",
+        "prompt": "问：请说出小吴喜欢的水果。\n答：",
+        "expected": "绿色的西瓜。",
+        "actual": "绿色的西瓜。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-1-7",
+        "prompt": "问：请说出小何喜欢的水果。\n答：",
+        "expected": "紫色的桑葚。",
+        "actual": "紫色的桑葚。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-2-0",
+        "prompt": "问：小丁爱吃哪种水果？\n答：",
+        "expected": "黄色的香蕉。",
+        "actual": "黄色的香蕉。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-2-1",
+        "prompt": "问：小周爱吃哪种水果？\n答：",
+        "expected": "红色的苹果。",
+        "actual": "红色的苹果。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-2-2",
+        "prompt": "问：小陈爱吃哪种水果？\n答：",
+        "expected": "紫色的葡萄。",
+        "actual": "紫色的葡萄。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-2-3",
+        "prompt": "问：小李爱吃哪种水果？\n答：",
+        "expected": "绿色的梨子。",
+        "actual": "绿色的梨子。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-2-4",
+        "prompt": "问：小王爱吃哪种水果？\n答：",
+        "expected": "红色的草莓。",
+        "actual": "红色的草莓。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-2-5",
+        "prompt": "问：小赵爱吃哪种水果？\n答：",
+        "expected": "黄色的柠檬。",
+        "actual": "黄色的柠檬。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-2-6",
+        "prompt": "问：小吴爱吃哪种水果？\n答：",
+        "expected": "绿色的西瓜。",
+        "actual": "绿色的西瓜。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-2-7",
+        "prompt": "问：小何爱吃哪种水果？\n答：",
+        "expected": "紫色的桑葚。",
+        "actual": "紫色的桑葚。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      }
+    ],
+    "sft_val": [
+      {
+        "record_id": "s-3-0",
+        "prompt": "问：小丁最喜欢的水果是什么？\n答：",
+        "expected": "黄色的香蕉。",
+        "actual": "黄色的香蕉。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-3-1",
+        "prompt": "问：小周最喜欢的水果是什么？\n答：",
+        "expected": "红色的苹果。",
+        "actual": "红色的苹果。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-3-2",
+        "prompt": "问：小陈最喜欢的水果是什么？\n答：",
+        "expected": "紫色的葡萄。",
+        "actual": "紫色的葡萄。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-3-3",
+        "prompt": "问：小李最喜欢的水果是什么？\n答：",
+        "expected": "绿色的梨子。",
+        "actual": "绿色的梨子。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-3-4",
+        "prompt": "问：小王最喜欢的水果是什么？\n答：",
+        "expected": "红色的草莓。",
+        "actual": "红色的草莓。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-3-5",
+        "prompt": "问：小赵最喜欢的水果是什么？\n答：",
+        "expected": "黄色的柠檬。",
+        "actual": "黄色的柠檬。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-3-6",
+        "prompt": "问：小吴最喜欢的水果是什么？\n答：",
+        "expected": "绿色的西瓜。",
+        "actual": "绿色的西瓜。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      },
+      {
+        "record_id": "s-3-7",
+        "prompt": "问：小何最喜欢的水果是什么？\n答：",
+        "expected": "紫色的桑葚。",
+        "actual": "紫色的桑葚。",
+        "exact_match": true,
+        "stop_reason": "eos"
+      }
+    ]
+  },
+  "sft_train_exact_match": 1.0,
+  "sft_val_exact_match": 1.0
+}

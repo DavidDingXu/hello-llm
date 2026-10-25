@@ -1,0 +1,80 @@
+{
+  "kind": "teaching_transfer_check",
+  "date": "2026-10-23",
+  "description": "只交换小丁与小周的颜色水果对应；从同一初值重训，原小丁作者实验保留",
+  "facts_before": [
+    [
+      "小丁",
+      "红色",
+      "苹果"
+    ],
+    [
+      "小周",
+      "黄色",
+      "香蕉"
+    ]
+  ],
+  "facts_after": [
+    [
+      "小丁",
+      "黄色",
+      "香蕉"
+    ],
+    [
+      "小周",
+      "红色",
+      "苹果"
+    ]
+  ],
+  "vocab_size": 79,
+  "parameter_count": 92352,
+  "seed": 42,
+  "pretrain_steps": 1000,
+  "sft_steps": 300,
+  "same_initial_parameters": true,
+  "initial_parameter_sha256": "82aaf35a1b52aa644e0eea910cc416ac2d06fb777252c3e183f397feb8a86500",
+  "source_runs": {
+    "before": "artifacts/first_run",
+    "after": "artifacts/transfer_run"
+  },
+  "checks": [
+    {
+      "stage": "pretrain",
+      "prompt": "早上，小丁喜欢",
+      "before": "红色的苹果。",
+      "after": "黄色的香蕉。",
+      "expected": "黄色的香蕉。",
+      "stop_reason": "eos"
+    },
+    {
+      "stage": "pretrain",
+      "prompt": "晚上，小周拿着",
+      "before": "黄色的香蕉。",
+      "after": "红色的苹果。",
+      "expected": "红色的苹果。",
+      "stop_reason": "eos"
+    },
+    {
+      "stage": "sft",
+      "prompt": "问：小丁喜欢什么水果？\n答：",
+      "before": "红色的苹果。",
+      "after": "黄色的香蕉。",
+      "expected": "黄色的香蕉。",
+      "stop_reason": "eos"
+    },
+    {
+      "stage": "sft",
+      "prompt": "问：小周喜欢什么水果？\n答：",
+      "before": "黄色的香蕉。",
+      "after": "红色的苹果。",
+      "expected": "红色的苹果。",
+      "stop_reason": "eos"
+    }
+  ],
+  "parameter_sha256": {
+    "initial": "82aaf35a1b52aa644e0eea910cc416ac2d06fb777252c3e183f397feb8a86500",
+    "pretrain": "b0d843d3cc74f512293e992b6af26f2976f3238fe1c732730f554bc7bd8bd6cf",
+    "sft": "f26c528f08ad640af2cc35b12b1e11bfd29f3305b3953bd64dbcff023adb79e3"
+  },
+  "source_run_files_unchanged": true
+}

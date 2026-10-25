@@ -1,0 +1,451 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<meta name="source-sha256" content="fc78587a57bd2d637538d7f270780d291d9db6e2d587c2fc2973e22c52990215"><meta name="description" content="Reconnect inputs, labels, parameters, and saved weights across the full workflow. Swap facts and retrain, then add Xiaotang and tangerines yourself to verify your implementation and explain missing words in a new sentence pattern."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/20.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="20 | The Full Workflow: Connect Pretraining, Fine-Tuning, and Generation · Hello LLM"><meta property="og:description" content="Reconnect inputs, labels, parameters, and saved weights across the full workflow. Swap facts and retrain, then add Xiaotang and tangerines yourself to verify your implementation and explain missing words in a new sentence pattern."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/20.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>20 | The Full Workflow: Connect Pretraining, Fine-Tuning, and Generation · Hello LLM</title>
+<link rel="icon" href="../assets/favicon.png" type="image/png">
+<script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
+<script defer src="../code/visuals/reading_site/search-index.en.js?v=11db81a4dd60"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="20" data-alternate-sections="[&quot;先看两次训练怎样接上&quot;, &quot;再把一次计算拆开&quot;, &quot;未来的字改了前面为什么不动&quot;, &quot;少一个标签损失为什么反而升了&quot;, &quot;参数多了就能自由聊天&quot;, &quot;怎样判断这20讲学到了什么&quot;, &quot;结课实战换一份事实模型会怎样变&quot;, &quot;独立任务让小唐和橘子进入模型&quot;, &quot;对不上时先从哪一步查&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="Open course contents" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></path></svg></button>
+<a class="brand" href="../index.en.html" aria-label="Hello LLM · 学习站首页">
+<img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>Build a Small Model, Understand Large Models</small></span></a>
+<nav class="header-nav" aria-label="Main navigation"><a href="../index.en.html#curriculum">Learning path</a><a href="../index.en.html#experiments">Experiments</a><a href="https://github.com/DavidDingXu/hello-llm" target="_blank" rel="noopener">GitHub <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a></nav>
+<div class="header-controls"><a class="language-switch" href="20.html" lang="zh-CN" aria-label="切换到中文">中文</a><button class="icon-button theme-toggle js-only" type="button" aria-label="Switch to dark theme" title="Switch to dark theme"><span class="theme-light-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A9 9 0 0 1 9.5 3.5a9 9 0 1 0 11 11Z"/></path></svg></span><span class="theme-dark-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/></circle><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></path></svg></span></button>
+<button class="search-trigger js-only" type="button" aria-label="Search course"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/></circle><path d="m16 16 4.5 4.5"/></path></svg><span>Search course</span><kbd>⌘ K</kbd></button>
+</div></div><div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div></header><div class="sidebar-scrim" hidden></div><div class="reader-layout"><aside class="course-sidebar" id="course-sidebar" aria-label="Course contents">
+<div class="sidebar-heading"><a href="../index.en.html">Course contents</a><button class="icon-button menu-close js-only" type="button" aria-label="Close course contents"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></div>
+<nav aria-label="All articles"><div class="sidebar-guides"><a class="lesson-link" data-lesson="intro" href="../course/intro.en.html"><span class="lesson-number">·</span><span>Course introduction</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="00" href="../course/00.en.html"><span class="lesson-number">·</span><span>Before we begin</span><span class="lesson-state" aria-hidden="true"></span></a></div><details class="sidebar-stage"><summary><span class="stage-index">Part I</span>Make a numerical network learn</summary><a class="lesson-link" data-lesson="01" href="../course/01.en.html"><span class="lesson-number">01</span><span>Neurons</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="02" href="../course/02.en.html"><span class="lesson-number">02</span><span>Vectors and Matrices</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="03" href="../course/03.en.html"><span class="lesson-number">03</span><span>Multiple Layers and Nonlinearity</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="04" href="../course/04.en.html"><span class="lesson-number">04</span><span>Gradients and Parameter Updates</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="05" href="../course/05.en.html"><span class="lesson-number">05</span><span>Backpropagation by Hand</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="06" href="../course/06.en.html"><span class="lesson-number">06</span><span>Making the Network Learn</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part II</span>Bring text into the network</summary><a class="lesson-link" data-lesson="07" href="../course/07.en.html"><span class="lesson-number">07</span><span>Text and Vectors</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="08" href="../course/08.en.html"><span class="lesson-number">08</span><span>Scores and Probabilities</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="09" href="../course/09.en.html"><span class="lesson-number">09</span><span>Text Training Problems</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part III</span>Read context and assemble the model</summary><a class="lesson-link" data-lesson="10" href="../course/10.en.html"><span class="lesson-number">10</span><span>Single-Head Attention</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="11" href="../course/11.en.html"><span class="lesson-number">11</span><span>Causal masks</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="12" href="../course/12.en.html"><span class="lesson-number">12</span><span>Multi-head attention</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="13" href="../course/13.en.html"><span class="lesson-number">13</span><span>Rotary position embeddings</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="14" href="../course/14.en.html"><span class="lesson-number">14</span><span>Positionwise feed-forward networks</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="15" href="../course/15.en.html"><span class="lesson-number">15</span><span>Residual connections and normalization</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="16" href="../course/16.en.html"><span class="lesson-number">16</span><span>The complete forward pass</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage" open><summary><span class="stage-index">Part IV</span>Pretrain, generate, and fine-tune</summary><a class="lesson-link" data-lesson="17" href="../course/17.en.html"><span class="lesson-number">17</span><span>The first pretraining run</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="18" href="../course/18.en.html"><span class="lesson-number">18</span><span>Character-by-character generation</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="19" href="../course/19.en.html"><span class="lesson-number">19</span><span>Question-answer fine-tuning</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="20" href="../course/20.en.html" aria-current="page"><span class="lesson-number">20</span><span>The full workflow and checks of the principles</span><span class="lesson-state" aria-hidden="true"></span></a></details><a class="lesson-link" data-lesson="end" href="../course/end.en.html"><span class="lesson-number">·</span><span>Closing thoughts</span><span class="lesson-state" aria-hidden="true"></span></a></nav></aside><main class="reader-main" id="main-content"><div class="article-context"><span>Pretrain, generate, and fine-tune</span><div class="article-actions"><button type="button" class="copy-page-link js-only">Copy link</button><button type="button" class="focus-toggle js-only" aria-pressed="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></path></svg><span>Focus mode</span></button></div></div>
+<div class="mobile-context"><nav class="reading-route" aria-label="On this page"><details><summary>On this page</summary><div class="toc">
+<ul>
+<li><a href="#first-connect-the-two-training-stages">First Connect the Two Training Stages</a></li>
+<li><a href="#unpack-a-single-computation-again">Unpack a Single Computation Again</a></li>
+<li><a href="#why-does-the-prefix-stay-still-when-a-future-character-changes">Why Does the Prefix Stay Still When a Future Character Changes?</a></li>
+<li><a href="#why-can-dropping-one-label-raise-the-loss">Why Can Dropping One Label Raise the Loss?</a></li>
+<li><a href="#do-more-parameters-enable-open-ended-chat">Do More Parameters Enable Open-Ended Chat?</a></li>
+<li><a href="#how-to-check-what-you-learned-in-these-20-lessons">How to Check What You Learned in These 20 Lessons</a></li>
+<li><a href="#final-project-what-happens-when-the-facts-change">Final Project: What Happens When the Facts Change?</a></li>
+<li><a href="#independent-task-bring-小唐-and-橘子-into-the-model">Independent Task: Bring “小唐” and “橘子” into the Model</a></li>
+<li><a href="#where-should-you-look-first-when-results-do-not-match">Where Should You Look First When Results Do Not Match?</a></li>
+</ul>
+</div>
+</details></nav><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="Decrease text size">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="Increase text size">A+</button></div></div><article id="article-body"><h1 id="20-the-full-workflow-connect-pretraining-fine-tuning-and-generation">20 | The Full Workflow: Connect Pretraining, Fine-Tuning, and Generation</h1>
+<p>Build a Small Model, Understand Large Models · Lesson 20</p>
+<p>The parameters have not changed. The inputs have not changed. Yet loss rises from <strong>4.356023</strong> to <strong>4.359718</strong>. Has the model really become worse?</p>
+<p>In another experiment, we replace “红” (“red”) with “黄” (“yellow”) in a sentence and recompute the whole sentence, but the scores at the first eight positions remain identical. Did the program fail to read the edit?</p>
+<p>To interpret both results, we must distinguish which computations are affected by inputs, scoring targets, and parameters. First connect pretraining, fine-tuning, and generation, then run controlled comparisons using the same architecture with 92,352 parameters.</p>
+<h2 id="first-connect-the-two-training-stages">First Connect the Two Training Stages</h2>
+<p>The first stage starts from random parameters. We turn 256 short sentences into next-character tasks: inputs go to the model for scoring, while labels go to the loss function for evaluation. Backpropagation computes gradients from errors, and the optimizer changes parameters. After 1,000 repeated updates, we save the pretrained weights.</p>
+<p>The second stage loads those weights and continues training on 24 question-answer records. Questions remain in the input, but only answers and EOS are scored. After another 300 updates, we save the fine-tuned weights. The network structure has not changed; its trainable parameters are still the same 92,352 numbers.</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/20-full-workflow/images/en/web/03-%E5%85%A8%E6%B5%81%E7%A8%8B.svg" width="1540" height="470"><img data-full-figure="../chapters/20-full-workflow/images/en/03-%E5%85%A8%E6%B5%81%E7%A8%8B.svg" alt="Random parameters become pretrained weights through text pretraining, then fine-tuned weights through question answering; weights from any stage can be fixed for generation" src="../chapters/20-full-workflow/images/en/03-%E5%85%A8%E6%B5%81%E7%A8%8B.svg"  width="1080" height="2017" loading="eager" decoding="async" /></picture></p>
+<p>Generation can happen at any stage. Load weights, provide a prefix, and repeatedly select and append the next item. No standard answer is used for scoring, and no optimizer changes the parameters.</p>
+<p>Open the <a href="../chapters/20-full-workflow/training-replay.en.html">full training replay</a> to follow a batch through encoding, forward computation, loss, backpropagation, and updating. Then inspect the actual loss curves for both training stages and the text outputs at all three stages. The first update is replayed from the saved initial weights. The long-term curves use losses recorded every 50 steps in the original logs; loadable weights exist only for initialization, after pretraining, and after fine-tuning.</p><details class="inline-experiment"><summary><span>Try it here · Training replay</span><small>Inspect each step of a recorded training run.</small></summary><p><a href="../chapters/20-full-workflow/training-replay.en.html" class="js-experiment inline-expand">Expand workspace ↗</a> · <a href="../chapters/20-full-workflow/training-replay.en.html" target="_blank" rel="noopener">Open in a new tab ↗</a></p><dialog class="inline-workspace experiment-viewer" aria-label="Training replay"><header><strong>Training replay</strong><div><a href="../chapters/20-full-workflow/training-replay.en.html" target="_blank" rel="noopener">Open in a new tab <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button inline-close" type="button" aria-label="Return to reading">Return to reading <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe data-src="../chapters/20-full-workflow/training-replay.en.html" title="Training replay" loading="lazy"></iframe></dialog></details>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Process</th>
+<th>Data supplied</th>
+<th>How results are used</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pretraining</td>
+<td>Inputs and next-character labels built from short sentences</td>
+<td>Score valid positions, calculate gradients, update parameters</td>
+</tr>
+<tr>
+<td>Supervised fine-tuning</td>
+<td>Inputs containing questions and answers; only answer targets retained</td>
+<td>Continue from pretrained weights; this series updates all parameters</td>
+</tr>
+<tr>
+<td>Evaluation</td>
+<td>A set of inputs and labels to inspect</td>
+<td>Compute scores and loss to assess fixed weights</td>
+</tr>
+<tr>
+<td>Generation</td>
+<td>Only a supplied prefix</td>
+<td>Select and append the next item with parameters fixed</td>
+</tr>
+</tbody>
+</table></div>
+<p>Evaluation and generation can use identical weights but answer different questions. Evaluation asks, “How much probability do these reference answers receive?” Generation asks, “What does the current selection method actually write?” One fluent continuation cannot replace checking a whole held-out set.</p>
+<section class="training-lab" id="training-lab" data-default-mode="pipeline" data-presets="{&quot;pretrain&quot;: {&quot;steps&quot;: 1000, &quot;seed&quot;: 42, &quot;batch_size&quot;: 16, &quot;learning_rate&quot;: 0.003}, &quot;sft&quot;: {&quot;steps&quot;: 300, &quot;seed&quot;: 42, &quot;batch_size&quot;: 16, &quot;learning_rate&quot;: 0.001}, &quot;quick&quot;: {&quot;steps&quot;: 100, &quot;seed&quot;: 42, &quot;batch_size&quot;: 4, &quot;learning_rate&quot;: 0.003}}" data-counts="{&quot;pretrain_train&quot;: 256, &quot;pretrain_val&quot;: 64, &quot;sft_train&quot;: 24, &quot;sft_val&quot;: 8}" aria-labelledby="training-lab-title">
+<div class="lab-heading"><span>TEST THE IDEA · REAL TRAINING</span><h3 id="training-lab-title">Train the model right here</h3></div>
+<p class="training-question">Start from random weights and run pretraining followed by fine-tuning. Compare the same inputs and explain what each stage changes.</p>
+<label class="training-mode-label" for="training-mode">Experiment<select id="training-mode"><option value="pretrain" >Pretraining · full dataset</option><option value="sft" >Fine-tuning · full dataset</option><option value="pipeline" selected>Full pipeline · pretrain → fine-tune</option><option value="quick" >Quick experiment · 4 samples</option></select></label>
+<p class="training-recipe" id="training-recipe"></p>
+<details class="training-settings"><summary>Adjust training parameters</summary><div class="training-fields">
+<label><span class="primary-steps-label">Training steps</span><input id="training-steps" type="number" min="1" max="1000" step="1" value="1000" required></label>
+<label><span class="primary-lr-label">Learning rate</span><input id="training-lr" type="number" min="0.000001" max="0.1" step="any" value="0.003" required></label>
+<label class="pipeline-field" >Fine-tuning steps<input id="training-sft-steps" type="number" min="1" max="1000" step="1" value="300" required></label>
+<label class="pipeline-field" >Fine-tuning learning rate<input id="training-sft-lr" type="number" min="0.000001" max="0.1" step="any" value="0.001" required></label>
+</div><p class="training-change-note">Change one variable at a time and compare with the default run.</p></details>
+<div class="training-actions"><button class="button primary training-start" type="button" disabled>Start training</button><button class="button training-stop" type="button" disabled>Stop</button><button class="button training-reset" type="button" disabled>Reset</button><button class="button training-download" type="button" disabled>Download results</button></div>
+<p class="training-status" role="status">Choose an experiment and start training.</p>
+<progress class="training-progress" value="0" max="100" aria-label="Training progress" hidden></progress>
+<div class="training-results" hidden><div class="training-chart-tabs" role="group" aria-label="Choose a training stage"></div>
+<figure class="training-plot"><svg class="training-chart" viewBox="0 0 520 230" role="img" aria-label="Training and validation loss curves"></svg><figcaption><span class="train-key">Training</span><span class="validation-key">Validation</span><span class="training-metrics"></span></figcaption></figure>
+<p class="training-answer-scores" hidden></p><div class="training-generations"></div>
+<details class="training-more"><summary>Check more: an unseen question and another familiar continuation</summary><div class="training-extra-generations"></div></details>
+<p class="training-observation"></p><details class="training-explanation"><summary>About this experiment</summary><p class="training-run-note">A fresh training run may differ from the recorded values and wording. Compare both curves and outputs.</p></details>
+<details class="training-comparison" hidden><summary>Compare with the previous run</summary><div></div></details></div>
+<noscript>Enable JavaScript to train here, or run the companion code locally.</noscript>
+</section><h2 id="unpack-a-single-computation-again">Unpack a Single Computation Again</h2>
+<p>The fixed question is:</p>
+<pre><code class="language-text">问：小丁喜欢什么水果？
+答：
+</code></pre>
+<p>It asks “What fruit does Xiaoding like?” followed by an “Answer:” marker. It contains 14 characters, or 15 IDs including BOS. One forward pass looks up <code>[1, 15]</code> IDs as <code>[1, 15, 64]</code> vectors, then passes through two blocks and the output projection to produce <code>[1, 15, 79]</code> candidate scores.</p>
+<p>The colon at position 14 is the current final input. Generation selects from this row. If it chooses “红”, it appends that character and computes the next step. Only inputs and weights are needed; no target labels participate in scoring.</p>
+<p>When training this question-answer record, the answer is already present in the sample. Valid inputs are BOS, the complete prompt, and the six answer characters. EOS is reserved as the final target, and the input is padded to 32 entries. The causal constraint lets each position use only current and earlier inputs. Although the later answer is in memory, the position predicting “红” cannot read it.</p>
+<p>Six answer characters plus EOS contribute seven label terms to the loss:</p>
+<p><strong>L=−(ln p_红+ln p_色+ln p_的+ln p_苹+ln p_果+ln p_。+ln p_EOS)/7</strong></p>
+<p>Each probability comes from its own position and prefix. Target labels select which probability to use and which positions enter the average; they do not directly replace the scores produced by the forward pass. Loss propagates gradients through the preceding computation, and the optimizer then uses them to update parameters.</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/20-full-workflow/images/en/web/01-%E6%9C%BA%E5%88%B6.svg" width="1504" height="876.6"><img alt="Forward computation, backpropagation, parameter updates, and generation with fixed weights each change different quantities" src="../chapters/20-full-workflow/images/en/01-%E6%9C%BA%E5%88%B6.svg"  width="1080" height="2205" loading="lazy" decoding="async" /></picture></p>
+<p>Next, hold the weights fixed for two comparisons: change only the input, then only the scoring targets, and observe which results change.</p>
+<h2 id="why-does-the-prefix-stay-still-when-a-future-character-changes">Why Does the Prefix Stay Still When a Future Character Changes?</h2>
+<p>Input the complete sentence <code>早上，小丁喜欢红色的苹果。</code> (“In the morning, Xiaoding likes red apples”) and replace “红” at position 8 with “黄”. The program recomputes the whole sentence, but recomputing does not mean every result must change. Do position 7 and the positions before it have a path for reading the new character?</p>
+<p>Under the causal constraint, none may read position 8. With fixed parameters, their outputs should therefore be identical. Position 8 and later positions may change. This requirement also holds for a random model; we do not have to wait until it learns fruit sentences before checking information leakage.</p>
+<p>Run this from the <code>code</code> companion code directory:</p>
+<pre><code class="language-python">import torch
+from tiny_lm.model import ModelConfig, TinyLM
+from tiny_lm.tokenizer import CharTokenizer
+
+torch.set_num_threads(1)
+torch.manual_seed(42)
+tokenizer = CharTokenizer.for_course()
+# 新建随机模型检查依赖路径，不要求先训练；eval 本身不修改参数。
+model = TinyLM(ModelConfig()).eval()
+
+# BOS 加十三个字符得到 [1,14]，输出将是每个位置的 79 项候选分数。
+ids = torch.tensor([tokenizer.encode(
+    &quot;早上，小丁喜欢红色的苹果。&quot;, add_bos=True)])
+changed = ids.clone()
+assert tokenizer.itos[int(ids[0, 8])] == &quot;红&quot;
+# 只改位置 8 的输入编号，词表、参数和更早位置都不改。
+changed[0, 8] = tokenizer.stoi[&quot;黄&quot;]
+
+# 两次只做前向，不计算梯度也不更新参数。
+with torch.no_grad():
+    before = model(ids)
+    after = model(changed)
+# :8 对应位置 0—7；最大值覆盖这些位置的全部候选分数。
+prefix_difference = (before[:, :8] - after[:, :8]).abs().max()
+suffix_difference = (before[:, 8:] - after[:, 8:]).abs().max()
+print(float(prefix_difference), float(suffix_difference))
+assert torch.allclose(before[:, :8], after[:, :8])
+</code></pre>
+<p>With CPU execution and PyTorch 2.9.1, this run gives maximum prefix difference <strong>0</strong> and maximum suffix difference approximately <strong>0.475077</strong>. The new character affects the suffix, while the prefix remains unchanged because it cannot read it.</p>
+<p>If the prefix changes, inspect the attention scores and mask placement. Forbidden positions must be excluded before Softmax. Setting their scores to 0 does not set their weights to 0. If the edit actually changes an earlier position, however, altered outputs at later positions may be entirely correct.</p>
+<h2 id="why-can-dropping-one-label-raise-the-loss">Why Can Dropping One Label Raise the Loss?</h2>
+<p>This time, leave even the forward input unchanged. For the same question-answer record, correct labels start with “红” at index 14. Deliberately set that label to <code>−100</code> as well, and use the same logits for both label sets.</p>
+<p>If the model has not changed but its score changes, inspect what is being scored. The average now contains six targets instead of seven, changing both numerator and denominator. Omitting an easier target can raise average loss. Omitting a harder target can move it in the opposite direction.</p>
+<p>Continue with the same random model from the preceding snippet:</p>
+<pre><code class="language-python">from tiny_lm.data import build_records, make_sft_batch
+from tiny_lm.losses import token_loss
+
+record = build_records()[&quot;sft_train&quot;][0]
+# 同一条问答的输入始终不变，只比较两种损失标签。
+x, correct = make_sft_batch([record], tokenizer)
+# 首个非 -100 的标签是首答案“红”；复制后只把这一题额外忽略。
+first = int((correct[0] != -100).nonzero()[0].item())
+wrong = correct.clone()
+wrong[0, first] = -100
+
+with torch.no_grad():
+    # 前向只运行一次；两种评分共用同一份 [B,T,V] 原始分数。
+    logits = model(x)  # 两种标签共用这一份分数
+    correct_loss = token_loss(logits, correct)
+    wrong_loss = token_loss(logits, wrong)
+
+# 列出实际参与平均的目标与数量，防止把评分内容改变误认成模型变化。
+for name, labels in [(&quot;正确&quot;, correct), (&quot;错后一格&quot;, wrong)]:
+    indices = (labels[0] != -100).nonzero().flatten().tolist()
+    targets = [tokenizer.itos[int(labels[0, i])] for i in indices]
+    print(name, len(indices), targets)
+print(float(correct_loss), float(wrong_loss))
+</code></pre>
+<p>The correct targets are <code>红、色、的、苹、果、。、EOS</code>. Shifting the scoring boundary one position too far leaves <code>色、的、苹、果、。、EOS</code>. In this run, loss rises slightly from <strong>4.356023</strong> to <strong>4.359718</strong>.</p>
+<p>The increase comes from omitting a task, with no model update; it does not establish that the model became worse. When comparing training scores, check the inputs, valid labels, first answer character, and EOS to confirm that both scores evaluate the same tasks.</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/20-full-workflow/images/en/web/02-%E9%AA%8C%E8%AF%81.svg" width="1504" height="886.4"><img alt="Prefix and suffix score differences after a future-character edit, alongside target counts and losses after omitting the first answer label" src="../chapters/20-full-workflow/images/en/02-%E9%AA%8C%E8%AF%81.svg"  width="1080" height="2205" loading="lazy" decoding="async" /></picture></p>
+<h2 id="do-more-parameters-enable-open-ended-chat">Do More Parameters Enable Open-Ended Chat?</h2>
+<p>Suppose we increase internal width from 64 to 640. The model can store more parameters, but its training tasks remain these 256 fruit sentences. It has not thereby encountered programming, history, or other everyday topics, nor acquired a vocabulary that can handle arbitrary text. Parameter capacity and training experience must be examined separately.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Choice in this model</th>
+<th>What broader language processing requires considering</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Two blocks, 64 values per position, 92,352 parameters</td>
+<td>More layers or width alter capacity and increase computation and storage requirements</td>
+</tr>
+<tr>
+<td>79-character vocabulary, at most 32 input entries</td>
+<td>Tokenization, vocabulary design, and longer context; removing the length check alone is insufficient</td>
+</tr>
+<tr>
+<td>256 pretraining sentences and 24 fine-tuning questions</td>
+<td>More varied text, data quality, evaluation questions, and suitable further training methods</td>
+</tr>
+<tr>
+<td>Single-machine CPU; recompute the prefix for each new character</td>
+<td>Reuse previous computation where appropriate, optimize memory and speed, and organize parallel computation at greater scale</td>
+</tr>
+</tbody>
+</table></div>
+<p>Architectures also differ. Qwen3-0.6B, observed in Lesson 16, lets some queries share K/V and shares input and output parameters. Check these differences against its <a href="https://huggingface.co/Qwen/Qwen3-0.6B/blob/main/config.json">official configuration</a>. Lesson 18's cache observation shows that previously computed intermediate results can be reused instead of recomputed from scratch.</p>
+<p>Forward computation, loss, gradients, and updates still help us trace real models. Expanding capability requires designing data, architecture, training methods, and runtime conditions together. After completing this project, choose one question from the table as your next experiment.</p>
+<h2 id="how-to-check-what-you-learned-in-these-20-lessons">How to Check What You Learned in These 20 Lessons</h2>
+<p>Close the article and explain, in your own words, how text becomes IDs and vectors, how the prefix affects next-character scores, how errors affect parameters, how pretrained weights continue into fine-tuning, and which values change during generation. Then use another short sentence or small input and verify your predictions in the code.</p>
+<p>If you cannot explain a step, return to that component's small numerical example. First we will swap facts within the existing vocabulary and check the effects of retraining. Then you will implement three interfaces for data containing new characters. These tasks test, in order, whether you can complete the workflow and whether you can adapt it to different data.</p>
+<h2 id="final-project-what-happens-when-the-facts-change">Final Project: What Happens When the Facts Change?</h2>
+<p>Swap Xiaoding's and Xiaozhou's fruits. With the computation unchanged, can the model learn the new associations?</p>
+<p>Open <code>tiny_lm/data.py</code> and change the Xiaoding and Xiaozhou entries in <code>FACTS</code> to the values below, leaving the other six people unchanged:</p>
+<pre><code class="language-text">('小丁', '黄色', '香蕉'), ('小周', '红色', '苹果')
+</code></pre>
+<p>Each entry contains person, color, and fruit in that order. The new facts associate Xiaoding with yellow bananas and Xiaozhou with red apples. Edit this source table. The new training run builds records from it and saves the actual data in <code>data/</code> under the new run directory. Data at the repository root and in the author's original experiment remain as they were.</p>
+<p>Before running, write down your predictions. Will editing these two entries immediately change answers from an already saved model? Will vocabulary size or parameter count change? After retraining, how should Xiaoding's continuation and question answer change?</p>
+<p>Then run this from the code repository root:</p>
+<pre><code class="language-bash"># 从随机参数重新训练，结果写入新目录，便于与原实验比较。
+python -m tiny_lm.train --out artifacts/my_swapped_run
+</code></pre>
+<p>The command performs pretraining, fine-tuning, and the generation comparison in order, saving a snapshot under <code>artifacts/my_swapped_run/data/</code>. The course's fine-tuning entry point uses that pretraining snapshot to prevent the two stages from mixing different facts. After the run, load <code>pretrain.pt</code> and <code>sft.pt</code> from the new directory separately and check these four tasks. In question prompts, <code>\n</code> denotes a newline; the actual input should put “答：” on its own line.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Weights loaded</th>
+<th>Input</th>
+<th>Desired continuation for this experiment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pretrained</td>
+<td><code>早上，小丁喜欢</code></td>
+<td>黄色的香蕉。</td>
+</tr>
+<tr>
+<td>Pretrained</td>
+<td><code>晚上，小周拿着</code></td>
+<td>红色的苹果。</td>
+</tr>
+<tr>
+<td>Fine-tuned</td>
+<td><code>问：小丁喜欢什么水果？\n答：</code></td>
+<td>黄色的香蕉。</td>
+</tr>
+<tr>
+<td>Fine-tuned</td>
+<td><code>问：小周喜欢什么水果？\n答：</code></td>
+<td>红色的苹果。</td>
+</tr>
+</tbody>
+</table></div>
+<p>The continuation prompts mean “In the morning, Xiaoding likes” and “In the evening, Xiaozhou is holding.” The questions ask what fruit each person likes. In both formats, Xiaoding should now get “yellow bananas” and Xiaozhou “red apples.”</p>
+<details class="optional">
+<summary>Expand the verification code: reload weights and print each actual result</summary>
+<p>Save the code below as <code>check_swapped.py</code> at the repository root and run <code>python check_swapped.py</code>. It loads the new weights from disk and generates the four results again.</p>
+<pre><code class="language-python">from pathlib import Path
+from tiny_lm.checkpoint import load_checkpoint
+from tiny_lm.generate import generate
+
+def check_swapped_run(run_dir):
+    &quot;&quot;&quot;重载两个阶段的权重，核对四条输出；返回实际结果，便于继续比较。&quot;&quot;&quot;
+    # 每个阶段使用与其训练形式对应的题；字符串中的 \n 是真正的换行。
+    cases = {
+        &quot;pretrain&quot;: [(&quot;早上，小丁喜欢&quot;, &quot;黄色的香蕉。&quot;),
+                     (&quot;晚上，小周拿着&quot;, &quot;红色的苹果。&quot;)],
+        &quot;sft&quot;: [(&quot;问：小丁喜欢什么水果？\n答：&quot;, &quot;黄色的香蕉。&quot;),
+                (&quot;问：小周喜欢什么水果？\n答：&quot;, &quot;红色的苹果。&quot;)],
+    }
+    results = []
+    for stage, questions in cases.items():
+        # 每份检查点都带着自己的词表和参数，生成不依赖当前 FACTS。
+        model, tokenizer, _ = load_checkpoint(Path(run_dir) / f&quot;{stage}.pt&quot;)
+        count = sum(p.numel() for p in model.parameters())
+        print(stage, &quot;词表：&quot;, model.config.vocab_size, &quot;参数：&quot;, count)
+        for prompt, expected in questions:
+            # 固定用最高分选择，避免抽样随机性干扰这次比较。
+            output = generate(model, tokenizer, prompt,
+                              max_new_tokens=8, greedy=True)
+            actual = output[&quot;generated_text&quot;]
+            # 文字一致还不够：也检查模型是否选到了 EOS。
+            matched = actual == expected and output[&quot;stop_reason&quot;] == &quot;eos&quot;
+            results.append({&quot;stage&quot;: stage, &quot;prompt&quot;: prompt,
+                            &quot;actual&quot;: actual, &quot;expected&quot;: expected,
+                            &quot;matched&quot;: matched})
+            print(repr(prompt), &quot;→&quot;, actual,
+                  &quot;符合预期&quot; if matched else &quot;需要检查&quot;,
+                  &quot;停止原因：&quot;, output[&quot;stop_reason&quot;])
+    print(&quot;符合预期：&quot;, sum(row[&quot;matched&quot;] for row in results), &quot;/&quot;, len(results))
+    return results
+
+if __name__ == &quot;__main__&quot;:
+    # 改成 artifacts/first_run，可以重新查看旧模型的答案。
+    check_swapped_run(&quot;artifacts/my_swapped_run&quot;)
+</code></pre>
+</details>
+<details class="answer">
+<summary>After making your predictions, inspect the actual retraining results and explanation</summary>
+<p>The swap experiment uses the same random initialization, with 1000 pretraining steps and 300 fine-tuning steps. All four tasks above produce the expected text and reach EOS. The vocabulary still has 79 entries, and the model still has 92,352 parameters. The <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/artifacts/transfer_check.json">experiment record</a> preserves the old and new facts, all four outputs, and parameter digests.</p>
+<p><img alt="Editing facts does not alter old weights; only retraining changes the same Xiaoding prefix from red apples to yellow bananas" src="../chapters/20-full-workflow/images/en/04-%E6%8D%A2%E4%B8%80%E4%BB%BD%E4%BA%8B%E5%AE%9E.svg"  width="1080" height="1980" loading="lazy" decoding="async" /></p>
+<p>Editing the source table does not directly modify saved parameters. Generating with an old checkpoint still gives old answers. Retraining changes the targets supplied by samples, which changes gradients and parameter updates. Only the resulting new weights provide the new continuations.</p>
+<p>The swap adds no new characters and changes no layer dimensions, so vocabulary size and parameter count remain unchanged. Which numbers change and how many numbers exist are separate questions.</p>
+<p>After these four tasks pass, inspect new question formats as well. <code>answers.sft_val</code> in <code>sft_log.json</code> stores held-out questions and their individual results. <code>generation_comparison.json</code> stores stage comparisons for four fixed prompts and can reveal continuation behavior after fine-tuning. Combine these with held-out losses in both training logs to identify which tasks improved.</p>
+</details>
+<h2 id="independent-task-bring-小唐-and-橘子-into-the-model">Independent Task: Bring “小唐” and “橘子” into the Model</h2>
+<p>The previous task swapped existing facts without changing vocabulary or shapes. Now an independent dataset adds “小唐喜欢橙色的橘子” (“Xiaotang likes orange-colored tangerines”). The characters “唐”, “橙”, and “橘” are all absent from the original course vocabulary. Loading the old model directly encounters unknown characters; additional sampling attempts cannot solve that.</p>
+<p>The data is in <code>exercises/transfer_data.json</code> and covers text pretraining only. Four familiar sentence patterns yield 288 training records. A separate pattern, such as “早上，小唐爱吃橙色的橘子。” (“In the morning, Xiaotang loves eating orange-colored tangerines”), is held out in full, yielding 72 records. No complete held-out sentence enters training, but every character appears in training text. This lets us observe continuation under a new sentence pattern separately from characters never trained at all.</p>
+<p>Implement three functions in <code>exercises/transfer_task.py</code> yourself. Keep the two-layer, 64-dimensional TinyLM architecture and the remaining configuration from Lesson 16; only vocabulary size should follow the data:</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Your task</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>build_tokenizer</code></td>
+<td>Deduplicate and sort training characters, placing them after the four special entries at IDs 0–3; do not read held-out data to add characters</td>
+</tr>
+<tr>
+<td><code>make_batch</code></td>
+<td>Build shifted labels, EOS, and right padding; raise clear errors for unknown characters and overlong samples</td>
+</tr>
+<tr>
+<td><code>build_model</code></td>
+<td>Create a model from random parameters, sizing the input table and output head to the new vocabulary</td>
+</tr>
+</tbody>
+</table></div>
+<p>You can reuse components from Lessons 07, 09, and 16. This task reads its own data file, so the FACTS entries from the preceding swap experiment can remain as they are. Do not hard-code the existing 79-entry vocabulary into the new functions. Before coding, predict: does adding a few new characters necessarily increase vocabulary size by that same number? Can the old weights be loaded unchanged? Does lower training loss guarantee complete continuations for the held-out pattern?</p>
+<p>Run structural acceptance checks first. The downloaded starter file initially reports the first unimplemented function. Once complete, it should pass checks for vocabulary, labels, unknown characters, length, model outputs, and causal visibility:</p>
+<pre><code class="language-bash">python -m lessons.transfer_challenge --module exercises.transfer_task
+</code></pre>
+<p>The checks call your functions with a different tiny dataset, “甲乙、甲丙”—strings made from the Chinese characters 甲, 乙, and 丙—to prevent hard-coding Xiaotang's IDs or this task's answers. After passing, train from random parameters and save your own artifacts in a new directory:</p>
+<pre><code class="language-bash">python -m lessons.transfer_challenge --module exercises.transfer_task --train --out artifacts/my_transfer
+</code></pre>
+<p>When finished, <code>my_transfer/</code> contains a data copy, <code>model.pt</code>, and <code>report.json</code>. The program reloads the saved weights from disk, then generates answers for familiar and held-out sentence patterns. Choose another output directory for a repeated experiment so you can compare runs.</p>
+<p>Write yourself a short experiment report that answers at least these four questions using results:</p>
+<ol>
+<li>Where does the vocabulary come from, and how does the model's candidate dimension stay consistent with it? Were unknown characters silently converted to UNK?</li>
+<li>What are the training and held-out losses at random initialization and after training? Did held-out records participate in updates?</li>
+<li>After loading your saved model, what does each of the three supplied prompts generate, and why does generation stop?</li>
+<li>If familiar patterns work but new patterns add or omit words, which data or label detail should you inspect first? Support your judgment with an actual record.</li>
+</ol>
+<p>Passing the program's checks establishes that the implementation meets its interfaces and key constraints. The last three explanations require your own run records. Keep incomplete or incorrect continuations unchanged and identify where the failures occur.</p>
+<details class="optional">
+<summary>If you get stuck: three progressively more specific hints</summary>
+<p>First level: label each axis. Inputs and targets are both <code>[B,T]</code>; model scores are <code>[B,T,V]</code>. V is determined by the training character set, and T must reserve an input position for BOS.</p>
+<p>Second level: Lesson 09's <code>make_pretrain_batch</code> already handles shifting, EOS, and padding. Check unknown characters before calling it. Lesson 16's model accepts <code>ModelConfig(vocab_size=tokenizer.vocab_size)</code>.</p>
+<p>Third level: compare against <code>exercises/transfer_solution.py</code>, explaining line by line which constraint your implementation handles differently. Then rerun acceptance checks on your own file. To rerun the reference implementation:</p>
+<pre><code class="language-bash">python -m lessons.transfer_challenge --module exercises.transfer_solution --train --out artifacts/reference_transfer
+</code></pre>
+</details>
+<details class="answer">
+<summary>After completing your own record, inspect the reference result</summary>
+<p>This task builds its vocabulary only from pretraining training text, yielding 67 entries and a model with 90,816 parameters. Although it introduces new characters, it omits other characters from materials such as the original question-answer corpus. The size is therefore not 79 plus 3. After changing the vocabulary, both ID meanings and matrix dimensions must be checked again. The reference experiment retrains from random initialization.</p>
+<p>With seed=42 and 1000 steps, training loss falls from 4.207454 to 0.379470, while held-out loss falls from 4.207752 to 1.963480. The three generated results are:</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Prompt</th>
+<th>Actual reference continuation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>早上，小唐喜欢</td>
+<td>橙色的橘子。</td>
+</tr>
+<tr>
+<td>早上，小唐爱吃</td>
+<td>橘子，小周拿着橙色的香蕉。</td>
+</tr>
+<tr>
+<td>晚上，小周爱吃</td>
+<td>香蕉，小周拿着黄色的香蕉。</td>
+</tr>
+</tbody>
+</table></div>
+<p>These prompts mean “In the morning, Xiaotang likes,” “In the morning, Xiaotang loves eating,” and “In the evening, Xiaozhou loves eating.” The outputs are “orange-colored tangerines,” “tangerines, Xiaozhou is holding orange-colored bananas,” and “bananas, Xiaozhou is holding yellow bananas.”</p>
+<p>All three reach EOS, but the last two begin with fruit and then add a fragment starting “小周拿着……” (“Xiaozhou is holding…”), continuing beyond the intended ending. This is neither truncation at a length limit nor an inability to encode “橙”. In the training records, “说：我爱吃” (“says: I love eating”) is followed directly by fruit, while patterns such as “拿着” contain a color and fruit. The held-out pattern requires the color immediately after “爱吃”, followed by the fruit. The actual outputs contain some correct fruit names but fail to compose the required complete suffix.</p>
+<p>This observation suggests what to inspect next. Two generation examples alone cannot identify which internal parameters caused the choices. If you add training examples with color suffixes, reserve new questions that were not involved in that decision before comparing again. The 72 already-inspected questions are not a fresh test set.</p>
+<p>The reference result is stored in <code>artifacts/transfer_challenge.json</code>, including losses at each stage and actual outputs. The complete reference code can regenerate the checkpoint. Your report should also explain how “loss decreased substantially” and “the entire sentence is still wrong” can both be true.</p>
+</details>
+<h2 id="where-should-you-look-first-when-results-do-not-match">Where Should You Look First When Results Do Not Match?</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>First check</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The new model still says Xiaoding likes apples</td>
+<td>Check that <code>my_swapped_run/data/</code> contains the changed banana fact and that you loaded weights from the new directory. Both the data and the weights must change.</td>
+</tr>
+<tr>
+<td>An “outside the vocabulary” error appears</td>
+<td>Inspect the actual vocabulary. The fruit swap uses existing characters; the Xiaotang task requires a vocabulary built from its new training records and training from random parameters.</td>
+</tr>
+<tr>
+<td>Matrix dimensions do not match</td>
+<td>Write down the input shape at the error and check each axis against Lesson 16; revisit Lesson 12 for head splitting.</td>
+</tr>
+<tr>
+<td>Text stops before finishing</td>
+<td>Check <code>stop_reason</code>. Lesson 18 distinguishes EOS, the new-token limit, and the context limit; BOS also occupies one position.</td>
+</tr>
+<tr>
+<td>Loss is low, but a new question format gets a wrong answer</td>
+<td>Use Lesson 17 to distinguish training from held-out questions, then check question-answer scoring positions as in Lesson 19.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Run the two controlled comparisons and this lesson's overview:</p>
+<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+python -m lessons.l20
+</code></pre>
+<p>Check numerical behavior, data boundaries, the model, and saving/reloading. The original replay reads <code>first_run/data/</code>, while new runs read their own snapshots, so these checks still work after editing FACTS:</p>
+<pre><code class="language-bash"># 运行项目的正确性检查。
+python -m unittest discover -s checks -v
+</code></pre>
+<p>Entry points: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l20.py">Lesson runner</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/EXPERIMENTS.md">Complete run record</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/model.py">Model source</a>.</p>
+<p>Source navigation: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/experiments.py#L340">experiments.py · lesson20</a>.</p></article><details class="lesson-video video-ready" id="lesson-video"><summary><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></path></svg>Watch the companion video<span class="video-duration">6:29</span><span class="video-language">Chinese audio</span></summary><div class="bilibili-embed"><iframe data-src="https://player.bilibili.com/player.html?bvid=BV1q7HV69E9P&amp;p=1&amp;autoplay=0&amp;danmaku=0" title="20 | The Full Workflow: Connect Pretraining, Fine-Tuning, and Generation · B站视频" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><p class="video-actions"><a href="https://www.bilibili.com/video/BV1q7HV69E9P/?p=1" target="_blank" rel="noopener">Watch in HD on Bilibili ↗</a></p></div></details>
+<div class="reader-feedback"><span>Questions about this chapter?</span><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=question.yml&amp;title=%5B%E5%AD%A6%E4%B9%A0%5D+20+%7C+The+Full+Workflow%3A+Connect+Pretraining%2C+Fine-Tuning%2C+and+Generation&amp;location=20+%7C+The+Full+Workflow%3A+Connect+Pretraining%2C+Fine-Tuning%2C+and+Generation+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F20.en.html" target="_blank" rel="noopener">Ask a question</a><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=content.yml&amp;title=%5B%E5%8B%98%E8%AF%AF%5D+20+%7C+The+Full+Workflow%3A+Connect+Pretraining%2C+Fine-Tuning%2C+and+Generation&amp;location=20+%7C+The+Full+Workflow%3A+Connect+Pretraining%2C+Fine-Tuning%2C+and+Generation+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F20.en.html" target="_blank" rel="noopener">Suggest a correction</a></div><nav class="chapter-nav" aria-label="Previous and next articles"><a href="../course/19.en.html"><span>Previous <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></path></svg></span><strong>19 | Supervised Fine-Tuning: Why Can It Continue Text but Still Fail to Answer?</strong></a><a href="../course/end.en.html"><span>Next <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></path></svg></span><strong>Closing Thoughts | You Can Now Explain Those “Red Apples”</strong></a></nav><footer class="reader-footer">Hello LLM · Build a Small Model, Understand Large Models<details class="community-mini"><summary>Stay in touch · 好好用 AI</summary><div class="community-section"><div><h2>Stay in touch · 好好用 AI</h2><p>Follow the WeChat account to discuss what you learn and build.</p><p>For bugs and corrections, <a href="https://github.com/DavidDingXu/hello-llm/issues" target="_blank" rel="noopener">open a GitHub issue</a>.</p></div><a class="qr-link" href="../code/assets/wechat-official-account.jpg" target="_blank" rel="noopener" aria-label="Open the 好好用 AI WeChat QR code"><img src="../code/assets/wechat-official-account.jpg" alt="好好用 AI WeChat official account QR code" width="130" height="130" loading="lazy"><p class="qr-caption">Scan in WeChat · Open full image</p></a></div></details></footer></main>
+<aside class="context-sidebar" aria-label="Article navigation and tools"><div class="context-inner"><nav class="reading-route" aria-label="On this page"><details open><summary>On this page</summary><div class="toc">
+<ul>
+<li><a href="#first-connect-the-two-training-stages">First Connect the Two Training Stages</a></li>
+<li><a href="#unpack-a-single-computation-again">Unpack a Single Computation Again</a></li>
+<li><a href="#why-does-the-prefix-stay-still-when-a-future-character-changes">Why Does the Prefix Stay Still When a Future Character Changes?</a></li>
+<li><a href="#why-can-dropping-one-label-raise-the-loss">Why Can Dropping One Label Raise the Loss?</a></li>
+<li><a href="#do-more-parameters-enable-open-ended-chat">Do More Parameters Enable Open-Ended Chat?</a></li>
+<li><a href="#how-to-check-what-you-learned-in-these-20-lessons">How to Check What You Learned in These 20 Lessons</a></li>
+<li><a href="#final-project-what-happens-when-the-facts-change">Final Project: What Happens When the Facts Change?</a></li>
+<li><a href="#independent-task-bring-小唐-and-橘子-into-the-model">Independent Task: Bring “小唐” and “橘子” into the Model</a></li>
+<li><a href="#where-should-you-look-first-when-results-do-not-match">Where Should You Look First When Results Do Not Match?</a></li>
+</ul>
+</div>
+</details></nav>
+<section class="reading-settings"><h2>Reading settings</h2><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="Decrease text size">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="Increase text size">A+</button></div><span>Allow about 90 minutes</span><p class="lesson-goal">Independently complete a transfer experiment covering data, vocabulary, model construction, training, and reloading, and explain both successes and failures.</p></section>
+</div></aside></div><dialog class="search-dialog" id="search-dialog" aria-labelledby="search-label">
+<form method="dialog" class="search-heading"><label for="course-search" id="search-label"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/></circle><path d="m16 16 4.5 4.5"/></path></svg>Search course</label><button class="icon-button" aria-label="Close search"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></form>
+<input id="course-search" type="search" placeholder="Search concepts, code, or questions…" autocomplete="off" spellcheck="false">
+<p class="search-status" id="search-status" role="status">Search all 23 articles by keyword.</p>
+<div class="search-results" id="search-results"></div><footer>↑ ↓ Select result <span>Enter Open · Esc Close</span></footer></dialog>
+<dialog class="experiment-viewer" id="experiment-viewer" aria-labelledby="experiment-title"><header><strong id="experiment-title">Experiments</strong><div><a id="experiment-standalone" target="_blank" rel="noopener">Open separately <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a><button class="button" id="close-experiment" type="button">Back to reading <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></div></header><iframe id="experiment-frame" title="Experiments" src="about:blank"></iframe></dialog>
+<dialog class="image-viewer" id="image-viewer" aria-label="Enlarge figure">
+<header><span>View figure</span><div class="image-actions"><button type="button" id="image-zoom-out" aria-label="Zoom out">−</button><output id="image-scale" aria-label="Zoom level">100%</output><button type="button" id="image-zoom-in" aria-label="Enlarge figure">＋</button><button type="button" id="image-size">Actual size</button><button type="button" id="close-image" autofocus>Close</button></div></header>
+<div class="image-canvas"><p id="image-status" role="status" hidden></p><img id="large-image" alt=""></div><footer><p id="image-description"></p><a id="original-image" target="_blank" rel="noopener">Open original image <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a></footer></dialog>
+<div class="toast" id="toast" role="status"></div></body></html>

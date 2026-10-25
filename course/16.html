@@ -1,0 +1,315 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<meta name="source-sha256" content="d7256c8142ee4426f75b1b6df7a8931800ad41e8219105aa7cd95b3e72c5340a"><meta name="description" content="从14个编号进入，追住“欢”的那一行：64项表示怎样改变，最后又怎样算出79个候选分数？"><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/16.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="16｜完整模型：跟着“欢”这个字走一遍 · Hello LLM"><meta property="og:description" content="从14个编号进入，追住“欢”的那一行：64项表示怎样改变，最后又怎样算出79个候选分数？"><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/16.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>16｜完整模型：跟着“欢”这个字走一遍 · Hello LLM</title>
+<link rel="icon" href="../assets/favicon.png" type="image/png">
+<script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
+<script defer src="../code/visuals/reading_site/search-index.js?v=ea96857fef58"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="16" data-alternate-sections="[&quot;start-with-these-14-ids&quot;, &quot;stay-with-the-row-for-欢&quot;, &quot;connect-the-checkpoints-in-one-forward-method&quot;, &quot;stop-at-each-checkpoint-in-the-saved-record&quot;, &quot;change-only-the-prefix-what-happens-to-the-same-欢&quot;, &quot;inspect-the-64-term-weighted-sum-for-红&quot;, &quot;of-all-these-numbers-which-ones-does-training-change&quot;, &quot;check-that-the-assembled-network-can-propagate-gradients&quot;, &quot;two-questions-about-position-and-structure&quot;]"><a class="skip-link" href="#main-content">跳到正文</a>
+<header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="打开课程目录" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+<a class="brand" href="../index.html" aria-label="Hello LLM · 学习站首页">
+<img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>手写小模型，看懂大模型</small></span></a>
+<nav class="header-nav" aria-label="主导航"><a href="../index.html#curriculum">学习路径</a><a href="../index.html#experiments">交互实验</a><a href="https://github.com/DavidDingXu/hello-llm" target="_blank" rel="noopener">GitHub <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a></nav>
+<div class="header-controls"><a class="language-switch" href="16.en.html" lang="en" aria-label="Switch to English">EN</a><button class="icon-button theme-toggle js-only" type="button" aria-label="切换到深色主题" title="切换到深色主题"><span class="theme-light-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A9 9 0 0 1 9.5 3.5a9 9 0 1 0 11 11Z"/></svg></span><span class="theme-dark-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></span></button>
+<button class="search-trigger js-only" type="button" aria-label="搜索课程"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><span>搜索课程</span><kbd>⌘ K</kbd></button>
+</div></div><div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div></header><div class="sidebar-scrim" hidden></div><div class="reader-layout"><aside class="course-sidebar" id="course-sidebar" aria-label="课程目录">
+<div class="sidebar-heading"><a href="../index.html">课程目录</a><button class="icon-button menu-close js-only" type="button" aria-label="关闭课程目录"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+<nav aria-label="全部文章"><div class="sidebar-guides"><a class="lesson-link" data-lesson="intro" href="../course/intro.html"><span class="lesson-number">·</span><span>专栏介绍</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="00" href="../course/00.html"><span class="lesson-number">·</span><span>开篇导学</span><span class="lesson-state" aria-hidden="true"></span></a></div><details class="sidebar-stage"><summary><span class="stage-index">第一部分</span>让数值网络学起来</summary><a class="lesson-link" data-lesson="01" href="../course/01.html"><span class="lesson-number">01</span><span>神经元</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="02" href="../course/02.html"><span class="lesson-number">02</span><span>向量与矩阵</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="03" href="../course/03.html"><span class="lesson-number">03</span><span>多层与非线性</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="04" href="../course/04.html"><span class="lesson-number">04</span><span>梯度与参数更新</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="05" href="../course/05.html"><span class="lesson-number">05</span><span>手写反向传播</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="06" href="../course/06.html"><span class="lesson-number">06</span><span>让网络学起来</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">第二部分</span>把文字接进来</summary><a class="lesson-link" data-lesson="07" href="../course/07.html"><span class="lesson-number">07</span><span>文字与向量</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="08" href="../course/08.html"><span class="lesson-number">08</span><span>分数与概率</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="09" href="../course/09.html"><span class="lesson-number">09</span><span>文本训练题</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage" open><summary><span class="stage-index">第三部分</span>读取前文，组装模型</summary><a class="lesson-link" data-lesson="10" href="../course/10.html"><span class="lesson-number">10</span><span>单头注意力</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="11" href="../course/11.html"><span class="lesson-number">11</span><span>因果掩码</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="12" href="../course/12.html"><span class="lesson-number">12</span><span>多头注意力</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="13" href="../course/13.html"><span class="lesson-number">13</span><span>旋转位置</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="14" href="../course/14.html"><span class="lesson-number">14</span><span>逐位置前馈</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="15" href="../course/15.html"><span class="lesson-number">15</span><span>残差与归一化</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="16" href="../course/16.html" aria-current="page"><span class="lesson-number">16</span><span>完整模型前向</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">第四部分</span>预训练、生成与微调</summary><a class="lesson-link" data-lesson="17" href="../course/17.html"><span class="lesson-number">17</span><span>第一次预训练</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="18" href="../course/18.html"><span class="lesson-number">18</span><span>逐字生成</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="19" href="../course/19.html"><span class="lesson-number">19</span><span>问答微调</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="20" href="../course/20.html"><span class="lesson-number">20</span><span>闭环与原理检验</span><span class="lesson-state" aria-hidden="true"></span></a></details><a class="lesson-link" data-lesson="end" href="../course/end.html"><span class="lesson-number">·</span><span>结束篇</span><span class="lesson-state" aria-hidden="true"></span></a></nav></aside><main class="reader-main" id="main-content"><div class="article-context"><span>读取前文，组装模型</span><div class="article-actions"><button type="button" class="copy-page-link js-only">复制链接</button><button type="button" class="focus-toggle js-only" aria-pressed="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg><span>专注阅读</span></button></div></div>
+<div class="mobile-context"><nav class="reading-route" aria-label="本篇路线"><details><summary>本篇目录</summary><div class="toc">
+<ul>
+<li><a href="#从这14个编号进入">从这14个编号进入</a></li>
+<li><a href="#跟住欢的这一行">跟住“欢”的这一行</a></li>
+<li><a href="#把沿途节点接成一个-forward">把沿途节点接成一个 forward</a></li>
+<li><a href="#在保存的记录里逐站停下">在保存的记录里逐站停下</a></li>
+<li><a href="#只换前文同一个欢会怎样">只换前文，同一个“欢”会怎样？</a></li>
+<li><a href="#再看红的64项乘加">再看“红”的64项乘加</a></li>
+<li><a href="#一路产生这么多数哪些会被训练改变">一路产生这么多数，哪些会被训练改变？</a></li>
+<li><a href="#检查搭好的网络能否传回梯度">检查搭好的网络能否传回梯度</a></li>
+<li><a href="#两道定位题">两道定位题</a></li>
+</ul>
+</div>
+</details></nav><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="减小正文字号">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="增大正文字号">A+</button></div></div><article id="article-body"><h1 id="16完整模型跟着欢这个字走一遍">16｜完整模型：跟着“欢”这个字走一遍</h1>
+<p>手写小模型，看懂大模型 · 第 16 讲</p>
+<p>第09讲只看最后一个“欢”，分不清前面是小丁还是小周。现在，完整模型读到“早上，小丁喜欢”，给下一字“红”的概率约为 <strong>0.999765</strong>。加上的这些组件，怎样改变了预测？</p>
+<p>本讲先借用已经完成预训练的参数，观察各组件怎样协作；下一讲再展开这份参数的训练过程。像调试程序那样，固定输入和参数，在几处节点停下来：入口的编号对不对，“欢”的那一行何时变了，最后哪一步才出现候选字的分数。</p>
+<h2 id="从这14个编号进入">从这14个编号进入</h2>
+<p>固定文本是：</p>
+<p><code>早上，小丁喜欢红色的苹果。</code></p>
+<p>本栏按字符编码。13 个字符前加一个 BOS，得到 14 个编号：</p>
+<p><code>[1, 32, 7, 76, 27, 6, 22, 44, 55, 57, 50, 58, 39, 5]</code></p>
+<p>第 0 项是 BOS，第 1 项是“早”，第 7 项是“欢”，第 13 项是“。”。先锁定位置 7，后面的每次取值都用这个索引，避免看着看着换成别的字。</p>
+<p>整个模型按下列路线计算：</p>
+<p><strong>编号 <code>[1, 14]</code> → 查表 <code>[1, 14, 64]</code> → 两个模型块 → 最后一次 RMSNorm → 候选分数 <code>[1, 14, 79]</code></strong></p>
+<p>第一个数字 1 是样本数，14 是位置数。64 是内部表示的宽度，79 是候选词表的大小。它们分别回答“每个位置用多少项数表示”和“要给多少个候选打分”，不能互相替代。</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/16-transformer/images/web/01-%E6%9C%BA%E5%88%B6.svg" width="1540" height="470"><img data-full-figure="../chapters/16-transformer/images/01-%E6%9C%BA%E5%88%B6.svg" alt="同一段文本从编号经过查表、两个模型块、最后归一化与输出投影" src="../chapters/16-transformer/images/01-%E6%9C%BA%E5%88%B6.svg"  width="1080" height="2010" loading="eager" decoding="async" /></picture></p>
+<p>图中位置数始终是 14，变化的是每行装了什么：先是一个编号，再是 64 项表示，最后是 79 项候选分数。位置 7 可以利用从 BOS 到“欢”的前文，不能读取后面的“红色的苹果。”；整句在同一张量里，也不会取消这条限制。</p>
+<p>配套的<a href="../chapters/16-transformer/lab3d.html">三维模型观察实验</a>把这些节点分层排开。选定位置和坐标后逐站比较，可以核对残差相加、最后归一化，以及 64 项表示怎样参与某个候选的打分。实验读取同一份已验证的预训练记录，切换视图不会训练模型；下文的表格与代码也保留了完整的核对路径。</p><details class="inline-experiment"><summary><span>动手实验 · 三维模型解剖台</span><small>跟随一个字，逐层查看真实表示、注意力和候选分数。</small></summary><p><a href="../chapters/16-transformer/lab3d.html" class="js-experiment inline-expand">展开大窗口 ↗</a> · <a href="../chapters/16-transformer/lab3d.html" target="_blank" rel="noopener">在新标签页打开 ↗</a></p><dialog class="inline-workspace experiment-viewer" aria-label="三维模型解剖台"><header><strong>三维模型解剖台</strong><div><a href="../chapters/16-transformer/lab3d.html" target="_blank" rel="noopener">在新标签页打开 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button inline-close" type="button" aria-label="返回阅读">返回阅读 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe data-src="../chapters/16-transformer/lab3d.html" title="三维模型解剖台" loading="lazy"></iframe></dialog></details>
+<h2 id="跟住欢的这一行">跟住“欢”的这一行</h2>
+<p>第一站查表，“欢”的编号 44 选出 Embedding 的第 44 行。这里的 64 项数只由字符和表内参数决定，还没有读取“小丁”。把它停在这里，就能与后面经过上下文处理的结果比较。</p>
+<p>第一块给这一行接上读取前文的路径，再用前馈网络加工汇总后的坐标，两次残差保留原有表示的直路。第二块接收它的结果，用另一组参数再处理一次。两次出口形状都还是 <code>[1, 14, 64]</code>，所以只看形状发现不了数值已经改变，稍后要取出真实切片。</p>
+<p>64 项内部坐标没有逐项对应字符。要给词表中的 79 个候选打分，还需要最后一层投影。</p>
+<p>第二块后再做一次 RMSNorm，接着用无偏置线性层把每个 64 项向量投影为 79 个分数。对候选 <code>j</code> 而言，就是：</p>
+<p><strong>logit_j=h₁W_j1+h₂W_j2+…+h₆₄W_j64</strong></p>
+<p>这里 <code>h</code> 是最后归一后的向量，<code>W_j</code> 是输出矩阵对应候选 <code>j</code> 的一行。它与第二讲的逐行乘加完全相同，只是输入从两项变成 64 项。</p>
+<p>这就是 <code>[1, 14, 64]</code> 变成 <code>[1, 14, 79]</code> 的位置。返回的 <strong>logits 是未经概率归一化的分数</strong>；训练时交给交叉熵，观察候选或选字时再用 Softmax。开头“红”的概率就从这一整行分数得到。</p>
+<h2 id="把沿途节点接成一个-forward">把沿途节点接成一个 forward</h2>
+<p>先把路线写成代码，创建一份尚未训练的 <code>random_model</code>，只核对结构、形状和参数数目。稍后读取的 <code>pretrain_trace</code> 才是开头那份预训练模型的记录，两者的参数不同。</p>
+<p>代码里的变量 <code>x</code> 沿着路线被接连赋值，每一步都要得到下一站能接收的形状：</p>
+<pre><code class="language-python">import torch
+from torch import nn
+from tiny_lm.model import ModelConfig
+from tiny_lm.layers import RMSNorm, TransformerBlock
+from tiny_lm.tokenizer import CharTokenizer
+
+class TinyLM(nn.Module):
+    &quot;&quot;&quot;将整数编号 [B,T] 转为原始候选分数 [B,T,V]，不在前向内选字。&quot;&quot;&quot;
+    def __init__(self, config):
+        super().__init__()
+        self.config = config
+        self.embedding = nn.Embedding(config.vocab_size, config.d_model)
+        # ModuleList 注册各块的独立参数，模型的优化器才能找到它们。
+        self.blocks = nn.ModuleList([
+            TransformerBlock(config) for _ in range(config.n_layers)])
+        self.final_norm = RMSNorm(config.d_model, config.norm_eps)
+        self.output = nn.Linear(config.d_model, config.vocab_size,
+                                bias=False)
+        self.apply(self._initialize)
+
+    @staticmethod
+    def _initialize(module):
+        # 随机填写 Linear/Embedding；RMSNorm 的缩放参数保留初值 1。
+        if isinstance(module, (nn.Linear, nn.Embedding)):
+            nn.init.normal_(module.weight, mean=0., std=.02)
+
+    def forward(self, ids):
+        # 这里只接受一批编号，不把标签或损失计算混进模型前向。
+        if ids.ndim != 2 or not 0 &lt; ids.shape[1] &lt;= self.config.max_seq_len:
+            raise ValueError(&quot;需要 [B,T]，且 1 &lt;= T &lt;= 32&quot;)
+        x = self.embedding(ids)  # [B,T] → [B,T,D]，按编号读取参数表行。
+        # 各块改写位置表示，保留 [B,T,D] 的轴与宽度。
+        for block in self.blocks:
+            x = block(x)
+        # 最后归一后，将 D 项内部坐标映射成 V 个候选分数；此处没有 Softmax。
+        return self.output(self.final_norm(x))
+
+torch.manual_seed(42)
+tokenizer = CharTokenizer.for_course()
+# 这是一份新建的随机模型，尚未训练；不要与下段的预训练记录混为一份参数。
+random_model = TinyLM(ModelConfig(vocab_size=tokenizer.vocab_size))
+text = &quot;早上，小丁喜欢红色的苹果。&quot;
+ids = torch.tensor([tokenizer.encode(text, add_bos=True)])
+logits = random_model(ids)
+print(ids.shape)     # torch.Size([1, 14])
+print(logits.shape)  # torch.Size([1, 14, 79])
+print(sum(p.numel() for p in random_model.parameters()))  # 92352
+</code></pre>
+<p><code>ModuleList</code> 让两个块都注册为模型的子模块；普通 Python 列表虽然能遍历，却不会按相同方式交给模型的参数管理。<code>apply</code> 逐个访问模块，为线性层和查表矩阵填入均值 0、标准差 0.02 的随机数。RMSNorm 的缩放参数仍从 1 开始。</p>
+<h2 id="在保存的记录里逐站停下">在保存的记录里逐站停下</h2>
+<p>读取预训练模型对同一句话的前向记录，取位置 7，每一站只展示最前四个坐标，其余 60 项仍参与真实计算：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>位置 7 的节点</th>
+<th>前四项，四舍五入到六位小数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Embedding</td>
+<td>[−0.094927, 0.018641, 0.043246, 0.040713]</td>
+</tr>
+<tr>
+<td>第一块输出</td>
+<td>[−0.844999, −0.217363, −0.441488, −0.389308]</td>
+</tr>
+<tr>
+<td>第二块输出</td>
+<td>[−0.840967, −0.695858, −0.620723, −0.608694]</td>
+</tr>
+<tr>
+<td>最后 RMSNorm</td>
+<td>[−1.184615, −1.003421, −1.015668, −0.869593]</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="只换前文同一个欢会怎样">只换前文，同一个“欢”会怎样？</h2>
+<p>数值变了，还不能据此认定前文起了作用。再用这份预训练权重，分别输入 <code>早上，小丁喜欢</code>、<code>早上，小周喜欢</code>，两次都只给前缀，不给后面的答案。</p>
+<p>最后位置都是“欢”，编号都是44，所以最初查出来的64项完全相同。经过两个块，前文中的“丁”和“周”有了影响这一行的路径，输出就不再一样。</p>
+<p><img alt="同一份预训练权重下，小丁和小周两个前缀在欢位置查出相同向量，经过模型块得到不同表示，红和黄的下一项概率也随之改变" src="../chapters/16-transformer/images/06-%E5%90%8C%E4%B8%80%E4%B8%AA%E6%AC%A2%E4%B8%8D%E5%90%8C%E7%9A%84%E5%89%8D%E6%96%87.svg"  width="1080" height="2160" loading="lazy" decoding="async" /></p>
+<p>两张格图共用色阶：青色为正，紫色为负，越深表示绝对值越大。每边的8×8格仍是一条64维向量，不是64个字；单凭某格颜色，也不能给它起名叫“水果特征”。</p>
+<p>在“小丁”前文下，“红”的概率约为99.9765%；换成“小周”，则是“黄”的概率约为99.9736%。第09讲的字符基线只查当前“欢”，两个人得到相同分布；现在，前文真的改变了下一字的预测。两次没有更新参数，变的是输入以及沿途算出的表示。</p>
+<details class="optional">
+<summary>展开完整坐标与这次人名对照的代码</summary>
+<p>下面单独比较“小丁”这条输入查表后与第二块后的全部64项，两张格图同样使用共同色阶。格内0—63是坐标编号，排成8行8列仅为方便查看。</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/16-transformer/images/web/04-%E4%B8%80%E4%B8%AA%E4%BD%8D%E7%BD%AE%E7%9A%8464%E9%A1%B9%E5%8F%98%E5%8C%96.svg" width="1504" height="1065"><img alt="同一位置的64项真实数值在查表后与第二块后呈现不同分布，两张格图共用色阶；格内0到63是坐标编号" src="../chapters/16-transformer/images/04-%E4%B8%80%E4%B8%AA%E4%BD%8D%E7%BD%AE%E7%9A%8464%E9%A1%B9%E5%8F%98%E5%8C%96.svg"  width="1080" height="2700" loading="lazy" decoding="async" /></picture></p>
+<p>要重做两个人名的对照，直接加载保存的权重。这里另用 <code>context_model</code> 命名，避免与前面新建的 <code>random_model</code> 混淆：</p>
+<pre><code class="language-python">from tiny_lm.checkpoint import load_checkpoint
+from tiny_lm.trace import parameter_digest
+
+# 加载同一份预训练权重；本段没有标签、反向或优化器更新。
+context_model, context_tokenizer, _ = load_checkpoint(
+    &quot;artifacts/first_run/pretrain.pt&quot;)
+before_digest = parameter_digest(context_model)
+embeddings, representations = [], []
+for prefix in [&quot;早上，小丁喜欢&quot;, &quot;早上，小周喜欢&quot;]:
+    # 两个前缀都以“欢”结尾，只在前面的人名处差一个字。
+    prefix_ids = torch.tensor([context_tokenizer.encode(prefix, add_bos=True)])
+    with torch.no_grad():
+        scores, detail = context_model(prefix_ids, return_trace=True)
+    embeddings.append(detail[&quot;embedding&quot;][0, -1])
+    representations.append(detail[&quot;blocks&quot;][-1][&quot;block_output&quot;][0, -1])
+    # 对最后位置的完整79项归一化，再查看“红”和“黄”，不单独重分这两项。
+    probabilities = scores[0, -1].softmax(-1)
+    print(prefix, {c: float(probabilities[context_tokenizer.stoi[c]])
+                   for c in [&quot;红&quot;, &quot;黄&quot;]})
+
+assert torch.equal(embeddings[0], embeddings[1])  # 当前字符相同，查表结果完全相同。
+assert not torch.allclose(representations[0], representations[1])
+assert parameter_digest(context_model) == before_digest  # 比较期间参数没有改变。
+</code></pre>
+</details>
+<h2 id="再看红的64项乘加">再看“红”的64项乘加</h2>
+<p>输出头在这个位置给“红”的 logit 约为 <strong>13.768686</strong>，“紫”约为 <strong>0.992895</strong>。对完整 79 项执行 Softmax，“红”的概率约为 <strong>0.999765</strong>。这是一次已训练模型的实测预测，恰好与下一个真实字符相符。</p>
+<p>这个13.768686也能拆开。下面每根柱子是一项 <code>hᵢ×W红,ᵢ</code>：上方是正贡献，下方是负贡献，64项全部相加才得到“红”的分数。其他78个候选各有自己的参数行，也要分别这样计算。</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/16-transformer/images/web/05-%E4%B8%80%E4%B8%AA%E5%80%99%E9%80%89%E7%9A%8464%E9%A1%B9%E4%B9%98%E5%8A%A0.svg" width="1504" height="751.6"><img alt="真实归一后向量与候选红的输出权重逐项相乘，64根有符号柱表示各项贡献，相加得到13.768686，再与其他78项共同归一化" src="../chapters/16-transformer/images/05-%E4%B8%80%E4%B8%AA%E5%80%99%E9%80%89%E7%9A%8464%E9%A1%B9%E4%B9%98%E5%8A%A0.svg"  width="1080" height="1830" loading="lazy" decoding="async" /></picture></p>
+<p>这里仍未选择或追加字符。第十八讲的生成循环还会屏蔽 PAD、BOS、UNK 后重新归一化，因此相同候选的生成概率会略有不同，不能把两处末位小数直接拼成同一份分布。</p>
+<p>用下面这段代码，可以直接读取原始记录，而无需再次训练：</p>
+<pre><code class="language-python">import json
+from pathlib import Path
+
+# JSON 保存已训练模型的一次前向结果；读取它不会给 random_model 加载权重。
+pretrain_record = json.loads(Path(
+    &quot;artifacts/first_run/forward_trace.json&quot;).read_text(encoding=&quot;utf-8&quot;))
+pretrain_trace = pretrain_record[&quot;trace&quot;]
+assert pretrain_record[&quot;stage&quot;] == &quot;pretrain&quot;
+position = 7
+# 取样本 0 的位置 7（欢），只显示前四个坐标，其余坐标仍参与原计算。
+print(pretrain_trace[&quot;embedding&quot;][0][position][:4])
+print(pretrain_trace[&quot;blocks&quot;][0][&quot;block_output&quot;][0][position][:4])
+scores = torch.tensor(pretrain_trace[&quot;logits&quot;][0][position])
+# red 索引的是词表候选轴，不是 64 维表示中的某个坐标。
+red = tokenizer.stoi[&quot;红&quot;]
+print(float(scores[red]), float(scores.softmax(-1)[red]))
+</code></pre>
+<p>调试时，若到出口还只有 64 项，就检查是否漏走了词表投影；如果编号解码出的字符不对，就核对模型所配的词表。上面的逐站记录能帮助定位错误发生在哪一步。</p>
+<p>还可以在<a href="../chapters/16-transformer/model-inspector.html">模型解剖台</a>里换一个输入位置，查看查表、每块的注意力与两次残差相加，以及最后的候选分数；点击一个坐标，就能核对对应数值。它使用的仍是本节这份已保存的前向记录，不会在页面里重新训练。</p><details class="inline-experiment"><summary><span>动手实验 · 模型解剖台</span><small>查看真实张量，追踪模型的一次前向计算。</small></summary><p><a href="../chapters/16-transformer/model-inspector.html" class="js-experiment inline-expand">展开大窗口 ↗</a> · <a href="../chapters/16-transformer/model-inspector.html" target="_blank" rel="noopener">在新标签页打开 ↗</a></p><dialog class="inline-workspace experiment-viewer" aria-label="模型解剖台"><header><strong>模型解剖台</strong><div><a href="../chapters/16-transformer/model-inspector.html" target="_blank" rel="noopener">在新标签页打开 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button inline-close" type="button" aria-label="返回阅读">返回阅读 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe data-src="../chapters/16-transformer/model-inspector.html" title="模型解剖台" loading="lazy"></iframe></dialog></details>
+<h2 id="一路产生这么多数哪些会被训练改变">一路产生这么多数，哪些会被训练改变？</h2>
+<p>刚才表里的向量会随输入重新生成，模型长期保存、训练时修改的是各组参数。把它们数一遍，也能检查是否漏注册了一层或意外共享了一份矩阵。令词表大小为 <code>V</code>，内部宽度为 <code>D</code>，块数为 <code>L</code>，前馈中间宽度为 <code>F</code>。输入与输出矩阵不共享，线性层都不带偏置。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>部分</th>
+<th>计算式</th>
+<th>本模型参数数目</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>输入 Embedding</td>
+<td>VD = 79×64</td>
+<td>5,056</td>
+</tr>
+<tr>
+<td>每块 Q、K、V、输出投影</td>
+<td>4D² = 4×64²</td>
+<td>16,384</td>
+</tr>
+<tr>
+<td>每块 SwiGLU</td>
+<td>3DF = 3×64×128</td>
+<td>24,576</td>
+</tr>
+<tr>
+<td>每块两次 RMSNorm</td>
+<td>2D</td>
+<td>128</td>
+</tr>
+<tr>
+<td>两个完整块</td>
+<td>2×41,088</td>
+<td>82,176</td>
+</tr>
+<tr>
+<td>最后 RMSNorm</td>
+<td>D</td>
+<td>64</td>
+</tr>
+<tr>
+<td>输出投影</td>
+<td>DV = 64×79</td>
+<td>5,056</td>
+</tr>
+</tbody>
+</table></div>
+<p>因此总数是：</p>
+<p><strong>2VD+L(4D²+3DF+2D)+D=92,352</strong></p>
+<p>表中的“每块”列出一个块的组成，合计时只计入“两个完整块”一次。头数为 2，是把总宽度 64 拆为每头 32，不能再把 <code>4D²</code> 乘以头数。RoPE 的固定频率、输入编号、中间结果和因果掩码都不计入可训练参数。</p>
+<h2 id="检查搭好的网络能否传回梯度">检查搭好的网络能否传回梯度</h2>
+<p>回到刚才搭建的 <code>random_model</code>，给每个位置补上错开一位的目标，算损失并反向，检查所有应训练的参数是否连到损失。读取JSON记录不会改变这份模型的参数；下面只核对连接，尚未训练：</p>
+<pre><code class="language-python">from tiny_lm.losses import token_loss
+
+# 输入为 BOS+原文；标签向后错一格，成为原文+EOS，两者同为 [1,14]。
+targets = torch.tensor([tokenizer.encode(text) + [2]])  # 末尾是 EOS
+# 回到前面新建的随机模型，只检查它的全部参数是否接到了损失。
+random_model.zero_grad(set_to_none=True)
+loss = token_loss(random_model(ids), targets)
+loss.backward()
+# backward 只填写梯度；这里没有优化器 step，随机参数仍未更新。
+assert all(p.grad is not None and torch.isfinite(p.grad).all()
+           for p in random_model.parameters())
+print(float(loss.detach()))
+</code></pre>
+<p>这个检查确认参数连到了损失，且本次梯度均为有限值。没有被用到的词表行可以是零梯度；网络能否学好，还要实际训练。</p>
+<details class="optional">
+<summary>选读：把追踪方法用于公开模型</summary>
+<p>这套追踪办法也能用于公开模型。我们把同一个问题“天空是什么颜色？”送入 Qwen3-0.6B，记录了一次真实前向。加上对话格式后，输入有 16 个 token；它们经过 28 个块，最后得到 <code>[1, 16, 151936]</code> 的候选分数。</p>
+<p>下面是第一层第一个注意力头实际算出的比例。横轴选被读的位置，纵轴选发起查询的位置；右上角全部为 0，仍然是在执行前面手写过的因果限制。</p>
+<p><img alt="Qwen3-0.6B真实前向中第一层第一头的16乘16注意力比例，未来区域为零" src="../chapters/16-transformer/images/03-%E5%85%AC%E5%BC%80%E6%A8%A1%E5%9E%8B.svg"  width="1080" height="1350" loading="lazy" decoding="async" /></p>
+<p>这里的内部宽度是1024。它有16组查询，却只有8组K/V，相当于每两组查询共用一组读取材料；本栏手写模型则让各头分别拥有K/V。公开模型还有额外的归一化与参数共享，本栏没有逐项实现。这次观察用来核对计算路径和因果限制，不能只把64改大，就认定复制了它的完整设计。</p>
+<p>最后位置本次给 token“天空”的概率约为 0.997092。这个概率来自输出头；图中深浅则是某一头读取前文的比例，两者用途不同。<a href="https://huggingface.co/Qwen/Qwen3-0.6B">官方权重说明</a>和<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/artifacts/reference/qwen3_trace.json">实测记录</a>可分别核对设计与这次运行。</p>
+</details>
+<h2 id="两道定位题">两道定位题</h2>
+<ol>
+<li>BOS 所在位置的分数要预测谁？句号所在的最后有效位置要预测谁？</li>
+<li>若只把内部宽度从 64 改成 128，保留两个头，一块注意力的四组投影共有多少参数？需要再乘一次头数吗？</li>
+</ol>
+<details class="answer">
+<summary>参考答案</summary>
+<p>答案：第一题，BOS 位置的目标是第一个字符“早”；句号位置的目标是 EOS。输入与标签各有 14 项，这不是让句号预测自己。第二题，<strong>4×128²=65,536</strong>，是原来 16,384 的四倍。每头宽度变成 64，四组投影已经覆盖整个 128 维，不再乘头数。</p>
+</details>
+<p>继续训练前，给自己的模型两条长度为5的编号序列，先写下预期输出形状，再执行前向。接着只改其中一条在位置索引3处的字符编号，核对该条位置0—2与另一条样本的全部输出都不变。最后计算一次损失并反向，检查参数是否获得有限梯度。若某项不符，先找轴、可见范围或参数登记，不急着增加训练次数。</p>
+<p>在 <code>code</code> 目录运行：</p>
+<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+python -m lessons.l16
+</code></pre>
+<p>代码与运行记录：<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l16.py">运行入口</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/model.py">完整模型源码</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/artifacts/first_run/forward_trace.json">真实前向记录</a>。</p>
+<p>源码导航：<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/model.py#L39">model.py · TinyLM</a>。</p></article><details class="lesson-video video-ready" id="lesson-video"><summary><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></svg>观看配套视频<span class="video-duration">4:42</span></summary><div class="bilibili-embed"><iframe data-src="https://player.bilibili.com/player.html?bvid=BV1oJHV6pEMN&amp;p=1&amp;autoplay=0&amp;danmaku=0" title="16｜完整模型：跟着“欢”这个字走一遍 · B站视频" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><p class="video-actions"><a href="https://www.bilibili.com/video/BV1oJHV6pEMN/?p=1" target="_blank" rel="noopener">在 B 站高清观看 ↗</a></p></div></details>
+<div class="reader-feedback"><span>这一讲有疑问？</span><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=question.yml&amp;title=%5B%E5%AD%A6%E4%B9%A0%5D+16%EF%BD%9C%E5%AE%8C%E6%95%B4%E6%A8%A1%E5%9E%8B%EF%BC%9A%E8%B7%9F%E7%9D%80%E2%80%9C%E6%AC%A2%E2%80%9D%E8%BF%99%E4%B8%AA%E5%AD%97%E8%B5%B0%E4%B8%80%E9%81%8D&amp;location=16%EF%BD%9C%E5%AE%8C%E6%95%B4%E6%A8%A1%E5%9E%8B%EF%BC%9A%E8%B7%9F%E7%9D%80%E2%80%9C%E6%AC%A2%E2%80%9D%E8%BF%99%E4%B8%AA%E5%AD%97%E8%B5%B0%E4%B8%80%E9%81%8D+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F16.html" target="_blank" rel="noopener">提出学习疑问</a><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=content.yml&amp;title=%5B%E5%8B%98%E8%AF%AF%5D+16%EF%BD%9C%E5%AE%8C%E6%95%B4%E6%A8%A1%E5%9E%8B%EF%BC%9A%E8%B7%9F%E7%9D%80%E2%80%9C%E6%AC%A2%E2%80%9D%E8%BF%99%E4%B8%AA%E5%AD%97%E8%B5%B0%E4%B8%80%E9%81%8D&amp;location=16%EF%BD%9C%E5%AE%8C%E6%95%B4%E6%A8%A1%E5%9E%8B%EF%BC%9A%E8%B7%9F%E7%9D%80%E2%80%9C%E6%AC%A2%E2%80%9D%E8%BF%99%E4%B8%AA%E5%AD%97%E8%B5%B0%E4%B8%80%E9%81%8D+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F16.html" target="_blank" rel="noopener">反馈内容勘误</a></div><nav class="chapter-nav" aria-label="前后篇"><a href="../course/15.html"><span>上一篇 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg></span><strong>15｜残差与RMSNorm：为什么留一条原路？</strong></a><a href="../course/17.html"><span>下一篇 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><strong>17｜预训练：训练题熟了，新题为什么更差？</strong></a></nav><footer class="reader-footer">Hello LLM · 手写小模型，看懂大模型<details class="community-mini"><summary>关注与交流 · 好好用 AI</summary><div class="community-section"><div><h2>关注与交流 · 好好用 AI</h2><p>交流学习中的问题与实践心得。</p><p>代码问题和勘误，欢迎在 <a href="https://github.com/DavidDingXu/hello-llm/issues" target="_blank" rel="noopener">GitHub 提交 Issue</a>。</p></div><a class="qr-link" href="../code/assets/wechat-official-account.jpg" target="_blank" rel="noopener" aria-label="查看好好用 AI 公众号二维码原图"><img src="../code/assets/wechat-official-account.jpg" alt="好好用 AI 微信公众号二维码" width="130" height="130" loading="lazy"><p class="qr-caption">微信扫码 · 点击查看原图</p></a></div></details></footer></main>
+<aside class="context-sidebar" aria-label="本篇辅助导航"><div class="context-inner"><nav class="reading-route" aria-label="本篇路线"><details open><summary>本篇路线</summary><div class="toc">
+<ul>
+<li><a href="#从这14个编号进入">从这14个编号进入</a></li>
+<li><a href="#跟住欢的这一行">跟住“欢”的这一行</a></li>
+<li><a href="#把沿途节点接成一个-forward">把沿途节点接成一个 forward</a></li>
+<li><a href="#在保存的记录里逐站停下">在保存的记录里逐站停下</a></li>
+<li><a href="#只换前文同一个欢会怎样">只换前文，同一个“欢”会怎样？</a></li>
+<li><a href="#再看红的64项乘加">再看“红”的64项乘加</a></li>
+<li><a href="#一路产生这么多数哪些会被训练改变">一路产生这么多数，哪些会被训练改变？</a></li>
+<li><a href="#检查搭好的网络能否传回梯度">检查搭好的网络能否传回梯度</a></li>
+<li><a href="#两道定位题">两道定位题</a></li>
+</ul>
+</div>
+</details></nav>
+<section class="reading-settings"><h2>阅读设置</h2><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="减小正文字号">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="增大正文字号">A+</button></div><span>建议预留 50 分钟</span><p class="lesson-goal">组装完整模型，定位表示、参数和词表分数。</p></section>
+</div></aside></div><dialog class="search-dialog" id="search-dialog" aria-labelledby="search-label">
+<form method="dialog" class="search-heading"><label for="course-search" id="search-label"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg>搜索课程</label><button class="icon-button" aria-label="关闭搜索"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></form>
+<input id="course-search" type="search" placeholder="搜索概念、代码或问题…" autocomplete="off" spellcheck="false">
+<p class="search-status" id="search-status" role="status">输入关键词，搜索全部 23 篇文章。</p>
+<div class="search-results" id="search-results"></div><footer>↑ ↓ 选择结果 <span>Enter 打开 · Esc 关闭</span></footer></dialog>
+<dialog class="experiment-viewer" id="experiment-viewer" aria-labelledby="experiment-title"><header><strong id="experiment-title">交互实验</strong><div><a id="experiment-standalone" target="_blank" rel="noopener">独立打开 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button" id="close-experiment" type="button">返回阅读 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe id="experiment-frame" title="交互实验" src="about:blank"></iframe></dialog>
+<dialog class="image-viewer" id="image-viewer" aria-label="放大配图">
+<header><span>查看配图</span><div class="image-actions"><button type="button" id="image-zoom-out" aria-label="缩小配图">−</button><output id="image-scale" aria-label="缩放比例">100%</output><button type="button" id="image-zoom-in" aria-label="放大配图">＋</button><button type="button" id="image-size">原尺寸</button><button type="button" id="close-image" autofocus>关闭</button></div></header>
+<div class="image-canvas"><p id="image-status" role="status" hidden></p><img id="large-image" alt=""></div><footer><p id="image-description"></p><a id="original-image" target="_blank" rel="noopener">打开原图 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a></footer></dialog>
+<div class="toast" id="toast" role="status"></div></body></html>

@@ -1,0 +1,257 @@
+{
+  "articles": [
+    {
+      "id": "intro",
+      "source": "chapters/intro/README.md",
+      "folder": "intro",
+      "module": "课程介绍",
+      "topic": "课程介绍",
+      "title": "手写小模型，看懂大模型",
+      "short_summary": "模型答错了，该查输入、生成还是训练？从一个可手算的小模型开始，理解文字生成、预训练与微调，为开发判断找到依据。",
+      "goal": "判断为什么要学大模型底层原理，理解本课程能帮助形成哪些开发与验证能力。",
+      "suggested_reading_minutes": 15
+    },
+    {
+      "id": "00",
+      "source": "chapters/00-introduction/README.md",
+      "folder": "00-开篇词",
+      "module": "开篇词",
+      "topic": "开篇词",
+      "title": "开篇词｜先给成品出两道题，再从零把它造出来",
+      "short_summary": "同一句开头，随机模型乱写，训练后却能续写；换成提问又失灵。先看这两个变化，再跑通第一个算例。",
+      "goal": "分清训练与生成，找到后续学习的起点。",
+      "suggested_reading_minutes": 20
+    },
+    {
+      "id": "01",
+      "source": "chapters/01-neuron/README.md",
+      "folder": "01-neuron",
+      "module": "一、让数值网络学起来",
+      "topic": "神经元",
+      "title": "01｜神经元：模型接着写字，底下先算什么？",
+      "short_summary": "两项输入、两条权重和一个偏置，怎样先算出4？再用一个做不到的目标，看清激活函数为什么出现。",
+      "goal": "解释输入、参数和激活各自的作用。",
+      "suggested_reading_minutes": 30
+    },
+    {
+      "id": "02",
+      "source": "chapters/02-vectors-and-matrices/README.md",
+      "folder": "02-vectors-and-matrices",
+      "module": "一、让数值网络学起来",
+      "topic": "向量与矩阵",
+      "title": "02｜向量与矩阵：算两个数，要复制两遍代码吗？",
+      "short_summary": "把两组参数排成一张表，一次计算两个输出。再增加一份输入，看看哪些数需要复制、哪些参数仍然共用。",
+      "goal": "按轴解释输入、参数和输出的形状。",
+      "suggested_reading_minutes": 30
+    },
+    {
+      "id": "03",
+      "source": "chapters/03-nonlinearity/README.md",
+      "folder": "03-nonlinearity",
+      "module": "一、让数值网络学起来",
+      "topic": "多层与非线性",
+      "title": "03｜非线性：四行规则，为什么乘加函数做不到？",
+      "short_summary": "前三条都能对上，第四条却一定出错。沿着这四个输入，看看多接一层为何还不够，ReLU又改变了什么。",
+      "goal": "解释叠层与增加非线性的区别。",
+      "suggested_reading_minutes": 35
+    },
+    {
+      "id": "04",
+      "source": "chapters/04-gradients/README.md",
+      "folder": "04-gradients",
+      "module": "一、让数值网络学起来",
+      "topic": "梯度与参数更新",
+      "title": "04｜梯度：方向对了，为什么也会越改越差？",
+      "short_summary": "同一个负梯度，小步更新让误差变小，大步却越过目标。用一条可重算的曲线，看清局部方向和学习率。",
+      "goal": "区分梯度给出的局部方向与实际更新步长。",
+      "suggested_reading_minutes": 40
+    },
+    {
+      "id": "05",
+      "source": "chapters/05-backpropagation/README.md",
+      "folder": "05-backpropagation",
+      "module": "一、让数值网络学起来",
+      "topic": "手写反向传播",
+      "title": "05｜反向传播：9个参数，难道要逐个试？",
+      "short_summary": "前向得到−1，损失为4。沿一条路径逆着追，为什么那个值为0的权重，梯度却是−8？",
+      "goal": "手算一条反向路径，解释分支合流与统一更新。",
+      "suggested_reading_minutes": 45
+    },
+    {
+      "id": "06",
+      "source": "chapters/06-training-loop/README.md",
+      "folder": "06-training-loop",
+      "module": "一、让数值网络学起来",
+      "topic": "让网络学起来",
+      "title": "06｜训练循环：更新500次，四条预测会怎样？",
+      "short_summary": "让同一个小网络反复前向、算损失、反向和更新。观察500次学习，再抓出一个“预测全对，损失却不为零”的形状错误。",
+      "goal": "写出一轮训练，解释清梯度并识别广播错题。",
+      "suggested_reading_minutes": 45
+    },
+    {
+      "id": "07",
+      "source": "chapters/07-embeddings/README.md",
+      "folder": "07-embeddings",
+      "module": "二、把文字接进来",
+      "topic": "文字与向量",
+      "title": "07｜Embedding：文字怎样变成网络的输入？",
+      "short_summary": "“欢”的编号44不是它的含义。先给字符编地址，再从可训练表里取一行向量，把文字接上数值计算。",
+      "goal": "区分字符编号、词向量与张量三根轴。",
+      "suggested_reading_minutes": 35
+    },
+    {
+      "id": "08",
+      "source": "chapters/08-softmax/README.md",
+      "folder": "08-softmax",
+      "module": "二、把文字接进来",
+      "topic": "分数与概率",
+      "title": "08｜Softmax：分数怎样变成下一字的概率？",
+      "short_summary": "“红”的分数没有降低，概率却变小了。把红、黄、绿放在同一场竞争里，逐步算清指数与归一化。",
+      "goal": "解释候选分数、相对竞争与归一化。",
+      "suggested_reading_minutes": 30
+    },
+    {
+      "id": "09",
+      "source": "chapters/09-training-targets/README.md",
+      "folder": "09-training-targets",
+      "module": "二、把文字接进来",
+      "topic": "文本训练题",
+      "title": "09｜训练目标：一句话怎样变成可学习的题？",
+      "short_summary": "训练答案就藏在原句里：输入与目标错开一格。再看损失怎样评分，以及填充位置为什么不能混进平均。",
+      "goal": "构造错位标签并解释有效位置的平均损失。",
+      "suggested_reading_minutes": 40
+    },
+    {
+      "id": "10",
+      "source": "chapters/10-attention/README.md",
+      "folder": "10-attention",
+      "module": "三、读取前文，组装模型",
+      "topic": "单头注意力",
+      "title": "10｜注意力：预测下一字，怎样读到前文？",
+      "short_summary": "前文放进了数组，却未必进入当前预测。先按比例读三个位置，再看读取比例怎样由Q、K算出。",
+      "goal": "算清一行注意力，并区分比例与读出内容。",
+      "suggested_reading_minutes": 45
+    },
+    {
+      "id": "11",
+      "source": "chapters/11-causal-mask/README.md",
+      "folder": "11-causal-mask",
+      "module": "三、读取前文，组装模型",
+      "topic": "因果掩码",
+      "title": "11｜因果掩码：并行训练为什么不算偷看答案？",
+      "short_summary": "未来答案已经在内存里，当前位置为什么仍读不到？画出允许的连接，再把不该存在的分数在归一化前排除。",
+      "goal": "解释因果可见性与掩码的正确位置。",
+      "suggested_reading_minutes": 35
+    },
+    {
+      "id": "12",
+      "source": "chapters/12-multi-head-attention/README.md",
+      "folder": "12-multi-head-attention",
+      "module": "三、读取前文，组装模型",
+      "topic": "多头注意力",
+      "title": "12｜多头注意力：各个头分别读向哪里？",
+      "short_summary": "同一句话可以有不同读法。先看一套比例的限制，再让数字格子实际拆头、各自汇总，最后按位置拼回。",
+      "goal": "解释分头、各头独立配比与拼回，识别同形状的错轴。",
+      "suggested_reading_minutes": 45
+    },
+    {
+      "id": "13",
+      "source": "chapters/13-rope/README.md",
+      "folder": "13-rope",
+      "module": "三、读取前文，组装模型",
+      "topic": "旋转位置",
+      "title": "13｜RoPE：模型怎样知道先后顺序？",
+      "short_summary": "内容换序，注意力的结果却可能不变。用两根会转动的箭头，把坐标、弧度和相对位置一步步接起来。",
+      "goal": "把二维旋转公式接到相对位置与Q/K点积。",
+      "suggested_reading_minutes": 50
+    },
+    {
+      "id": "14",
+      "source": "chapters/14-swiglu/README.md",
+      "folder": "14-swiglu",
+      "module": "三、读取前文，组装模型",
+      "topic": "逐位置前馈",
+      "title": "14｜SwiGLU：读完前文以后，还要怎么算？",
+      "short_summary": "两个条件怎样共同影响一个输出？由当前输入再算一组乘数，直接看见变号、归零、缩小与放大。",
+      "goal": "解释门控的输入依赖与逐位置加工。",
+      "suggested_reading_minutes": 40
+    },
+    {
+      "id": "15",
+      "source": "chapters/15-residual-and-rmsnorm/README.md",
+      "folder": "15-residual-and-rmsnorm",
+      "module": "三、读取前文，组装模型",
+      "topic": "残差与归一化",
+      "title": "15｜残差与RMSNorm：为什么留一条原路？",
+      "short_summary": "新分支暂时返回零，原来算出的信息还在吗？先看旁路留下什么，再把分支收到的数调整到合适尺度。",
+      "goal": "把分头、旋转与因果汇总封成注意力组件，再接残差与Pre-Norm模型块。",
+      "suggested_reading_minutes": 50
+    },
+    {
+      "id": "16",
+      "source": "chapters/16-transformer/README.md",
+      "folder": "16-transformer",
+      "module": "三、读取前文，组装模型",
+      "topic": "完整模型前向",
+      "title": "16｜完整模型：跟着“欢”这个字走一遍",
+      "short_summary": "从14个编号进入，追住“欢”的那一行：64项表示怎样改变，最后又怎样算出79个候选分数？",
+      "goal": "组装完整模型，定位表示、参数和词表分数。",
+      "suggested_reading_minutes": 50
+    },
+    {
+      "id": "17",
+      "source": "chapters/17-pretraining/README.md",
+      "folder": "17-pretraining",
+      "module": "四、训练、生成与微调",
+      "topic": "第一次预训练",
+      "title": "17｜预训练：训练题熟了，新题为什么更差？",
+      "short_summary": "训练损失一路降低，留出损失却上升。先看两组题差了什么，再沿一批数据走完一次真实参数更新。",
+      "goal": "完成预训练，并依据数据差异解释评估变化。",
+      "suggested_reading_minutes": 45
+    },
+    {
+      "id": "18",
+      "source": "chapters/18-generation/README.md",
+      "folder": "18-generation",
+      "module": "四、训练、生成与微调",
+      "topic": "逐字生成",
+      "title": "18｜生成：一句话究竟做了几次选择？",
+      "short_summary": "六个可见字符，却做了七次选择。把每个选出的字接回输入，追完前缀增长、采样和EOS结束。",
+      "goal": "写出生成循环并解释随机选择与停止条件。",
+      "suggested_reading_minutes": 40
+    },
+    {
+      "id": "19",
+      "source": "chapters/19-fine-tuning/README.md",
+      "folder": "19-fine-tuning",
+      "module": "四、训练、生成与微调",
+      "topic": "问答微调",
+      "title": "19｜监督微调：会续写，为何还不会回答？",
+      "short_summary": "会续写的模型开始回答问题，旧能力却可能退化。先对齐答案标签，再固定评价题比较学习率与混训，检查收益和代价。",
+      "goal": "构造答案监督，并通过三方法、三种子的固定对照诊断微调取舍。",
+      "suggested_reading_minutes": 70
+    },
+    {
+      "id": "20",
+      "source": "chapters/20-full-workflow/README.md",
+      "folder": "20-full-workflow",
+      "module": "四、训练、生成与微调",
+      "topic": "闭环与原理检验",
+      "title": "20｜全流程：把预训练、微调和生成串起来",
+      "short_summary": "把输入、标签、参数与权重接回全流程。先交换事实重训，再独立接入小唐和橘子，验证自己的实现并解释新句式为何仍会漏词。",
+      "goal": "独立完成数据、词表、模型、训练和重载的迁移实验，并解释成功与失败。",
+      "suggested_reading_minutes": 90
+    },
+    {
+      "id": "end",
+      "source": "chapters/end/README.md",
+      "folder": "结束语",
+      "module": "结束语",
+      "topic": "结束语",
+      "title": "结束语｜那句“红色的苹果”，现在可以解释清楚了",
+      "short_summary": "从只看见一句输出，到能追踪计算、参数和训练目标。回望这个小模型，再选择真实语料、任务微调或公开模型继续走。",
+      "goal": "确认学习成果，选择一个能独立推进的下一步。",
+      "suggested_reading_minutes": 20
+    }
+  ]
+}

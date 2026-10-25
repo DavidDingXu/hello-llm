@@ -1,0 +1,31 @@
+{
+  "kind": "hand_calc",
+  "x": [
+    3.0,
+    4.0
+  ],
+  "eps": 1e-05,
+  "rms": 3.535535320146017,
+  "normalized": [
+    0.8485277980128058,
+    1.1313703973504077
+  ],
+  "rms_after": 0.99999960000024,
+  "mean_after": 0.9899490976816068,
+  "residual_branch": [
+    6.0,
+    8.0
+  ],
+  "residual_output": [
+    9.0,
+    12.0
+  ],
+  "input_gradient": [
+    3.0,
+    3.0
+  ],
+  "identity_when_branch_zero": [
+    3.0,
+    4.0
+  ]
+}

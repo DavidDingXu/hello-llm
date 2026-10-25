@@ -1,0 +1,242 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<meta name="source-sha256" content="7d561af9f5dd3b1f43f5663a3f7fa7f3ac440d85dee8a663a49ac734d5bb2213"><meta name="description" content="前三条都能对上，第四条却一定出错。沿着这四个输入，看看多接一层为何还不够，ReLU又改变了什么。"><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/03.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="03｜非线性：四行规则，为什么乘加函数做不到？ · Hello LLM"><meta property="og:description" content="前三条都能对上，第四条却一定出错。沿着这四个输入，看看多接一层为何还不够，ReLU又改变了什么。"><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/03.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>03｜非线性：四行规则，为什么乘加函数做不到？ · Hello LLM</title>
+<link rel="icon" href="../assets/favicon.png" type="image/png">
+<script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
+<script defer src="../code/visuals/reading_site/search-index.js?v=ea96857fef58"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="03" data-alternate-sections="[&quot;the-first-three-rows-work-but-the-fourth-does-not&quot;, &quot;can-another-layer-get-around-the-problem&quot;, &quot;remove-negative-differences-before-adding&quot;, &quot;put-the-two-branches-back-into-a-network&quot;, &quot;change-one-line-and-see-whether-the-behavior-disappears&quot;, &quot;two-exercises-with-changed-numbers&quot;]"><a class="skip-link" href="#main-content">跳到正文</a>
+<header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="打开课程目录" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+<a class="brand" href="../index.html" aria-label="Hello LLM · 学习站首页">
+<img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>手写小模型，看懂大模型</small></span></a>
+<nav class="header-nav" aria-label="主导航"><a href="../index.html#curriculum">学习路径</a><a href="../index.html#experiments">交互实验</a><a href="https://github.com/DavidDingXu/hello-llm" target="_blank" rel="noopener">GitHub <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a></nav>
+<div class="header-controls"><a class="language-switch" href="03.en.html" lang="en" aria-label="Switch to English">EN</a><button class="icon-button theme-toggle js-only" type="button" aria-label="切换到深色主题" title="切换到深色主题"><span class="theme-light-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A9 9 0 0 1 9.5 3.5a9 9 0 1 0 11 11Z"/></svg></span><span class="theme-dark-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></span></button>
+<button class="search-trigger js-only" type="button" aria-label="搜索课程"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><span>搜索课程</span><kbd>⌘ K</kbd></button>
+</div></div><div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div></header><div class="sidebar-scrim" hidden></div><div class="reader-layout"><aside class="course-sidebar" id="course-sidebar" aria-label="课程目录">
+<div class="sidebar-heading"><a href="../index.html">课程目录</a><button class="icon-button menu-close js-only" type="button" aria-label="关闭课程目录"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+<nav aria-label="全部文章"><div class="sidebar-guides"><a class="lesson-link" data-lesson="intro" href="../course/intro.html"><span class="lesson-number">·</span><span>专栏介绍</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="00" href="../course/00.html"><span class="lesson-number">·</span><span>开篇导学</span><span class="lesson-state" aria-hidden="true"></span></a></div><details class="sidebar-stage" open><summary><span class="stage-index">第一部分</span>让数值网络学起来</summary><a class="lesson-link" data-lesson="01" href="../course/01.html"><span class="lesson-number">01</span><span>神经元</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="02" href="../course/02.html"><span class="lesson-number">02</span><span>向量与矩阵</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="03" href="../course/03.html" aria-current="page"><span class="lesson-number">03</span><span>多层与非线性</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="04" href="../course/04.html"><span class="lesson-number">04</span><span>梯度与参数更新</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="05" href="../course/05.html"><span class="lesson-number">05</span><span>手写反向传播</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="06" href="../course/06.html"><span class="lesson-number">06</span><span>让网络学起来</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">第二部分</span>把文字接进来</summary><a class="lesson-link" data-lesson="07" href="../course/07.html"><span class="lesson-number">07</span><span>文字与向量</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="08" href="../course/08.html"><span class="lesson-number">08</span><span>分数与概率</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="09" href="../course/09.html"><span class="lesson-number">09</span><span>文本训练题</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">第三部分</span>读取前文，组装模型</summary><a class="lesson-link" data-lesson="10" href="../course/10.html"><span class="lesson-number">10</span><span>单头注意力</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="11" href="../course/11.html"><span class="lesson-number">11</span><span>因果掩码</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="12" href="../course/12.html"><span class="lesson-number">12</span><span>多头注意力</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="13" href="../course/13.html"><span class="lesson-number">13</span><span>旋转位置</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="14" href="../course/14.html"><span class="lesson-number">14</span><span>逐位置前馈</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="15" href="../course/15.html"><span class="lesson-number">15</span><span>残差与归一化</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="16" href="../course/16.html"><span class="lesson-number">16</span><span>完整模型前向</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">第四部分</span>预训练、生成与微调</summary><a class="lesson-link" data-lesson="17" href="../course/17.html"><span class="lesson-number">17</span><span>第一次预训练</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="18" href="../course/18.html"><span class="lesson-number">18</span><span>逐字生成</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="19" href="../course/19.html"><span class="lesson-number">19</span><span>问答微调</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="20" href="../course/20.html"><span class="lesson-number">20</span><span>闭环与原理检验</span><span class="lesson-state" aria-hidden="true"></span></a></details><a class="lesson-link" data-lesson="end" href="../course/end.html"><span class="lesson-number">·</span><span>结束篇</span><span class="lesson-state" aria-hidden="true"></span></a></nav></aside><main class="reader-main" id="main-content"><div class="article-context"><span>让数值网络学起来</span><div class="article-actions"><button type="button" class="copy-page-link js-only">复制链接</button><button type="button" class="focus-toggle js-only" aria-pressed="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg><span>专注阅读</span></button></div></div>
+<div class="mobile-context"><nav class="reading-route" aria-label="本篇路线"><details><summary>本篇目录</summary><div class="toc">
+<ul>
+<li><a href="#前三行都对第四行却不对了">前三行都对，第四行却不对了</a></li>
+<li><a href="#再接一层能绕过去吗">再接一层，能绕过去吗？</a></li>
+<li><a href="#相加之前把负差值截掉">相加之前，把负差值截掉</a></li>
+<li><a href="#把刚才两条分支装回网络">把刚才两条分支装回网络</a></li>
+<li><a href="#只改一行看看结果会不会消失">只改一行，看看结果会不会消失</a></li>
+<li><a href="#两道改数题">两道改数题</a></li>
+</ul>
+</div>
+</details></nav><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="减小正文字号">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="增大正文字号">A+</button></div></div><article id="article-body"><h1 id="03非线性四行规则为什么乘加函数做不到">03｜非线性：四行规则，为什么乘加函数做不到？</h1>
+<p>手写小模型，看懂大模型 · 第 03 讲</p>
+<p>两个输入相同，输出 0；不同，输出 1。用 <code>if</code> 写，几行就结束了。</p>
+<p>换成上一讲的乘加函数，事情却没有这么顺。能不能挑出一组参数，不为每一种输入单独写规则，就同时给出下面四个结果？可以先试着填一填权重和偏置。</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>x₁</th>
+<th>x₂</th>
+<th>目标输出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+</tr>
+</tbody>
+</table></div>
+<p>这四条规则叫<strong>异或</strong>，常写作 XOR。用它检查函数很方便：全部答案都已知，哪条没满足立刻看得见。</p>
+<h2 id="前三行都对第四行却不对了">前三行都对，第四行却不对了</h2>
+<p>最朴素的办法是写一个乘加函数：</p>
+<p><strong>y = a×x₁ + b×x₂ + c</strong></p>
+<p>试着让它精确满足上表。输入 <code>(0, 0)</code> 要得到 0，迫使 <code>c=0</code>；输入 <code>(1, 0)</code> 要得到 1，接着迫使 <code>a=1</code>；输入 <code>(0, 1)</code> 要得到 1，又迫使 <code>b=1</code>。</p>
+<p>三个参数已经确定。第四个输入 <code>(1, 1)</code> 只能得到 <strong>1+1=2</strong>，目标却是 0。换参数就会破坏前三条要求。</p>
+<p>前三条已把参数定死，第四条与它们冲突。这个仿射函数无法精确满足四个目标。</p>
+<h2 id="再接一层能绕过去吗">再接一层，能绕过去吗？</h2>
+<p>第一讲用单输入算过：两次乘加展开后，仍是一条直线。现在换成向量也一样。</p>
+<p>若先算 <code>h=Ax+a</code>，再算 <code>y=Bh+b</code>，把第一式代入第二式：</p>
+<p><strong>y = B(Ax+a)+b = (BA)x + (Ba+b)</strong></p>
+<p>大写 <code>A、B</code> 是两层权重矩阵，小写 <code>a、b</code> 是两层偏置；它们在这次计算中固定。合起来的 <code>BA</code> 是一组新权重，<code>Ba+b</code> 是一组新偏置。两层仍可合并成对原输入的一次乘加。</p>
+<p>所以，再抄一层乘加，最后仍会回到那三项参数的矛盾。第一讲加入的 ReLU 在这里就有用了：它能在乘加之间保留一次无法被展开消掉的转折。</p>
+<h2 id="相加之前把负差值截掉">相加之前，把负差值截掉</h2>
+<p>回看四条目标。两项一样时，差值为 0；不一样时，差值可能是 1，也可能是 −1。我们希望这两种情况都得到正的 1。</p>
+<p>可以把两个方向的差值各算一遍。直接相加会抵消，所以每条分支先截去负半边。</p>
+<p>第一条分支计算 <code>x₁−x₂</code>，再交给第01讲认识的 ReLU：</p>
+<p><strong>h₁ = ReLU(x₁−x₂)</strong></p>
+<p>当 <code>x₁&gt;x₂</code> 时保留正差值，反过来就变成 0。第二条分支交换顺序：</p>
+<p><strong>h₂ = ReLU(x₂−x₁)</strong></p>
+<p>它在 <code>x₂&gt;x₁</code> 时保留正差值。最后相加：</p>
+<p><strong>y = h₁+h₂</strong></p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/03-nonlinearity/images/web/01-%E6%9C%BA%E5%88%B6.svg" width="1540" height="470"><img data-full-figure="../chapters/03-nonlinearity/images/01-%E6%9C%BA%E5%88%B6.svg" alt="两个差值分别经过ReLU，再由输出层相加" src="../chapters/03-nonlinearity/images/01-%E6%9C%BA%E5%88%B6.svg"  width="1080" height="1845" loading="eager" decoding="async" /></picture></p>
+<p>沿图中一条分支读完再换另一条：先看减法结果，再看 ReLU 是否把它置为 0，最后看留下的值怎样进入输出层。参数固定时，同一分支会因输入不同而进入不同区间。</p>
+<p>以输入 <code>(0, 1)</code> 为例：第一条分支先得 <code>−1</code>，ReLU 后是 0；第二条分支先得 <code>1</code>，ReLU 后还是 1。两者相加得 1，正好是这一行的目标。</p>
+<p>把两个乘加结果并排放成 <code>z=[z₁,z₂]</code>，ReLU处理后放成 <code>h=[h₁,h₂]</code>，最后将 h 的两项相加。四条输入得到：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>输入</th>
+<th>z</th>
+<th>h</th>
+<th>输出 y</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[0,0]</code></td>
+<td><code>[0,0]</code></td>
+<td><code>[0,0]</code></td>
+<td>0</td>
+</tr>
+<tr>
+<td><code>[0,1]</code></td>
+<td><code>[−1,1]</code></td>
+<td><code>[0,1]</code></td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>[1,0]</code></td>
+<td><code>[1,−1]</code></td>
+<td><code>[1,0]</code></td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>[1,1]</code></td>
+<td><code>[0,0]</code></td>
+<td><code>[0,0]</code></td>
+<td>0</td>
+</tr>
+</tbody>
+</table></div>
+<p>这次第四行也得到 0，四条要求同时满足。<code>z</code> 是乘加后的值，<code>h</code> 是 ReLU 处理后的值；对照这两列，就能找到结果改变的那一步。</p>
+<p>再把两个差值都记在一个变量 <code>d=x₁−x₂</code> 上，输出就是 <code>ReLU(d)+ReLU(−d)</code>：负半边取相反数，正半边保留，整体得到 <code>|d|</code>。</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/03-nonlinearity/images/web/02-%E9%AA%8C%E8%AF%81.svg" width="1504" height="838.6"><img alt="XOR四项结果，以及两个ReLU分支沿差值轴合成折线" src="../chapters/03-nonlinearity/images/02-%E9%AA%8C%E8%AF%81.svg"  width="1080" height="2070" loading="lazy" decoding="async" /></picture></p>
+<p>折线图横轴是<strong>差值 <code>d</code></strong>，纵轴是各分支或相加后的数值。四点图则以 <code>x₁、x₂</code> 为两根输入轴，圆点内标目标；可以与上表的网络输出核对。</p>
+<p>小数输入也会得到两项的绝对差，但四条二值规则没有规定新输入的目标。文末会用 <code>[0.5, 1]</code> 检查这个区别。</p>
+<h2 id="把刚才两条分支装回网络">把刚才两条分支装回网络</h2>
+<p>把两条分支排成上一讲的矩阵，参数就是：</p>
+<pre><code class="language-text">W1 = [[ 1, -1],     b1 = [0, 0]
+      [-1,  1]]
+
+W2 = [[1, 1]]       b2 = [0]
+</code></pre>
+<p>第一层有两个输出，分别是 <code>h₁、h₂</code>。它们位于原始输入和最终输出之间，所以这层叫<strong>隐藏层</strong>。第二层读取它们，得到一个输出。</p>
+<p>整个结构简写为 <strong>2→2→1</strong>：两项输入、两个隐藏单元、一项输出。输入的两个点只放数据，不另外配一组权重；可训练参数是 <code>W1、b1、W2、b2</code>，共 <code>4+2+2+1=9</code> 个数。</p>
+<p>这里可以逐项解释隐藏值，因为参数是我们亲手构造的。一般网络的各维不会自动对应预先指定的含义。本例只在隐藏层加 ReLU，输出层直接把两项相加。</p>
+<h2 id="只改一行看看结果会不会消失">只改一行，看看结果会不会消失</h2>
+<p>在配套代码目录运行下面的代码，打印四条输入的结果，再去掉 ReLU 重跑。导入的 <code>linear</code> 做逐行乘加，<code>relu</code> 做 <code>max(0, value)</code>，只需 Python 标准功能。</p>
+<pre><code class="language-python">from tiny_lm.scalar import linear, relu
+
+
+def forward(inputs, params):
+    &quot;&quot;&quot;用两层参数计算一份输入，返回预测值和本次的中间结果。&quot;&quot;&quot;
+    # 第一层每行权重产生一个 z，再逐项经过 ReLU 得到隐藏值。
+    z = linear(inputs, params[&quot;W1&quot;], params[&quot;b1&quot;])
+    hidden = [relu(value) for value in z]
+    # 输出层读取两个隐藏值；它只做乘加，列表中只有一个结果。
+    prediction = linear(hidden, params[&quot;W2&quot;], params[&quot;b2&quot;])[0]
+    # 缓存输入、激活前后数值，后面反向计算会读取它们；这里不改参数。
+    cache = {
+        &quot;x&quot;: list(inputs), &quot;z&quot;: z, &quot;h&quot;: hidden,
+        &quot;prediction&quot;: prediction,
+    }
+    return prediction, cache
+
+
+# 手工指定两条差值分支的参数；W1 的两行对应两个隐藏单元。
+params = {
+    &quot;W1&quot;: [[1, -1], [-1, 1]], &quot;b1&quot;: [0, 0],
+    &quot;W2&quot;: [[1, 1]], &quot;b2&quot;: [0],
+}
+samples = [[0, 0], [0, 1], [1, 0], [1, 1]]
+for x in samples:
+    # 四份输入复用同一组参数，分别查看 z、ReLU 后的 h 与最终输出。
+    prediction, cache = forward(x, params)
+    print(x, cache[&quot;z&quot;], cache[&quot;h&quot;], prediction)
+</code></pre>
+<p><code>params</code> 用字典保存四组参数，<code>params["W1"]</code> 取第一层权重。第一层返回两个数；列表推导式将它们分别送入 ReLU。第二层只返回一个数，所以用 <code>[0]</code> 取出这一项。</p>
+<p><code>cache</code> 是一个保存中间结果的字典，英文意思是缓存。此时把它打印出来便于核对；第 05 讲计算梯度还会用到这些前向数值。<strong>保存缓存不会调整参数。</strong> <code>forward</code> 从输入一路算到输出，这个过程叫<strong>前向计算</strong>。</p>
+<p>得到 <code>[0, 1, 1, 0]</code> 后，保持全部参数不动，只把 <code>hidden = [relu(value) for value in z]</code> 改成 <code>hidden = z</code>。再次运行，输出变成：</p>
+<p><strong>y = (x₁−x₂)+(x₂−x₁)=0</strong></p>
+<p>四个结果全变成了 0：之前被 ReLU 截掉的负差值重新回来，把正差值抵消了。</p>
+<p>ReLU 按正负数处理，对所有样本使用同一条规则。它与这 9 个参数组合后，四条 XOR 目标才同时得到满足。参数目前仍是手工挑的，尚未训练。</p>
+<section class="python-lab" id="python-lab" aria-labelledby="python-lab-title">
+<div class="lab-heading"><span>PYTHON · 可编辑实验</span><h3 id="python-lab-title">改一改，运行看看</h3></div>
+<p class="lab-challenge">关掉隐藏层的 ReLU，再看四组 XOR 输入的结果。</p>
+<div class="lab-controls"><label for="lab-use_relu">隐藏层激活<select id="lab-use_relu" data-variable="use_relu"><option value="True">ReLU</option><option value="False">不使用激活</option></select></label></div>
+<details class="lab-editor"><summary>修改 Python 代码</summary>
+<label class="lab-editor-label" for="lab-code">Python 代码</label>
+<p class="lab-editor-help" id="lab-code-help">Tab 缩进，Shift + Tab 反缩进；按 Esc 后再按 Tab 离开代码框。Ctrl / ⌘ + Enter 运行。</p>
+<textarea id="lab-code" class="lab-code" aria-describedby="lab-code-help" wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" rows="13">from tiny_lm.scalar import linear, relu
+
+use_relu = True
+weights1 = [[1, -1], [-1, 1]]
+weights2 = [[1, 1]]
+
+for inputs in ([0, 0], [0, 1], [1, 0], [1, 1]):
+    hidden = linear(inputs, weights1, [0, 0])
+    if use_relu:
+        hidden = [relu(value) for value in hidden]
+    output = linear(hidden, weights2, [0])[0]
+    print(inputs, &quot;-&gt;&quot;, output)
+</textarea>
+</details>
+<div class="lab-actions"><button type="button" class="button primary lab-run" disabled>运行代码</button><button type="button" class="button lab-stop" disabled>停止</button><button type="button" class="button lab-reset" disabled>恢复示例</button><button type="button" class="button lab-download" disabled>下载代码</button></div>
+<p class="lab-status" role="status">点击运行，结果显示在下面。</p>
+<pre class="lab-output" tabindex="0" aria-label="运行输出">等待运行…</pre>
+<noscript>启用 JavaScript 后可在这里运行代码，也可以复制示例在本地执行。</noscript>
+</section><h2 id="两道改数题">两道改数题</h2>
+<ol>
+<li>保留 ReLU，把输入改成 <code>[0.5, 1]</code>。两条分支的 <code>z、h</code> 和最终输出分别是多少？这个输出是由四条训练目标唯一决定的吗？</li>
+<li>去掉 ReLU，分别输入 <code>[0, 1]</code> 和 <code>[1, 0]</code>，结果是什么？换一组纯乘加参数，能否精确满足四条 XOR 目标？</li>
+</ol>
+<details class="answer">
+<summary>参考答案</summary>
+<p>答案：第一题，<code>z=[−0.5, 0.5]</code>、<code>h=[0, 0.5]</code>，输出 <strong>0.5</strong>。它由当前函数和参数决定，四条二值目标没有规定这份新输入的答案。第二题，两个输出都为 <strong>0</strong>；换参数仍不能同时精确满足四条要求，因为所有纯乘加层仍能合并成一个仿射函数，开头的矛盾仍然成立。</p>
+</details>
+<p>在 <code>code</code> 目录运行：</p>
+<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+python -m lessons.l03
+</code></pre>
+<p>配套入口：<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l03.py">运行入口</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/manual_mlp.py">两层前向实现</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md">环境说明</a></p>
+<p>源码导航：<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/manual_mlp.py#L10">manual_mlp.py · forward</a>。</p></article><details class="lesson-video video-ready" id="lesson-video"><summary><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></svg>观看配套视频<span class="video-duration">4:30</span></summary><div class="bilibili-embed"><iframe data-src="https://player.bilibili.com/player.html?bvid=BV1fhHg67ET6&amp;p=1&amp;autoplay=0&amp;danmaku=0" title="03｜非线性：四行规则，为什么乘加函数做不到？ · B站视频" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><p class="video-actions"><a href="https://www.bilibili.com/video/BV1fhHg67ET6/?p=1" target="_blank" rel="noopener">在 B 站高清观看 ↗</a></p></div></details>
+<div class="reader-feedback"><span>这一讲有疑问？</span><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=question.yml&amp;title=%5B%E5%AD%A6%E4%B9%A0%5D+03%EF%BD%9C%E9%9D%9E%E7%BA%BF%E6%80%A7%EF%BC%9A%E5%9B%9B%E8%A1%8C%E8%A7%84%E5%88%99%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B9%98%E5%8A%A0%E5%87%BD%E6%95%B0%E5%81%9A%E4%B8%8D%E5%88%B0%EF%BC%9F&amp;location=03%EF%BD%9C%E9%9D%9E%E7%BA%BF%E6%80%A7%EF%BC%9A%E5%9B%9B%E8%A1%8C%E8%A7%84%E5%88%99%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B9%98%E5%8A%A0%E5%87%BD%E6%95%B0%E5%81%9A%E4%B8%8D%E5%88%B0%EF%BC%9F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F03.html" target="_blank" rel="noopener">提出学习疑问</a><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=content.yml&amp;title=%5B%E5%8B%98%E8%AF%AF%5D+03%EF%BD%9C%E9%9D%9E%E7%BA%BF%E6%80%A7%EF%BC%9A%E5%9B%9B%E8%A1%8C%E8%A7%84%E5%88%99%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B9%98%E5%8A%A0%E5%87%BD%E6%95%B0%E5%81%9A%E4%B8%8D%E5%88%B0%EF%BC%9F&amp;location=03%EF%BD%9C%E9%9D%9E%E7%BA%BF%E6%80%A7%EF%BC%9A%E5%9B%9B%E8%A1%8C%E8%A7%84%E5%88%99%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B9%98%E5%8A%A0%E5%87%BD%E6%95%B0%E5%81%9A%E4%B8%8D%E5%88%B0%EF%BC%9F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F03.html" target="_blank" rel="noopener">反馈内容勘误</a></div><nav class="chapter-nav" aria-label="前后篇"><a href="../course/02.html"><span>上一篇 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg></span><strong>02｜向量与矩阵：算两个数，要复制两遍代码吗？</strong></a><a href="../course/04.html"><span>下一篇 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><strong>04｜梯度：方向对了，为什么也会越改越差？</strong></a></nav><footer class="reader-footer">Hello LLM · 手写小模型，看懂大模型<details class="community-mini"><summary>关注与交流 · 好好用 AI</summary><div class="community-section"><div><h2>关注与交流 · 好好用 AI</h2><p>交流学习中的问题与实践心得。</p><p>代码问题和勘误，欢迎在 <a href="https://github.com/DavidDingXu/hello-llm/issues" target="_blank" rel="noopener">GitHub 提交 Issue</a>。</p></div><a class="qr-link" href="../code/assets/wechat-official-account.jpg" target="_blank" rel="noopener" aria-label="查看好好用 AI 公众号二维码原图"><img src="../code/assets/wechat-official-account.jpg" alt="好好用 AI 微信公众号二维码" width="130" height="130" loading="lazy"><p class="qr-caption">微信扫码 · 点击查看原图</p></a></div></details></footer></main>
+<aside class="context-sidebar" aria-label="本篇辅助导航"><div class="context-inner"><nav class="reading-route" aria-label="本篇路线"><details open><summary>本篇路线</summary><div class="toc">
+<ul>
+<li><a href="#前三行都对第四行却不对了">前三行都对，第四行却不对了</a></li>
+<li><a href="#再接一层能绕过去吗">再接一层，能绕过去吗？</a></li>
+<li><a href="#相加之前把负差值截掉">相加之前，把负差值截掉</a></li>
+<li><a href="#把刚才两条分支装回网络">把刚才两条分支装回网络</a></li>
+<li><a href="#只改一行看看结果会不会消失">只改一行，看看结果会不会消失</a></li>
+<li><a href="#两道改数题">两道改数题</a></li>
+</ul>
+</div>
+</details></nav>
+<section class="reading-settings"><h2>阅读设置</h2><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="减小正文字号">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="增大正文字号">A+</button></div><span>建议预留 35 分钟</span><p class="lesson-goal">解释叠层与增加非线性的区别。</p></section>
+</div></aside></div><dialog class="search-dialog" id="search-dialog" aria-labelledby="search-label">
+<form method="dialog" class="search-heading"><label for="course-search" id="search-label"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg>搜索课程</label><button class="icon-button" aria-label="关闭搜索"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></form>
+<input id="course-search" type="search" placeholder="搜索概念、代码或问题…" autocomplete="off" spellcheck="false">
+<p class="search-status" id="search-status" role="status">输入关键词，搜索全部 23 篇文章。</p>
+<div class="search-results" id="search-results"></div><footer>↑ ↓ 选择结果 <span>Enter 打开 · Esc 关闭</span></footer></dialog>
+<dialog class="experiment-viewer" id="experiment-viewer" aria-labelledby="experiment-title"><header><strong id="experiment-title">交互实验</strong><div><a id="experiment-standalone" target="_blank" rel="noopener">独立打开 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button" id="close-experiment" type="button">返回阅读 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe id="experiment-frame" title="交互实验" src="about:blank"></iframe></dialog>
+<dialog class="image-viewer" id="image-viewer" aria-label="放大配图">
+<header><span>查看配图</span><div class="image-actions"><button type="button" id="image-zoom-out" aria-label="缩小配图">−</button><output id="image-scale" aria-label="缩放比例">100%</output><button type="button" id="image-zoom-in" aria-label="放大配图">＋</button><button type="button" id="image-size">原尺寸</button><button type="button" id="close-image" autofocus>关闭</button></div></header>
+<div class="image-canvas"><p id="image-status" role="status" hidden></p><img id="large-image" alt=""></div><footer><p id="image-description"></p><a id="original-image" target="_blank" rel="noopener">打开原图 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a></footer></dialog>
+<div class="toast" id="toast" role="status"></div></body></html>

@@ -1,0 +1,333 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<meta name="source-sha256" content="fcc7215f31d2675f61f8d40bcb5fb3cf044826dbfc6482faf1973727878fad4d"><meta name="description" content="Have the same small network repeatedly run forward, calculate loss, backpropagate, and update. Observe 500 updates, then uncover a shape error that leaves a nonzero loss even when every prediction is correct."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/06.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="06 | The Training Loop: What Happens to Four Predictions After 500 Updates? · Hello LLM"><meta property="og:description" content="Have the same small network repeatedly run forward, calculate loss, backpropagate, and update. Observe 500 updates, then uncover a shape error that leaves a nonzero loss even when every prediction is correct."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/06.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>06 | The Training Loop: What Happens to Four Predictions After 500 Updates? · Hello LLM</title>
+<link rel="icon" href="../assets/favicon.png" type="image/png">
+<script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
+<script defer src="../code/visuals/reading_site/search-index.en.js?v=11db81a4dd60"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="06" data-alternate-sections="[&quot;换了工具同一个例子还算得对吗&quot;, &quot;一轮训练先认清五个动作&quot;, &quot;把刚才做过的运算记录下来&quot;, &quot;下一轮为什么先清梯度&quot;, &quot;现在回到那四条错误预测&quot;, &quot;第-100-次到第-500-次发生了什么&quot;, &quot;两道实验题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="Open course contents" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></path></svg></button>
+<a class="brand" href="../index.en.html" aria-label="Hello LLM · 学习站首页">
+<img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>Build a Small Model, Understand Large Models</small></span></a>
+<nav class="header-nav" aria-label="Main navigation"><a href="../index.en.html#curriculum">Learning path</a><a href="../index.en.html#experiments">Experiments</a><a href="https://github.com/DavidDingXu/hello-llm" target="_blank" rel="noopener">GitHub <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a></nav>
+<div class="header-controls"><a class="language-switch" href="06.html" lang="zh-CN" aria-label="切换到中文">中文</a><button class="icon-button theme-toggle js-only" type="button" aria-label="Switch to dark theme" title="Switch to dark theme"><span class="theme-light-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A9 9 0 0 1 9.5 3.5a9 9 0 1 0 11 11Z"/></path></svg></span><span class="theme-dark-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/></circle><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></path></svg></span></button>
+<button class="search-trigger js-only" type="button" aria-label="Search course"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/></circle><path d="m16 16 4.5 4.5"/></path></svg><span>Search course</span><kbd>⌘ K</kbd></button>
+</div></div><div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div></header><div class="sidebar-scrim" hidden></div><div class="reader-layout"><aside class="course-sidebar" id="course-sidebar" aria-label="Course contents">
+<div class="sidebar-heading"><a href="../index.en.html">Course contents</a><button class="icon-button menu-close js-only" type="button" aria-label="Close course contents"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></div>
+<nav aria-label="All articles"><div class="sidebar-guides"><a class="lesson-link" data-lesson="intro" href="../course/intro.en.html"><span class="lesson-number">·</span><span>Course introduction</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="00" href="../course/00.en.html"><span class="lesson-number">·</span><span>Before we begin</span><span class="lesson-state" aria-hidden="true"></span></a></div><details class="sidebar-stage" open><summary><span class="stage-index">Part I</span>Make a numerical network learn</summary><a class="lesson-link" data-lesson="01" href="../course/01.en.html"><span class="lesson-number">01</span><span>Neurons</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="02" href="../course/02.en.html"><span class="lesson-number">02</span><span>Vectors and Matrices</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="03" href="../course/03.en.html"><span class="lesson-number">03</span><span>Multiple Layers and Nonlinearity</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="04" href="../course/04.en.html"><span class="lesson-number">04</span><span>Gradients and Parameter Updates</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="05" href="../course/05.en.html"><span class="lesson-number">05</span><span>Backpropagation by Hand</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="06" href="../course/06.en.html" aria-current="page"><span class="lesson-number">06</span><span>Making the Network Learn</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part II</span>Bring text into the network</summary><a class="lesson-link" data-lesson="07" href="../course/07.en.html"><span class="lesson-number">07</span><span>Text and Vectors</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="08" href="../course/08.en.html"><span class="lesson-number">08</span><span>Scores and Probabilities</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="09" href="../course/09.en.html"><span class="lesson-number">09</span><span>Text Training Problems</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part III</span>Read context and assemble the model</summary><a class="lesson-link" data-lesson="10" href="../course/10.en.html"><span class="lesson-number">10</span><span>Single-Head Attention</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="11" href="../course/11.en.html"><span class="lesson-number">11</span><span>Causal masks</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="12" href="../course/12.en.html"><span class="lesson-number">12</span><span>Multi-head attention</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="13" href="../course/13.en.html"><span class="lesson-number">13</span><span>Rotary position embeddings</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="14" href="../course/14.en.html"><span class="lesson-number">14</span><span>Positionwise feed-forward networks</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="15" href="../course/15.en.html"><span class="lesson-number">15</span><span>Residual connections and normalization</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="16" href="../course/16.en.html"><span class="lesson-number">16</span><span>The complete forward pass</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part IV</span>Pretrain, generate, and fine-tune</summary><a class="lesson-link" data-lesson="17" href="../course/17.en.html"><span class="lesson-number">17</span><span>The first pretraining run</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="18" href="../course/18.en.html"><span class="lesson-number">18</span><span>Character-by-character generation</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="19" href="../course/19.en.html"><span class="lesson-number">19</span><span>Question-answer fine-tuning</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="20" href="../course/20.en.html"><span class="lesson-number">20</span><span>The full workflow and checks of the principles</span><span class="lesson-state" aria-hidden="true"></span></a></details><a class="lesson-link" data-lesson="end" href="../course/end.en.html"><span class="lesson-number">·</span><span>Closing thoughts</span><span class="lesson-state" aria-hidden="true"></span></a></nav></aside><main class="reader-main" id="main-content"><div class="article-context"><span>Make a numerical network learn</span><div class="article-actions"><button type="button" class="copy-page-link js-only">Copy link</button><button type="button" class="focus-toggle js-only" aria-pressed="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></path></svg><span>Focus mode</span></button></div></div>
+<div class="mobile-context"><nav class="reading-route" aria-label="On this page"><details><summary>On this page</summary><div class="toc">
+<ul>
+<li><a href="#with-a-new-tool-does-the-same-example-still-calculate-correctly">With a new tool, does the same example still calculate correctly?</a></li>
+<li><a href="#recognize-the-five-actions-in-one-training-round">Recognize the five actions in one training round</a></li>
+<li><a href="#record-the-operations-we-just-performed">Record the operations we just performed</a></li>
+<li><a href="#why-clear-gradients-before-the-next-round">Why clear gradients before the next round?</a></li>
+<li><a href="#return-to-the-four-incorrect-predictions">Return to the four incorrect predictions</a></li>
+<li><a href="#what-happened-between-updates-100-and-500">What happened between updates 100 and 500?</a></li>
+<li><a href="#two-experimental-exercises">Two experimental exercises</a></li>
+</ul>
+</div>
+</details></nav><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="Decrease text size">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="Increase text size">A+</button></div></div><article id="article-body"><h1 id="06-the-training-loop-what-happens-to-four-predictions-after-500-updates">06 | The Training Loop: What Happens to Four Predictions After 500 Updates?</h1>
+<p>Build a Small Model, Understand Large Models · Lesson 06</p>
+<p>Feed the network four inputs in the order <code>[0, 0]</code>, <code>[0, 1]</code>, <code>[1, 0]</code>, and <code>[1, 1]</code>. It should output <code>[0, 1, 1, 0]</code>, but initially gives <code>[0.05, -0.16, 0.28, 0.15]</code>.</p>
+<p>Look just at the second prediction: it starts at −0.16, reaches 0.7592 after 100 updates, and reaches 0.9999994 after 500. The other three predictions also approach their targets. The inputs and answers never change; the program repeatedly adjusts the same parameters.</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/06-training-loop/images/en/web/02-%E9%AA%8C%E8%AF%81.svg" width="1504" height="846"><img alt="Actual training loss, a fixed-parameter control, and the changes in all four predictions" src="../chapters/06-training-loop/images/en/02-%E9%AA%8C%E8%AF%81.svg"  width="1080" height="2100" loading="eager" decoding="async" /></picture></p>
+<p>The upper plot records the actual training MSE against the number of updates. In the lower plot, open circles show initial predictions and filled circles show their positions after 500 updates. The dashed line for fixed parameters stays at the original loss.</p>
+<p>Each update requires newly calculated gradients at the current parameters. As networks grow, manually writing every backward path becomes error-prone, so we will use PyTorch's automatic differentiation. First, check it against the previous lesson's hand calculations; then train on these four inputs.</p>
+<h2 id="with-a-new-tool-does-the-same-example-still-calculate-correctly">With a new tool, does the same example still calculate correctly?</h2>
+<p>The environment is Python 3.12 with <code>torch==2.9.1</code>, running on CPU with float32. The <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md">companion code instructions</a> provide installation commands for macOS and Windows. The parameters for our check are still:</p>
+<pre><code class="language-text">W1=[[1,0],[0,1]]，b1=[0,0]
+W2=[[1,-1]]，b2=[0]
+输入=[1,2]，目标=1
+</code></pre>
+<p>Python lists store numbers, while we write loops for multiply-and-add. A PyTorch <strong>tensor</strong> also stores numbers with a shape and provides operations on them. Here, think of it as a multidimensional array with a numerical type and a shape.</p>
+<p>We place one sample horizontally, so input <code>x</code> is <code>[[1, 2]]</code>, with shape <code>[1, 2]</code>. The first 1 counts samples; the second 2 counts input components per sample.</p>
+<p>The two-layer forward pass is:</p>
+<pre><code class="language-text">hidden = ReLU(x @ W1.T + b1)
+prediction = hidden @ W2.T + b2
+</code></pre>
+<p><code>@</code> performs matrix multiplication, and <code>.T</code> swaps a parameter matrix's rows and columns. With the initial values above, the hidden values should still be <code>[[1, 2]]</code>, and the prediction should still be <code>[[-1]]</code>.</p>
+<h2 id="recognize-the-five-actions-in-one-training-round">Recognize the five actions in one training round</h2>
+<p><strong>Clear old gradients → predict with a forward pass → calculate loss → calculate gradients backward → update parameters</strong></p>
+<p>Below, <code>forward</code> performs the forward calculation we already know, <code>backward</code> corresponds to the previous lesson's reverse calculation, and <code>SGD</code> updates parameters. The code also registers parameters and prints values; on your first reading, follow these five actions. Parameters change only in the last step.</p>
+<h2 id="record-the-operations-we-just-performed">Record the operations we just performed</h2>
+<p>While executing operations, PyTorch can record which inputs and operations produced each result. These dependencies form a <strong>computation graph</strong>. During the backward pass, it follows the dependencies and applies each operation's local rule.</p>
+<p>The current sample's input and target are fixed; the parameters are what we need to adjust. A tensor's <code>requires_grad=True</code> setting tells PyTorch to track operations involving it so that gradients with respect to it can be calculated.</p>
+<p>Wrap the four tensor groups in a class. <code>nn.Module</code> organizes the network, and <code>nn.Parameter</code> registers parameters with gradient tracking enabled by default. In the code, <code>B</code> counts samples, <code>D</code> counts input components per sample, and <code>H</code> counts hidden units. After running it, focus first on the gradient for the first row, second entry of <code>W1</code>: it should still be the −8 traced in the previous lesson.</p>
+<pre><code class="language-python">import torch
+from torch import nn
+
+
+class TensorMLP(nn.Module):
+    &quot;&quot;&quot;两层网络：一行放一份输入，返回每份输入各自的一项预测。&quot;&quot;&quot;
+    def __init__(self, params):
+        super().__init__()
+        # Parameter 登记可训练浮点数；各样本共用这些权重和偏置。
+        self.W1 = nn.Parameter(torch.tensor(params[&quot;W1&quot;], dtype=torch.float32))
+        self.b1 = nn.Parameter(torch.tensor(params[&quot;b1&quot;], dtype=torch.float32))
+        self.W2 = nn.Parameter(torch.tensor(params[&quot;W2&quot;], dtype=torch.float32))
+        self.b2 = nn.Parameter(torch.tensor(params[&quot;b2&quot;], dtype=torch.float32))
+
+    def forward(self, x):
+        # x 为 [B,D]，W1 为 [H,D]；转置后乘加得到 [B,H]，每行都加 b1。
+        hidden = torch.relu(x @ self.W1.T + self.b1)
+        # 输出层只做乘加，结果为 [B,1]，允许出现负预测。
+        return hidden @ self.W2.T + self.b2
+</code></pre>
+<p>This class only defines how the network calculates; no training has happened yet. Next, create a model using the previous lesson's initial values and perform the five training actions.</p>
+<p><code>SGD</code> is the optimizer used here. Without extra options such as momentum, it applies the update rule we already learned: <code>parameter−learning rate×gradient</code>. <code>model.parameters()</code> supplies the model's registered parameters to it.</p>
+<pre><code class="language-python"># 沿用手算例的初值，先核对自动求导，再进行后面的四样本实验。
+params = {
+    &quot;W1&quot;: [[1., 0.], [0., 1.]], &quot;b1&quot;: [0., 0.],
+    &quot;W2&quot;: [[1., -1.]], &quot;b2&quot;: [0.],
+}
+model = TensorMLP(params)
+# 输入与目标都按行放样本，目标保留 [B,1]，与预测逐项对齐。
+x = torch.tensor([[1., 2.]])
+target = torch.tensor([[1.]])
+optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+
+# 清除旧 .grad，防止本次反向的结果加到上次梯度上。
+optimizer.zero_grad()
+prediction = model(x)
+# 对每份样本算平方误差再平均，得到一个可用于反向的标量损失。
+loss = (prediction - target).square().mean()
+# 只把梯度写入各参数的 .grad，此时参数值没有更新。
+loss.backward()
+print(&quot;预测、损失：&quot;, prediction.item(), loss.item())
+for name, parameter in model.named_parameters():
+    print(name, parameter.grad.tolist())
+
+# SGD 在这一步才执行“参数 - 学习率 × 梯度”。
+optimizer.step()
+with torch.no_grad():
+    # 用新参数重新检查结果；检查过程无需再建立求导记录。
+    new_prediction = model(x)
+    new_loss = (new_prediction - target).square().mean()
+print(&quot;更新后：&quot;, new_prediction.item(), new_loss.item())
+</code></pre>
+<p><code>loss.backward()</code> starts from the scalar loss and calculates gradients, storing the results in each parameter's <code>.grad</code>. It does not update parameters; the later <code>optimizer.step()</code> does that.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Handwritten result in Lesson 05</th>
+<th>Automatic differentiation here</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Prediction / loss before update</td>
+<td><code>−1 / 4</code></td>
+<td><code>−1 / 4</code></td>
+</tr>
+<tr>
+<td>W1 gradient</td>
+<td><code>[[-4, -8], [4, 8]]</code></td>
+<td>Identical</td>
+</tr>
+<tr>
+<td>b1 gradient</td>
+<td><code>[-4, 4]</code></td>
+<td>Identical</td>
+</tr>
+<tr>
+<td>W2 gradient</td>
+<td><code>[[-4, -8]]</code></td>
+<td>Identical</td>
+</tr>
+<tr>
+<td>b2 gradient</td>
+<td><code>[-4]</code></td>
+<td>Identical</td>
+</tr>
+<tr>
+<td>Prediction / loss after update</td>
+<td><code>−0.2896 / 1.66306816</code></td>
+<td>Approximately <code>−0.2896002 / 1.6630688</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>float32 stores numbers with finite precision, so the last few decimal digits can differ through rounding. Hand calculations, finite differences, and automatic differentiation check gradients of the same function at the same parameters. Automatic differentiation does not need to try increasing and decreasing each parameter individually.</p>
+<details class="optional">
+<summary>Code notes: classes, gradient tracking, and printing values</summary>
+<p><code>super().__init__()</code> initializes the model information maintained by the base class. Attributes such as <code>self.W1</code> store parameters. When we call <code>model(x)</code>, <code>nn.Module</code> calls the <code>forward</code> method we defined.</p>
+<p><code>with torch.no_grad():</code> prevents calculations in the indented checking block from being recorded for differentiation. Here, the block only reads the updated results and performs no optimizer update. Disabling gradient tracking alone does not prohibit every possible manual parameter modification.</p>
+<p><code>.item()</code> extracts the Python number from a tensor containing just one value, making it easy to print. It does not change model parameters.</p>
+</details>
+<h2 id="why-clear-gradients-before-the-next-round">Why clear gradients before the next round?</h2>
+<p>After one loop iteration, the parameters have changed. The next prediction will differ, and the loss's rate of change with respect to parameters may differ too, so we must run the forward pass and calculate gradients again. The 500 updates at the start repeat this sequence.</p>
+<p>Why is the initial <code>zero_grad()</code> necessary? By default, PyTorch <strong>adds</strong> newly calculated gradients to any existing <code>.grad</code>. In ordinary training with one update per batch, we want the update to use this batch's gradients, so we clear the old values first.</p>
+<p>The XOR experiment below groups four samples into one batch. They all read the same <code>W1</code>, and their contributions combine in <code>W1.grad</code>. Because the batch loss uses <code>.mean()</code>, each sample's contribution is multiplied by 1/4, giving the average of the four sample gradients. This is different from retaining old gradients and adding together results from several backward passes.</p>
+<h2 id="return-to-the-four-incorrect-predictions">Return to the four incorrect predictions</h2>
+<p>After the single-sample check passes, arrange the four XOR inputs from the opening as <code>[4, 2]</code>. Arrange targets <code>[0, 1, 1, 0]</code> one sample per row as <code>[4, 1]</code>.</p>
+<p>Keeping the targets two-dimensional makes each prediction subtract its own row's target. <code>.square().mean()</code> calculates four squared errors, then divides by 4 to obtain the batch MSE.</p>
+<p>This time, create a <strong>2→4→1</strong> network with four hidden units. Two units can already express XOR; we use four for this training experiment.</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/06-training-loop/images/en/web/01-%E6%9C%BA%E5%88%B6.svg" width="1540" height="470"><img data-full-figure="../chapters/06-training-loop/images/en/01-%E6%9C%BA%E5%88%B6.svg" alt="Four XOR inputs form a batch, and four hidden units produce predictions; the backward pass writes gradients, while only the update stage changes parameters" src="../chapters/06-training-loop/images/en/01-%E6%9C%BA%E5%88%B6.svg"  width="1080" height="2100" loading="lazy" decoding="async" /></picture></p>
+<p>The input in the diagram has shape <code>[4,2]</code>, and the hidden result has shape <code>[4,4]</code>: the first 4 counts samples, while the second 4 counts hidden values per sample. Each trip around the arrows recalculates all four predictions with new parameters.</p>
+<p>Continue after the earlier class definition and create a new model and optimizer. All initial values are listed below, and the learning rate is 0.1. These values produce the four initial predictions from the opening:</p>
+<pre><code class="language-python"># 沿用上段的 TensorMLP 和 torch，重新建立 2→4→1 网络及优化器。
+torch.set_num_threads(1)
+xor_params = {
+    &quot;W1&quot;: [[.4, -.2], [-.3, .5], [.2, .3], [-.4, -.1]],
+    &quot;b1&quot;: [.1, .1, -.1, .2],
+    &quot;W2&quot;: [[.5, -.4, .3, .2]], &quot;b2&quot;: [0.],
+}
+model = TensorMLP(xor_params)
+# 四行输入与四行目标一一对应，共用同一组模型参数。
+x = torch.tensor([[0., 0.], [0., 1.], [1., 0.], [1., 1.]])
+target = torch.tensor([[0.], [1.], [1.], [0.]])
+optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
+history = []
+
+for step in range(501):
+    # 每次用当前参数重新计算本批梯度，先清掉上一批留下的值。
+    optimizer.zero_grad()
+    prediction = model(x)
+    # mean 除以四个样本数；反向时每条样本的梯度贡献也乘 1/4。
+    loss = (prediction - target).square().mean()
+    if step % 100 == 0:
+        history.append((step, loss.item()))
+    if step == 500:
+        # 第 0 次尚未更新，第 500 次已更新 500 次；记录后不再多更新一次。
+        break
+    loss.backward()
+    optimizer.step()
+
+print(&quot;更新步数与损失：&quot;, history)
+# detach 仅取出不追踪梯度的结果，展平后按样本顺序打印四项预测。
+print(&quot;最终四项预测：&quot;, prediction.detach().flatten().tolist())
+</code></pre>
+<p>Why use <code>range(501)</code> for a loop that runs through 500? Iteration 0 records the initial loss before any update. Iteration 500 records the result after 500 completed updates, then stops. The number of recordings and the number of updates are different counts.</p>
+<p>The final <code>.detach()</code> obtains a result that no longer tracks gradients. <code>.flatten()</code> flattens <code>[4, 1]</code> into four entries, and <code>.tolist()</code> converts them to an easy-to-read list. These operations display results; they perform no additional training.</p>
+<h2 id="what-happened-between-updates-100-and-500">What happened between updates 100 and 500?</h2>
+<p>The <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/artifacts/first_run/xor.json">original XOR record</a> used the fixed initial values above, CPU float32, and SGD with learning rate 0.1 for 500 steps. Selected MSE values are:</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Completed updates</th>
+<th>MSE</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>0.47224998</td>
+</tr>
+<tr>
+<td>100</td>
+<td>0.03686844</td>
+</tr>
+<tr>
+<td>200</td>
+<td>0.00008998</td>
+</tr>
+<tr>
+<td>500</td>
+<td>Approximately 3.32×10⁻¹³</td>
+</tr>
+</tbody>
+</table></div>
+<p>Remove the update step, and the parameters stay at their initial values. MSE remains approximately 0.47225, matching the dashed line in this lesson's first figure.</p>
+<p>The four final outputs are:</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Target</th>
+<th>Prediction after 500 steps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[0, 0]</code></td>
+<td>0</td>
+<td>0.000000246</td>
+</tr>
+<tr>
+<td><code>[0, 1]</code></td>
+<td>1</td>
+<td>0.999999404</td>
+</tr>
+<tr>
+<td><code>[1, 0]</code></td>
+<td>1</td>
+<td>0.999999523</td>
+</tr>
+<tr>
+<td><code>[1, 1]</code></td>
+<td>0</td>
+<td>0.000000827</td>
+</tr>
+</tbody>
+</table></div>
+<p>All four inputs now produce results close to their targets, showing that this fit succeeded. Every one of them was used in training, so these results do not yet prove that the network can handle unseen problems. These direct multiply-and-add outputs are not probabilities either, as the initial negative values already show.</p>
+<h2 id="two-experimental-exercises">Two experimental exercises</h2>
+<ol>
+<li>Suppose all four predictions exactly equal the targets <code>[0,1,1,0]</code>. Keep predictions shaped <code>[4,1]</code>, but write the targets as a one-dimensional <code>[4]</code> tensor before calculating the mean squared error. Will the loss still be 0?</li>
+<li>For the same scalar parameter <code>w=1</code>, run two successive forward and backward passes for <code>L=(2w−6)²</code>, without clearing gradients or updating the parameter between them. What does <code>w.grad</code> print after each pass?</li>
+</ol>
+<details class="answer">
+<summary>Reference answers and checking code</summary>
+<p>For the first exercise, the loss is actually <strong>0.5</strong>. PyTorch automatically expands the arrays during subtraction: each prediction in <code>[4,1]</code> is subtracted from all four targets in <code>[4]</code>, producing <code>[4,4]</code>, or 16 entries. This automatic expansion is called <strong>broadcasting</strong>. Here it turns four matched problems into every possible cross-pairing.</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/06-training-loop/images/en/web/03-%E9%A2%84%E6%B5%8B%E5%85%A8%E5%AF%B9%E6%8D%9F%E5%A4%B1%E5%8D%B4%E4%B8%8D%E4%B8%BA%E9%9B%B6.svg" width="1504" height="758"><img alt="Each of four predictions is paired with all four targets; 8 of the 16 squared errors are 1, while all four correct pairings have error 0" src="../chapters/06-training-loop/images/en/03-%E9%A2%84%E6%B5%8B%E5%85%A8%E5%AF%B9%E6%8D%9F%E5%A4%B1%E5%8D%B4%E4%B8%8D%E4%B8%BA%E9%9B%B6.svg"  width="1080" height="1650" loading="lazy" decoding="async" /></picture></p>
+<p>Only the four blue-framed cells are the intended comparisons, and all have squared error 0. The incorrect code averages the entire table: <code>8/16=0.5</code>. Check sample pairing and the shape of the loss array before deciding whether parameters need adjustment.</p>
+<pre><code class="language-python"># 构造四项完全正确的预测，与上面的训练实验分开；每行仍是一份样本。
+perfect_prediction = torch.tensor([[0.], [1.], [1.], [0.]])
+flat_target = torch.tensor([0., 1., 1., 0.])
+# 故意保留一维目标：相减时交叉配对，得到16项平方误差。
+wrong_errors = (perfect_prediction - flat_target).square()
+# 还原为 [4,1] 后，才是每行预测与本行目标配对。
+correct_errors = (perfect_prediction - flat_target[:, None]).square()
+print(wrong_errors.shape, wrong_errors.mean().item())  # [4,4]，0.5
+print(correct_errors.shape, correct_errors.mean().item())  # [4,1]，0.0
+assert wrong_errors.shape == (4, 4) and wrong_errors.mean().item() == .5
+assert correct_errors.shape == (4, 1) and correct_errors.mean().item() == 0.
+</code></pre>
+<p>In <code>flat_target[:, None]</code>, <code>:</code> keeps all four entries, while <code>None</code> adds an axis of length 1, changing <code>[4]</code> into <code>[4,1]</code>. The target values do not change; what changes is which target pairs with each prediction.</p>
+<p>For the second exercise, the first gradient is <strong>−16</strong>, and the second is <strong>−32</strong>, because two identical gradients have accumulated. Check with this independent small experiment:</p>
+<pre><code class="language-python"># 沿用前面导入的 torch；本段只观察标量 w 的梯度，不做参数更新。
+w = torch.tensor(1.0, requires_grad=True)
+for _ in range(2):
+    # 每次重新前向建立计算图，但特意不清空 w.grad，观察两次梯度相加。
+    loss = (2 * w - 6).square()
+    loss.backward()
+    print(w.grad.item())  # -16.0，然后 -32.0
+</code></pre>
+<p>Each loop iteration performs a new forward pass and creates that iteration's computation graph. It does not call backward repeatedly on the same already-consumed <code>loss</code>. To keep only the second pass's gradient here, set <code>w.grad=None</code> before its forward pass. In model training, <code>optimizer.zero_grad()</code> handles this for all parameters together.</p>
+</details>
+<p>Before moving to a text model, independently record four things: the loss from one forward pass, one gradient after backpropagation, the corresponding parameter before and after the update, and the loss from a fresh forward pass after the update. Identify exactly which line makes a gradient appear and which changes a parameter, and explain the shape and accumulation exercises above. Then continue to Lesson 07. If you still equate backpropagation with updating, return to Lesson 05 and recalculate one path.</p>
+<p>This network still receives numbers. If the input becomes “小丁喜欢苹果。” (“Xiaoding likes apples.”), what should we pass to the network first?</p>
+<p>Run this from the <code>code</code> directory:</p>
+<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+python -m lessons.l06
+</code></pre>
+<p>This entry point reruns the single-step gradient check and 500-step XOR training, prints the current run's initial, 100-step, and final results, and saves them to <code>artifacts/lessons/l06.json</code>. To try 100 updates first, run <code>python -m lessons.l06 --steps 100</code>. The original experiment is saved in <code>artifacts/first_run/xor.json</code> for comparison.</p>
+<p>Companion resources: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l06.py">Entry point</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/tensor_mlp.py">Tensor network implementation</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/EXPERIMENTS.md">Complete run log</a></p>
+<p>Source navigation: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/tensor_mlp.py#L9">tensor_mlp.py · TensorMLP</a>.</p></article><details class="lesson-video video-ready" id="lesson-video"><summary><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></path></svg>Watch the companion video<span class="video-duration">5:31</span><span class="video-language">Chinese audio</span></summary><div class="bilibili-embed"><iframe data-src="https://player.bilibili.com/player.html?bvid=BV1oeHg6LEj5&amp;p=1&amp;autoplay=0&amp;danmaku=0" title="06 | The Training Loop: What Happens to Four Predictions After 500 Updates? · B站视频" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><p class="video-actions"><a href="https://www.bilibili.com/video/BV1oeHg6LEj5/?p=1" target="_blank" rel="noopener">Watch in HD on Bilibili ↗</a></p></div></details>
+<div class="reader-feedback"><span>Questions about this chapter?</span><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=question.yml&amp;title=%5B%E5%AD%A6%E4%B9%A0%5D+06+%7C+The+Training+Loop%3A+What+Happens+to+Four+Predictions+After+500+Updates%3F&amp;location=06+%7C+The+Training+Loop%3A+What+Happens+to+Four+Predictions+After+500+Updates%3F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F06.en.html" target="_blank" rel="noopener">Ask a question</a><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=content.yml&amp;title=%5B%E5%8B%98%E8%AF%AF%5D+06+%7C+The+Training+Loop%3A+What+Happens+to+Four+Predictions+After+500+Updates%3F&amp;location=06+%7C+The+Training+Loop%3A+What+Happens+to+Four+Predictions+After+500+Updates%3F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F06.en.html" target="_blank" rel="noopener">Suggest a correction</a></div><nav class="chapter-nav" aria-label="Previous and next articles"><a href="../course/05.en.html"><span>Previous <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></path></svg></span><strong>05 | Backpropagation: Must We Test All 9 Parameters One by One?</strong></a><a href="../course/07.en.html"><span>Next <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></path></svg></span><strong>07 | Embedding: How Does Text Become a Network Input?</strong></a></nav><footer class="reader-footer">Hello LLM · Build a Small Model, Understand Large Models<details class="community-mini"><summary>Stay in touch · 好好用 AI</summary><div class="community-section"><div><h2>Stay in touch · 好好用 AI</h2><p>Follow the WeChat account to discuss what you learn and build.</p><p>For bugs and corrections, <a href="https://github.com/DavidDingXu/hello-llm/issues" target="_blank" rel="noopener">open a GitHub issue</a>.</p></div><a class="qr-link" href="../code/assets/wechat-official-account.jpg" target="_blank" rel="noopener" aria-label="Open the 好好用 AI WeChat QR code"><img src="../code/assets/wechat-official-account.jpg" alt="好好用 AI WeChat official account QR code" width="130" height="130" loading="lazy"><p class="qr-caption">Scan in WeChat · Open full image</p></a></div></details></footer></main>
+<aside class="context-sidebar" aria-label="Article navigation and tools"><div class="context-inner"><nav class="reading-route" aria-label="On this page"><details open><summary>On this page</summary><div class="toc">
+<ul>
+<li><a href="#with-a-new-tool-does-the-same-example-still-calculate-correctly">With a new tool, does the same example still calculate correctly?</a></li>
+<li><a href="#recognize-the-five-actions-in-one-training-round">Recognize the five actions in one training round</a></li>
+<li><a href="#record-the-operations-we-just-performed">Record the operations we just performed</a></li>
+<li><a href="#why-clear-gradients-before-the-next-round">Why clear gradients before the next round?</a></li>
+<li><a href="#return-to-the-four-incorrect-predictions">Return to the four incorrect predictions</a></li>
+<li><a href="#what-happened-between-updates-100-and-500">What happened between updates 100 and 500?</a></li>
+<li><a href="#two-experimental-exercises">Two experimental exercises</a></li>
+</ul>
+</div>
+</details></nav>
+<section class="reading-settings"><h2>Reading settings</h2><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="Decrease text size">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="Increase text size">A+</button></div><span>Allow about 45 minutes</span><p class="lesson-goal">Write one training iteration, explain gradient clearing, and identify incorrect comparisons caused by broadcasting.</p></section>
+</div></aside></div><dialog class="search-dialog" id="search-dialog" aria-labelledby="search-label">
+<form method="dialog" class="search-heading"><label for="course-search" id="search-label"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/></circle><path d="m16 16 4.5 4.5"/></path></svg>Search course</label><button class="icon-button" aria-label="Close search"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></form>
+<input id="course-search" type="search" placeholder="Search concepts, code, or questions…" autocomplete="off" spellcheck="false">
+<p class="search-status" id="search-status" role="status">Search all 23 articles by keyword.</p>
+<div class="search-results" id="search-results"></div><footer>↑ ↓ Select result <span>Enter Open · Esc Close</span></footer></dialog>
+<dialog class="experiment-viewer" id="experiment-viewer" aria-labelledby="experiment-title"><header><strong id="experiment-title">Experiments</strong><div><a id="experiment-standalone" target="_blank" rel="noopener">Open separately <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a><button class="button" id="close-experiment" type="button">Back to reading <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></div></header><iframe id="experiment-frame" title="Experiments" src="about:blank"></iframe></dialog>
+<dialog class="image-viewer" id="image-viewer" aria-label="Enlarge figure">
+<header><span>View figure</span><div class="image-actions"><button type="button" id="image-zoom-out" aria-label="Zoom out">−</button><output id="image-scale" aria-label="Zoom level">100%</output><button type="button" id="image-zoom-in" aria-label="Enlarge figure">＋</button><button type="button" id="image-size">Actual size</button><button type="button" id="close-image" autofocus>Close</button></div></header>
+<div class="image-canvas"><p id="image-status" role="status" hidden></p><img id="large-image" alt=""></div><footer><p id="image-description"></p><a id="original-image" target="_blank" rel="noopener">Open original image <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a></footer></dialog>
+<div class="toast" id="toast" role="status"></div></body></html>

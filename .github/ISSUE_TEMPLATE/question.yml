@@ -1,0 +1,23 @@
+name: 学习疑问 / Learning question
+description: 讨论某一步计算、解释或练习中不理解的地方
+title: '[学习] '
+body:
+  - type: input
+    id: location
+    attributes:
+      label: 章节或实验位置 / Chapter or experiment
+      description: 给出文章链接、小节标题或代码位置，便于一起定位。
+    validations:
+      required: true
+  - type: textarea
+    id: question
+    attributes:
+      label: 卡在哪一步 / Your question
+      description: 写下目前的理解，以及哪一步和你的预期不同。
+    validations:
+      required: true
+  - type: textarea
+    id: attempt
+    attributes:
+      label: 已经尝试的推导或实验 / What you have tried
+      description: 如有计算过程、最小代码或实际输出，可以一起贴出。

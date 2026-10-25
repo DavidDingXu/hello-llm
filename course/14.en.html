@@ -1,0 +1,272 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<meta name="source-sha256" content="7b0c3fb945f7a343728db0711a3090361100d3c2aff0f4969f82c01dd11d3b11"><meta name="description" content="How can two conditions jointly affect one output? Compute multipliers from the current input and observe sign changes, zeroing, shrinking, and amplification."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/14.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="14 | SwiGLU: What Happens After Reading the Prefix? · Hello LLM"><meta property="og:description" content="How can two conditions jointly affect one output? Compute multipliers from the current input and observe sign changes, zeroing, shrinking, and amplification."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/14.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>14 | SwiGLU: What Happens After Reading the Prefix? · Hello LLM</title>
+<link rel="icon" href="../assets/favicon.png" type="image/png">
+<script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
+<script defer src="../code/visuals/reading_site/search-index.en.js?v=11db81a4dd60"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="14" data-alternate-sections="[&quot;先多算几项为什么还不够&quot;, &quot;第二条支路为每项算一个乘数&quot;, &quot;这次能算出1了吗&quot;, &quot;把两条支路写进代码&quot;, &quot;它有没有又去读别的位置&quot;, &quot;两道改条件的题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="Open course contents" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></path></svg></button>
+<a class="brand" href="../index.en.html" aria-label="Hello LLM · 学习站首页">
+<img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>Build a Small Model, Understand Large Models</small></span></a>
+<nav class="header-nav" aria-label="Main navigation"><a href="../index.en.html#curriculum">Learning path</a><a href="../index.en.html#experiments">Experiments</a><a href="https://github.com/DavidDingXu/hello-llm" target="_blank" rel="noopener">GitHub <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a></nav>
+<div class="header-controls"><a class="language-switch" href="14.html" lang="zh-CN" aria-label="切换到中文">中文</a><button class="icon-button theme-toggle js-only" type="button" aria-label="Switch to dark theme" title="Switch to dark theme"><span class="theme-light-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A9 9 0 0 1 9.5 3.5a9 9 0 1 0 11 11Z"/></path></svg></span><span class="theme-dark-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/></circle><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></path></svg></span></button>
+<button class="search-trigger js-only" type="button" aria-label="Search course"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/></circle><path d="m16 16 4.5 4.5"/></path></svg><span>Search course</span><kbd>⌘ K</kbd></button>
+</div></div><div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div></header><div class="sidebar-scrim" hidden></div><div class="reader-layout"><aside class="course-sidebar" id="course-sidebar" aria-label="Course contents">
+<div class="sidebar-heading"><a href="../index.en.html">Course contents</a><button class="icon-button menu-close js-only" type="button" aria-label="Close course contents"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></div>
+<nav aria-label="All articles"><div class="sidebar-guides"><a class="lesson-link" data-lesson="intro" href="../course/intro.en.html"><span class="lesson-number">·</span><span>Course introduction</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="00" href="../course/00.en.html"><span class="lesson-number">·</span><span>Before we begin</span><span class="lesson-state" aria-hidden="true"></span></a></div><details class="sidebar-stage"><summary><span class="stage-index">Part I</span>Make a numerical network learn</summary><a class="lesson-link" data-lesson="01" href="../course/01.en.html"><span class="lesson-number">01</span><span>Neurons</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="02" href="../course/02.en.html"><span class="lesson-number">02</span><span>Vectors and Matrices</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="03" href="../course/03.en.html"><span class="lesson-number">03</span><span>Multiple Layers and Nonlinearity</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="04" href="../course/04.en.html"><span class="lesson-number">04</span><span>Gradients and Parameter Updates</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="05" href="../course/05.en.html"><span class="lesson-number">05</span><span>Backpropagation by Hand</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="06" href="../course/06.en.html"><span class="lesson-number">06</span><span>Making the Network Learn</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part II</span>Bring text into the network</summary><a class="lesson-link" data-lesson="07" href="../course/07.en.html"><span class="lesson-number">07</span><span>Text and Vectors</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="08" href="../course/08.en.html"><span class="lesson-number">08</span><span>Scores and Probabilities</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="09" href="../course/09.en.html"><span class="lesson-number">09</span><span>Text Training Problems</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage" open><summary><span class="stage-index">Part III</span>Read context and assemble the model</summary><a class="lesson-link" data-lesson="10" href="../course/10.en.html"><span class="lesson-number">10</span><span>Single-Head Attention</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="11" href="../course/11.en.html"><span class="lesson-number">11</span><span>Causal masks</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="12" href="../course/12.en.html"><span class="lesson-number">12</span><span>Multi-head attention</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="13" href="../course/13.en.html"><span class="lesson-number">13</span><span>Rotary position embeddings</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="14" href="../course/14.en.html" aria-current="page"><span class="lesson-number">14</span><span>Positionwise feed-forward networks</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="15" href="../course/15.en.html"><span class="lesson-number">15</span><span>Residual connections and normalization</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="16" href="../course/16.en.html"><span class="lesson-number">16</span><span>The complete forward pass</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part IV</span>Pretrain, generate, and fine-tune</summary><a class="lesson-link" data-lesson="17" href="../course/17.en.html"><span class="lesson-number">17</span><span>The first pretraining run</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="18" href="../course/18.en.html"><span class="lesson-number">18</span><span>Character-by-character generation</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="19" href="../course/19.en.html"><span class="lesson-number">19</span><span>Question-answer fine-tuning</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="20" href="../course/20.en.html"><span class="lesson-number">20</span><span>The full workflow and checks of the principles</span><span class="lesson-state" aria-hidden="true"></span></a></details><a class="lesson-link" data-lesson="end" href="../course/end.en.html"><span class="lesson-number">·</span><span>Closing thoughts</span><span class="lesson-state" aria-hidden="true"></span></a></nav></aside><main class="reader-main" id="main-content"><div class="article-context"><span>Read context and assemble the model</span><div class="article-actions"><button type="button" class="copy-page-link js-only">Copy link</button><button type="button" class="focus-toggle js-only" aria-pressed="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></path></svg><span>Focus mode</span></button></div></div>
+<div class="mobile-context"><nav class="reading-route" aria-label="On this page"><details><summary>On this page</summary><div class="toc">
+<ul>
+<li><a href="#why-is-computing-more-values-not-enough">Why Is Computing More Values Not Enough?</a></li>
+<li><a href="#a-second-branch-computes-a-multiplier-for-each-entry">A Second Branch Computes a Multiplier for Each Entry</a></li>
+<li><a href="#can-it-produce-1-this-time">Can It Produce 1 This Time?</a></li>
+<li><a href="#put-both-branches-into-code">Put Both Branches into Code</a></li>
+<li><a href="#does-it-read-other-positions-again">Does It Read Other Positions Again?</a></li>
+<li><a href="#two-exercises-with-changed-conditions">Two Exercises with Changed Conditions</a></li>
+</ul>
+</div>
+</details></nav><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="Decrease text size">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="Increase text size">A+</button></div></div><article id="article-body"><h1 id="14-swiglu-what-happens-after-reading-the-prefix">14 | SwiGLU: What Happens After Reading the Prefix?</h1>
+<p>Build a Small Model, Understand Large Models · Lesson 14</p>
+<p>Attention lets the position containing “欢” read the person's name earlier in the sentence. Here “欢” is the second character of “喜欢” (“likes”) in our Chinese data. Once the information is gathered, we still need to compute with combinations of those values.</p>
+<p>Consider the familiar programming operator <code>and</code>: the overall condition is true only when both conditions are true. Represent true as 1 and false as 0. We want <code>[0,0]</code>, <code>[0,1]</code>, and <code>[1,0]</code> to output 0, and only <code>[1,1]</code> to output 1.</p>
+<p>Can a fixed weighted sum directly meet all four numerical targets? The first three force the bias and both weights to 0, making the fourth output of 1 impossible. Multiplying the two inputs, however, meets all four targets.</p>
+<p><strong>How can several values act together after information has arrived?</strong> This is what the feed-forward network, commonly abbreviated FFN, addresses here. Our implementation has two branches: one produces intermediate values, and the other produces multipliers from the input. We will calculate both branches by hand for <code>[1,2]</code>, then return to how this multiplication can express <code>and</code>.</p>
+<h2 id="why-is-computing-more-values-not-enough">Why Is Computing More Values Not Enough?</h2>
+<p>Starting from <code>x=[1, 2]</code>, calculate four coordinate combinations. We specify the parameters ourselves to make each term easy to check. This branch is called <code>up</code>, because it expands the width:</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Output coordinate</th>
+<th>Parameter row</th>
+<th>Weighted-sum result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>u₁</td>
+<td>[1,0]</td>
+<td>1×1+2×0=1</td>
+</tr>
+<tr>
+<td>u₂</td>
+<td>[0,1]</td>
+<td>1×0+2×1=2</td>
+</tr>
+<tr>
+<td>u₃</td>
+<td>[1,1]</td>
+<td>1×1+2×1=3</td>
+</tr>
+<tr>
+<td>u₄</td>
+<td>[1,−1]</td>
+<td>1×1+2×(−1)=−1</td>
+</tr>
+</tbody>
+</table></div>
+<p>This gives <code>u=[1, 2, 3, −1]</code>. Each entry uses the weighted sums introduced in Lesson 2; there is no bias here.</p>
+<p>If we immediately used another set of fixed parameters to project four entries back to two, the two weighted-sum operations could still be combined. Lesson 3 added ReLU to break this limitation, forming one possible feed-forward network. Here we take another approach: <strong>compute the multipliers from the current input</strong>, instead of using the same intermediate multipliers for every input.</p>
+<h2 id="a-second-branch-computes-a-multiplier-for-each-entry">A Second Branch Computes a Multiplier for Each Entry</h2>
+<p>This new branch is called <code>gate</code>. Specify another set of parameters so that its weighted sums produce:</p>
+<p><code>a=[−1, 0, 1, 2]</code></p>
+<p>Apply the same function to each entry of <code>a</code>. First calculate:</p>
+<p><strong>sigmoid(a)=1/(1+exp(−a))</strong></p>
+<p><code>exp</code> is the exponential operation introduced in Lesson 8. This function maps real numbers into the interval between 0 and 1. Multiply the result by the original number to obtain this lesson's activation:</p>
+<p><strong>SiLU(a)=a×sigmoid(a)</strong></p>
+<p>For <code>a=2</code>, sigmoid first produces about 0.880797. Multiplying by 2 gives approximately 1.761594. For all four entries:</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>a</th>
+<th>sigmoid(a), approximately</th>
+<th>g=SiLU(a), approximately</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>−1</td>
+<td>0.268941</td>
+<td>−0.268941</td>
+</tr>
+<tr>
+<td>0</td>
+<td>0.5</td>
+<td>0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0.731059</td>
+<td>0.731059</td>
+</tr>
+<tr>
+<td>2</td>
+<td>0.880797</td>
+<td>1.761594</td>
+</tr>
+</tbody>
+</table></div>
+<p>Collect these four results into vector <code>g</code>, then multiply entries with the same index:</p>
+<p><strong>z=u⊙g≈[−0.268941,0,2.193176,−1.761594]</strong></p>
+<p>The symbol <code>⊙</code> means elementwise multiplication: first entry times first entry, second entry times second entry. It neither sums the four entries nor searches other positions for another character.</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/14-swiglu/images/en/web/01-%E6%9C%BA%E5%88%B6.svg" width="1504" height="997.2"><img alt="The same input enters up and gate branches; signed bars on a shared scale compare values before and after multiplication, showing sign reversal, zeroing, shrinking, and amplification before down returns to two dimensions" src="../chapters/14-swiglu/images/en/01-%E6%9C%BA%E5%88%B6.svg"  width="1080" height="2415" loading="eager" decoding="async" /></picture></p>
+<p>All four rows use the same scale. Blue bars show <code>u</code> before multiplication; teal bars show <code>z</code> afterward. In the first row, the result crosses to the left of 0. The second collapses to zero, the third gets shorter, and the fourth extends farther in the negative direction.</p>
+<p>“Gating” here has more than an on/off state: <strong>multipliers can be negative or greater than 1, and they do not need to sum to 1.</strong> They are not probabilities of selecting a position.</p>
+<p>Finally, <code>down</code> projects four entries back to two. The first output takes <code>z₁+z₃</code>, and the second takes <code>z₂+z₄</code>:</p>
+<p><strong>y≈[1.924234,−1.761594]</strong></p>
+<p>The input and output both contain two entries, temporarily expanding to four in between. Later components can therefore continue using vectors of the same width.</p>
+<p>Changing only the input recomputes both <code>u</code> and <code>g</code>. The elementwise multipliers change with the input, so the full function can no longer be collapsed into one fixed weighted sum.</p>
+<p>The three matrices are named <code>W_up</code>, <code>W_gate</code>, and <code>W_down</code>. Each row stores the parameters for one output coordinate. Following the code's convention of one sample per row:</p>
+<p><strong>u=xW_upᵀ</strong></p>
+<p><strong>g=SiLU(xW_gateᵀ)</strong></p>
+<p><strong>FFN(x)=(u⊙g)W_downᵀ</strong></p>
+<p>The superscript <code>ᵀ</code> denotes a transpose, aligning input coordinates with parameter rows for multiplication. In this example, the two expansion matrices are <code>[4, 2]</code> and the reduction matrix is <code>[2, 4]</code>.</p>
+<p>This structure, which multiplies two projection branches and applies SiLU to one of them, is called <strong>SwiGLU</strong>. The <a href="https://arxiv.org/abs/2002.05202">original paper</a> discusses these feed-forward variants; the SiLU definition can be checked against the <a href="https://docs.pytorch.org/docs/2.9/generated/torch.nn.SiLU.html">PyTorch interface</a>.</p>
+<p>Both a ReLU feed-forward network and SwiGLU add nonlinear processing. This lesson does not compare their training results, so it does not establish that either is better.</p>
+<h2 id="can-it-produce-1-this-time">Can It Produce 1 This Time?</h2>
+<p>Focus on just one intermediate coordinate and one output coordinate. Let <code>up</code> take the first input as <code>u</code>, and let <code>gate</code> take the second as <code>a</code>. Use their product <code>u×SiLU(a)</code> for the output, then multiply by the fixed value <code>1/SiLU(1)</code>:</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Input <code>[u,a]</code></th>
+<th>After multiplication, approximately</th>
+<th>After projection</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[0,0]</code></td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td><code>[0,1]</code></td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td><code>[1,0]</code></td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td><code>[1,1]</code></td>
+<td>0.731059</td>
+<td>1</td>
+</tr>
+</tbody>
+</table></div>
+<p>Because <code>SiLU(0)=0</code>, the product must be 0 when the second condition is false. When it is true, the first condition must also be true for a nonzero product. All four numerical targets are met.</p>
+<p>This construction shows that two inputs can jointly determine a result through gating. Actual training adjusts the three projection matrices; intermediate values and multipliers are then computed from the current input. We do not assign a Boolean condition to a particular coordinate in advance.</p>
+<h2 id="put-both-branches-into-code">Put Both Branches into Code</h2>
+<p>The following class matches the project's feed-forward computation. <code>nn.Linear</code> stores matrix parameters, and <code>bias=False</code> explicitly disables the bias. It transforms only the final input axis.</p>
+<pre><code class="language-python">import torch
+from torch import nn
+import torch.nn.functional as F
+
+class SwiGLU(nn.Module):
+    &quot;&quot;&quot;对每个位置独立做 D→F→D 变换，输入与输出的最后一维均为 D。&quot;&quot;&quot;
+    def __init__(self, width, expanded):
+        super().__init__()
+        # up、gate 是两套独立投影参数；down 将扩宽后的表示送回原宽度。
+        self.up = nn.Linear(width, expanded, bias=False)
+        self.gate = nn.Linear(width, expanded, bias=False)
+        self.down = nn.Linear(expanded, width, bias=False)
+
+    def forward(self, x):
+        # 两条支路读取同一份 x，分别得到 [...,F] 的内容与门控前数值。
+        u = self.up(x)
+        a = self.gate(x)
+        # g 是逐坐标乘数，可为负或大于 1，不是注意力概率。
+        g = F.silu(a)  # 等价于 a * torch.sigmoid(a)
+        # * 按同一位置、同一坐标相乘；down 再将 F 维投影回 D 维。
+        return self.down(u * g)
+
+ffn = SwiGLU(2, 4)
+# 仅为手算对照写入固定参数，不为这些赋值建立反向记录；参数仍可训练。
+with torch.no_grad():
+    ffn.up.weight.copy_(torch.tensor([
+        [1., 0.], [0., 1.], [1., 1.], [1., -1.]]))
+    ffn.gate.weight.copy_(torch.tensor([
+        [-1., 0.], [0., 0.], [1., 0.], [0., 1.]]))
+    ffn.down.weight.copy_(torch.tensor([
+        [1., 0., 1., 0.], [0., 1., 0., 1.]]))
+
+x = torch.tensor([1., 2.])
+u, a = ffn.up(x), ffn.gate(x)
+print(&quot;up:&quot;, u)
+print(&quot;gate:&quot;, F.silu(a))
+print(&quot;相乘:&quot;, u * F.silu(a))
+print(&quot;输出:&quot;, ffn(x))  # 约 [1.924234, -1.761594]
+</code></pre>
+<p><code>no_grad()</code> surrounds the manual parameter assignment, so the assignment does not create a backward-computation record. Normal calls to <code>ffn(x)</code> still allow all three parameter groups to receive gradients. Autograd, which we have already studied, handles the derivatives of the activation and multiplication.</p>
+<h2 id="does-it-read-other-positions-again">Does It Read Other Positions Again?</h2>
+<p>So far, we have tracked only one position. If we change the third position, will the first position change too? Put three positions into one tensor to check. The actual input is <code>[B, T, D]</code>: <code>B</code> samples, <code>T</code> positions, and <code>D</code> features per position. The entire batch uses the same three matrices:</p>
+<p><code>[B, T, D] → two branches [B, T, F] → elementwise multiplication → [B, T, D]</code></p>
+<p><strong>Different positions share parameters but perform this computation independently.</strong> This FFN layer does not read another position's vector. Its input may already contain prefix information gathered by attention, but that differs from the FFN itself fetching values across positions.</p>
+<p>Run the following comparison, first processing all positions together and then calling the FFN one position at a time:</p>
+<pre><code class="language-python"># [B,T,D]=[1,3,2]；同一套 FFN 参数分别作用于每个位置。
+sequence = torch.tensor([[[1., 2.], [2., 1.], [-1., 1.]]],
+                        requires_grad=True)  # [1,3,2]
+batched = ffn(sequence)
+# 逐位置运行并恢复位置轴，结果应与一次批量运行相同。
+one_by_one = torch.stack([
+    ffn(sequence[:, t, :]) for t in range(sequence.shape[1])
+], dim=1)
+assert torch.allclose(batched, one_by_one)
+
+# 只改位置 2；独立 FFN 不读取其他位置，所以位置 0 的输出保持不变。
+changed = sequence.detach().clone()
+changed[:, 2, :] = torch.tensor([10., -3.])
+assert torch.allclose(ffn(changed)[:, 0], batched[:, 0])
+
+# 用演示标量检查梯度通路；这里没有优化器更新，也不是下一字训练损失。
+batched.square().mean().backward()
+assert all(p.grad is not None and torch.isfinite(p.grad).all()
+           for p in ffn.parameters())
+print(batched.shape)  # torch.Size([1, 3, 2])
+</code></pre>
+<p>Changing the third position to <code>[10, −3]</code> leaves the first position's two outputs unchanged. The FFN processes only its current vector. To understand how preceding text affects that vector, trace the reading paths through attention.</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/14-swiglu/images/en/web/02-%E9%AA%8C%E8%AF%81.svg" width="1504" height="832"><img alt="Numerical comparison of hand-computed intermediate values, batched computation, and separate position-by-position computation" src="../chapters/14-swiglu/images/en/02-%E9%AA%8C%E8%AF%81.svg"  width="1080" height="1800" loading="lazy" decoding="async" /></picture></p>
+<p>The full model replaces <code>D=2, F=4</code> with <code>D=64, F=128</code>. Its three matrices contain <code>64×128</code>, <code>64×128</code>, and <code>128×64</code> parameters, totaling <strong>24,576</strong>, compared with 24 in this small example. These matrices change during training; the intermediate vectors <code>u</code>, <code>g</code>, and <code>z</code> are recomputed from the input.</p>
+<p>The next lesson asks: if the new result directly replaces the original vector, does the original input still have an independent route forward?</p>
+<h2 id="two-exercises-with-changed-conditions">Two Exercises with Changed Conditions</h2>
+<ol>
+<li>Keep all projections unchanged, but replace the activated <code>g</code> with <code>[1, 1, 1, 1]</code>. What is this example's output? Does it retain the nonlinearity introduced in this lesson?</li>
+<li>In the complete model, if the third input position changes, will the first output position change? Answer separately for “run only this FFN layer” and “rerun the entire block, including attention.”</li>
+</ol>
+<details class="answer">
+<summary>Reference answers</summary>
+<p>For question one, the product becomes <code>u=[1, 2, 3, −1]</code>, and down outputs <strong>[4,1]</strong>. If we force <code>g=1</code> for every input, only two bias-free linear projections remain, and they can be combined into one linear transformation. For question two, the first position of the standalone FFN is unchanged. In a complete causal block, the first position cannot read the future third position, so it should also be unaffected. If an earlier position changes and we inspect a later position instead, attention may change the result. This question requires checking both the module boundary and the visibility range; “positions always affect one another” is not an adequate answer.</p>
+</details>
+<p>Run the lesson entry point from the <code>code</code> companion code directory:</p>
+<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+python -m lessons.l14
+</code></pre>
+<p>On macOS, you can replace <code>python</code> with <code>python3</code>; on Windows, you can use <code>py</code> from your installed environment. Companion code: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l14.py">Lesson runner</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/layers.py">Feed-forward network source</a>.</p>
+<p>Source navigation: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/layers.py#L33">layers.py · SwiGLU</a>.</p></article><details class="lesson-video video-ready" id="lesson-video"><summary><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></path></svg>Watch the companion video<span class="video-duration">4:01</span><span class="video-language">Chinese audio</span></summary><div class="bilibili-embed"><iframe data-src="https://player.bilibili.com/player.html?bvid=BV1qJHV6pE7n&amp;p=1&amp;autoplay=0&amp;danmaku=0" title="14 | SwiGLU: What Happens After Reading the Prefix? · B站视频" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><p class="video-actions"><a href="https://www.bilibili.com/video/BV1qJHV6pE7n/?p=1" target="_blank" rel="noopener">Watch in HD on Bilibili ↗</a></p></div></details>
+<div class="reader-feedback"><span>Questions about this chapter?</span><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=question.yml&amp;title=%5B%E5%AD%A6%E4%B9%A0%5D+14+%7C+SwiGLU%3A+What+Happens+After+Reading+the+Prefix%3F&amp;location=14+%7C+SwiGLU%3A+What+Happens+After+Reading+the+Prefix%3F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F14.en.html" target="_blank" rel="noopener">Ask a question</a><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=content.yml&amp;title=%5B%E5%8B%98%E8%AF%AF%5D+14+%7C+SwiGLU%3A+What+Happens+After+Reading+the+Prefix%3F&amp;location=14+%7C+SwiGLU%3A+What+Happens+After+Reading+the+Prefix%3F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F14.en.html" target="_blank" rel="noopener">Suggest a correction</a></div><nav class="chapter-nav" aria-label="Previous and next articles"><a href="../course/13.en.html"><span>Previous <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></path></svg></span><strong>13 | RoPE: How Does the Model Know the Order?</strong></a><a href="../course/15.en.html"><span>Next <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></path></svg></span><strong>15 | Residual Connections and RMSNorm: Why Keep a Direct Path?</strong></a></nav><footer class="reader-footer">Hello LLM · Build a Small Model, Understand Large Models<details class="community-mini"><summary>Stay in touch · 好好用 AI</summary><div class="community-section"><div><h2>Stay in touch · 好好用 AI</h2><p>Follow the WeChat account to discuss what you learn and build.</p><p>For bugs and corrections, <a href="https://github.com/DavidDingXu/hello-llm/issues" target="_blank" rel="noopener">open a GitHub issue</a>.</p></div><a class="qr-link" href="../code/assets/wechat-official-account.jpg" target="_blank" rel="noopener" aria-label="Open the 好好用 AI WeChat QR code"><img src="../code/assets/wechat-official-account.jpg" alt="好好用 AI WeChat official account QR code" width="130" height="130" loading="lazy"><p class="qr-caption">Scan in WeChat · Open full image</p></a></div></details></footer></main>
+<aside class="context-sidebar" aria-label="Article navigation and tools"><div class="context-inner"><nav class="reading-route" aria-label="On this page"><details open><summary>On this page</summary><div class="toc">
+<ul>
+<li><a href="#why-is-computing-more-values-not-enough">Why Is Computing More Values Not Enough?</a></li>
+<li><a href="#a-second-branch-computes-a-multiplier-for-each-entry">A Second Branch Computes a Multiplier for Each Entry</a></li>
+<li><a href="#can-it-produce-1-this-time">Can It Produce 1 This Time?</a></li>
+<li><a href="#put-both-branches-into-code">Put Both Branches into Code</a></li>
+<li><a href="#does-it-read-other-positions-again">Does It Read Other Positions Again?</a></li>
+<li><a href="#two-exercises-with-changed-conditions">Two Exercises with Changed Conditions</a></li>
+</ul>
+</div>
+</details></nav>
+<section class="reading-settings"><h2>Reading settings</h2><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="Decrease text size">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="Increase text size">A+</button></div><span>Allow about 40 minutes</span><p class="lesson-goal">Explain input-dependent gating and positionwise processing.</p></section>
+</div></aside></div><dialog class="search-dialog" id="search-dialog" aria-labelledby="search-label">
+<form method="dialog" class="search-heading"><label for="course-search" id="search-label"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/></circle><path d="m16 16 4.5 4.5"/></path></svg>Search course</label><button class="icon-button" aria-label="Close search"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></form>
+<input id="course-search" type="search" placeholder="Search concepts, code, or questions…" autocomplete="off" spellcheck="false">
+<p class="search-status" id="search-status" role="status">Search all 23 articles by keyword.</p>
+<div class="search-results" id="search-results"></div><footer>↑ ↓ Select result <span>Enter Open · Esc Close</span></footer></dialog>
+<dialog class="experiment-viewer" id="experiment-viewer" aria-labelledby="experiment-title"><header><strong id="experiment-title">Experiments</strong><div><a id="experiment-standalone" target="_blank" rel="noopener">Open separately <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a><button class="button" id="close-experiment" type="button">Back to reading <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></div></header><iframe id="experiment-frame" title="Experiments" src="about:blank"></iframe></dialog>
+<dialog class="image-viewer" id="image-viewer" aria-label="Enlarge figure">
+<header><span>View figure</span><div class="image-actions"><button type="button" id="image-zoom-out" aria-label="Zoom out">−</button><output id="image-scale" aria-label="Zoom level">100%</output><button type="button" id="image-zoom-in" aria-label="Enlarge figure">＋</button><button type="button" id="image-size">Actual size</button><button type="button" id="close-image" autofocus>Close</button></div></header>
+<div class="image-canvas"><p id="image-status" role="status" hidden></p><img id="large-image" alt=""></div><footer><p id="image-description"></p><a id="original-image" target="_blank" rel="noopener">Open original image <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a></footer></dialog>
+<div class="toast" id="toast" role="status"></div></body></html>

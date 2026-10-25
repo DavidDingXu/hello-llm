@@ -1,0 +1,261 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<meta name="source-sha256" content="0beb148dd95602157153943116b706ac9c14d9c62afa438bcb1bdef587401b31"><meta name="description" content="How do two inputs, two weights, and one bias produce 4? Then use an impossible target to see why activation functions are needed."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/01.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="01 | Neurons: What Does a Model Calculate Before It Writes the Next Character? · Hello LLM"><meta property="og:description" content="How do two inputs, two weights, and one bias produce 4? Then use an impossible target to see why activation functions are needed."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/01.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>01 | Neurons: What Does a Model Calculate Before It Writes the Next Character? · Hello LLM</title>
+<link rel="icon" href="../assets/favicon.png" type="image/png">
+<script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
+<script defer src="../code/visuals/reading_site/search-index.en.js?v=11db81a4dd60"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="01" data-alternate-sections="[&quot;结果要变先找出哪些数能调&quot;, &quot;先算出这个-4&quot;, &quot;允许随便调参数也有做不到的事&quot;, &quot;让负数停在-0三个目标就接上了&quot;, &quot;回到那个-4把它变成能改的代码&quot;, &quot;一个结果能不能再交给同一个函数&quot;, &quot;三道小题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="Open course contents" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></path></svg></button>
+<a class="brand" href="../index.en.html" aria-label="Hello LLM · 学习站首页">
+<img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>Build a Small Model, Understand Large Models</small></span></a>
+<nav class="header-nav" aria-label="Main navigation"><a href="../index.en.html#curriculum">Learning path</a><a href="../index.en.html#experiments">Experiments</a><a href="https://github.com/DavidDingXu/hello-llm" target="_blank" rel="noopener">GitHub <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a></nav>
+<div class="header-controls"><a class="language-switch" href="01.html" lang="zh-CN" aria-label="切换到中文">中文</a><button class="icon-button theme-toggle js-only" type="button" aria-label="Switch to dark theme" title="Switch to dark theme"><span class="theme-light-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A9 9 0 0 1 9.5 3.5a9 9 0 1 0 11 11Z"/></path></svg></span><span class="theme-dark-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/></circle><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></path></svg></span></button>
+<button class="search-trigger js-only" type="button" aria-label="Search course"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/></circle><path d="m16 16 4.5 4.5"/></path></svg><span>Search course</span><kbd>⌘ K</kbd></button>
+</div></div><div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div></header><div class="sidebar-scrim" hidden></div><div class="reader-layout"><aside class="course-sidebar" id="course-sidebar" aria-label="Course contents">
+<div class="sidebar-heading"><a href="../index.en.html">Course contents</a><button class="icon-button menu-close js-only" type="button" aria-label="Close course contents"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></div>
+<nav aria-label="All articles"><div class="sidebar-guides"><a class="lesson-link" data-lesson="intro" href="../course/intro.en.html"><span class="lesson-number">·</span><span>Course introduction</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="00" href="../course/00.en.html"><span class="lesson-number">·</span><span>Before we begin</span><span class="lesson-state" aria-hidden="true"></span></a></div><details class="sidebar-stage" open><summary><span class="stage-index">Part I</span>Make a numerical network learn</summary><a class="lesson-link" data-lesson="01" href="../course/01.en.html" aria-current="page"><span class="lesson-number">01</span><span>Neurons</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="02" href="../course/02.en.html"><span class="lesson-number">02</span><span>Vectors and Matrices</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="03" href="../course/03.en.html"><span class="lesson-number">03</span><span>Multiple Layers and Nonlinearity</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="04" href="../course/04.en.html"><span class="lesson-number">04</span><span>Gradients and Parameter Updates</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="05" href="../course/05.en.html"><span class="lesson-number">05</span><span>Backpropagation by Hand</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="06" href="../course/06.en.html"><span class="lesson-number">06</span><span>Making the Network Learn</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part II</span>Bring text into the network</summary><a class="lesson-link" data-lesson="07" href="../course/07.en.html"><span class="lesson-number">07</span><span>Text and Vectors</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="08" href="../course/08.en.html"><span class="lesson-number">08</span><span>Scores and Probabilities</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="09" href="../course/09.en.html"><span class="lesson-number">09</span><span>Text Training Problems</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part III</span>Read context and assemble the model</summary><a class="lesson-link" data-lesson="10" href="../course/10.en.html"><span class="lesson-number">10</span><span>Single-Head Attention</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="11" href="../course/11.en.html"><span class="lesson-number">11</span><span>Causal masks</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="12" href="../course/12.en.html"><span class="lesson-number">12</span><span>Multi-head attention</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="13" href="../course/13.en.html"><span class="lesson-number">13</span><span>Rotary position embeddings</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="14" href="../course/14.en.html"><span class="lesson-number">14</span><span>Positionwise feed-forward networks</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="15" href="../course/15.en.html"><span class="lesson-number">15</span><span>Residual connections and normalization</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="16" href="../course/16.en.html"><span class="lesson-number">16</span><span>The complete forward pass</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">Part IV</span>Pretrain, generate, and fine-tune</summary><a class="lesson-link" data-lesson="17" href="../course/17.en.html"><span class="lesson-number">17</span><span>The first pretraining run</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="18" href="../course/18.en.html"><span class="lesson-number">18</span><span>Character-by-character generation</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="19" href="../course/19.en.html"><span class="lesson-number">19</span><span>Question-answer fine-tuning</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="20" href="../course/20.en.html"><span class="lesson-number">20</span><span>The full workflow and checks of the principles</span><span class="lesson-state" aria-hidden="true"></span></a></details><a class="lesson-link" data-lesson="end" href="../course/end.en.html"><span class="lesson-number">·</span><span>Closing thoughts</span><span class="lesson-state" aria-hidden="true"></span></a></nav></aside><main class="reader-main" id="main-content"><div class="article-context"><span>Make a numerical network learn</span><div class="article-actions"><button type="button" class="copy-page-link js-only">Copy link</button><button type="button" class="focus-toggle js-only" aria-pressed="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></path></svg><span>Focus mode</span></button></div></div>
+<div class="mobile-context"><nav class="reading-route" aria-label="On this page"><details><summary>On this page</summary><div class="toc">
+<ul>
+<li><a href="#to-change-the-result-first-identify-the-adjustable-numbers">To change the result, first identify the adjustable numbers</a></li>
+<li><a href="#first-calculate-that-4">First, calculate that 4</a></li>
+<li><a href="#some-tasks-remain-impossible-however-freely-we-adjust-the-parameters">Some tasks remain impossible, however freely we adjust the parameters</a></li>
+<li><a href="#clamp-negative-values-to-0-and-the-three-targets-line-up">Clamp negative values to 0, and the three targets line up</a></li>
+<li><a href="#return-to-that-4-and-turn-it-into-editable-code">Return to that 4 and turn it into editable code</a></li>
+<li><a href="#can-one-result-be-passed-to-the-same-function-again">Can one result be passed to the same function again?</a></li>
+<li><a href="#three-short-exercises">Three short exercises</a></li>
+</ul>
+</div>
+</details></nav><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="Decrease text size">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="Increase text size">A+</button></div></div><article id="article-body"><h1 id="01-neurons-what-does-a-model-calculate-before-it-writes-the-next-character">01 | Neurons: What Does a Model Calculate Before It Writes the Next Character?</h1>
+<p>Build a Small Model, Understand Large Models · Lesson 01</p>
+<p>Given “早上，小丁喜欢” (“In the morning, Xiaoding likes”), the small language model we trained continues with “红色的苹果。” (“red apples.”).</p>
+<p>The generation program contains no special continuation rule for this particular phrase. A few hundred short sentences about people, fruit, and colors were used in training and changed its saved parameters. It can continue familiar sentences, but it also makes mistakes when the wording changes. The <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/EXPERIMENTS.md">experiment log</a> preserves these results.</p>
+<p>Why can changing only the parameters change the output while the calculation stays the same? Instead of tracing an entire sentence, let us shrink the input to two numbers and see how to turn an output of 4 into 5.</p>
+<h2 id="to-change-the-result-first-identify-the-adjustable-numbers">To change the result, first identify the adjustable numbers</h2>
+<ul>
+<li><strong>Input <code>[2, 1]</code>:</strong> the two data values supplied for this calculation.</li>
+<li><strong>Weights <code>[1, 3]</code>:</strong> the multipliers paired with the two inputs.</li>
+<li><strong>Bias <code>−1</code>:</strong> a number added after summing the products.</li>
+</ul>
+<p>Together, the weights and bias are called <strong>parameters</strong>. Taking inputs and using these parameters to calculate one number is the basic job of an artificial neuron.</p>
+<p>Inputs change with the data; parameters are stored by the model and determine how it processes that data. We will set the parameters by hand here and adjust them based on errors during training later. During text generation, the parameters stay fixed.</p>
+<p><img alt="Inputs and parameters enter the calculation unit separately to produce one numerical output" src="../chapters/01-neuron/images/en/01-%E8%BE%93%E5%85%A5%E4%B8%8E%E5%8F%82%E6%95%B0.svg"  width="1080" height="975" loading="eager" decoding="async" /></p>
+<h2 id="first-calculate-that-4">First, calculate that 4</h2>
+<p>Call the two inputs <code>x₁</code> and <code>x₂</code>, and their corresponding weights <code>w₁</code> and <code>w₂</code>. The subscripts are just indices: the first input goes with the first weight, and the second with the second.</p>
+<p>The first path calculates <strong>2 × 1 = 2</strong>; the second calculates <strong>1 × 3 = 3</strong>.</p>
+<p><img alt="Each input is multiplied by its own weight, producing products of 2 and 3" src="../chapters/01-neuron/images/en/02-%E4%B8%A4%E6%9D%A1%E4%B9%98%E6%B3%95%E8%B7%AF%E5%BE%84.svg"  width="1080" height="900" loading="lazy" decoding="async" /></p>
+<p>A weight is simply a multiplier. It can be a fraction or a negative number, making this input's contribution larger, smaller, or opposite in sign.</p>
+<p>Next, add the two products: <strong>2 + 3 = 5</strong>.</p>
+<p>Then add the bias −1: <strong>5 + (−1) = 4</strong>.</p>
+<p>Calling the bias <code>b</code> and the result so far <code>z</code>, we get:</p>
+<p><strong>z = x₁ × w₁ + x₂ × w₂ + b = 4</strong></p>
+<p>Why include a bias? When all inputs are 0, the sum of the products must be 0. The bias lets us adjust that result independently.</p>
+<h2 id="some-tasks-remain-impossible-however-freely-we-adjust-the-parameters">Some tasks remain impossible, however freely we adjust the parameters</h2>
+<p>Parameters can change the output above, but some requirements cannot be met by any choice of parameters. Switch to a single input <code>x</code>: the output should be 0 when <code>x</code> is at most 1, and otherwise should equal only the amount above 1.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Input x</th>
+<th>Required output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1</td>
+</tr>
+</tbody>
+</table></div>
+<p>Can <strong>y = w × x + b</strong> alone meet all three requirements?</p>
+<p>An input of 0 must produce 0, forcing <strong>b = 0</strong>. An input of 1 must also produce 0, forcing <strong>w = 0</strong>.</p>
+<p>With both parameters determined, an input of 2 can only give <strong>0 × 2 + 0 = 0</strong>, not the required 1. Choosing different parameters would violate the first two requirements.</p>
+<p>Adjusting parameters to bring outputs closer to targets is called <strong>fitting</strong>. These three targets cannot all be fitted exactly; the restriction comes from the form of the function.</p>
+<p>Could adding another function get around this? Suppose we first calculate <code>a=x−1</code>, then <code>y=2×a+1</code>. Expanding gives:</p>
+<p><strong>y = 2 × (x − 1) + 1 = 2 × x − 1</strong></p>
+<p>This still means “multiply the input by a number, then add a number.” Changing parameters only changes the combined multiplier and offset. Stacking more such operations still cannot meet all three targets.</p>
+<p>Here, multiply-and-add means <strong>multiplying inputs by fixed weights, summing the products, and adding a bias</strong>. We need a way to treat inputs differently in different intervals.</p>
+<h2 id="clamp-negative-values-to-0-and-the-three-targets-line-up">Clamp negative values to 0, and the three targets line up</h2>
+<p>The missing behavior is specific: the first part must stay at 0, and only the second part should start increasing. Apply this rule to the multiply-and-add result <code>z</code>:</p>
+<p><strong>ReLU(z) = max(0, z)</strong></p>
+<p><code>max(0, z)</code> chooses the larger of 0 and <code>z</code>: negative values become 0, and nonnegative values are kept. This function is called <strong>ReLU</strong>, a type of <strong>activation function</strong>.</p>
+<p><img alt="ReLU takes z as input: −1 becomes 0, +1 stays 1, and the curve bends at z = 0" src="../chapters/01-neuron/images/en/04-ReLU%E6%80%8E%E6%A0%B7%E5%A4%84%E7%90%86%E6%AD%A3%E8%B4%9F%E6%95%B0.svg"  width="1080" height="1080" loading="lazy" decoding="async" /></p>
+<p>A bent line cannot be represented by one straight line. That is the <strong>nonlinearity</strong> we need. Nonlinearity can also come from a smooth curve; a piecewise straight line makes the arithmetic easier here.</p>
+<p>For the three targets above, choose weight <strong>w=1</strong> and bias <strong>b=−1</strong>:</p>
+<p><strong>z = 1 × x − 1</strong></p>
+<p>Then pass <code>z</code> to ReLU:</p>
+<p><strong>y = ReLU(z) = ReLU(x − 1)</strong></p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Input x</th>
+<th>z=x−1</th>
+<th>Output y</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>−1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1</td>
+<td>1</td>
+</tr>
+</tbody>
+</table></div>
+<p><img alt="The whole neuron takes x as input: multiply-and-add alone cannot meet all three targets, while ReLU with a bias creates a bend at x = 1" src="../chapters/01-neuron/images/en/08-%E6%BF%80%E6%B4%BB%E5%87%BD%E6%95%B0%E5%A2%9E%E5%8A%A0%E4%BA%86%E4%BB%80%E4%B9%88.svg"  width="1080" height="1080" loading="lazy" decoding="async" /></p>
+<p>The two plots have different horizontal axes. In the first, the horizontal axis is <strong>z</strong>, the result after multiply-and-add; the vertical axis is ReLU's output, and the bend is at <strong>z=0</strong>. In the second, the horizontal axis is the original input <strong>x</strong>, and the vertical axis is the whole neuron's output. Because we first calculate <code>z=x−1</code>, the bend appears at <strong>x=1</strong>. Find an input along the horizontal axis and move up to the curve to read its output. The bias has moved the bend; the ReLU rule has not changed.</p>
+<p>The dots in the second plot are the targets. The blue line is determined by the first two targets and always outputs 0. With ReLU, the purple bent line passes through all three dots. We chose these parameters by hand; later, the training program will search for them.</p>
+<h2 id="return-to-that-4-and-turn-it-into-editable-code">Return to that 4 and turn it into editable code</h2>
+<p>For the original input <code>[2, 1]</code>, the multiply-and-add result <code>z=4</code> is positive, so ReLU leaves it at 4.</p>
+<details class="motion-figure"><summary>Watch the animated walkthrough</summary><img alt="The main example moves step by step through multiplication, summation, bias, and ReLU" src="../chapters/01-neuron/images/en/07-%E7%A5%9E%E7%BB%8F%E5%85%83%E5%85%AD%E6%AD%A5%E8%AE%A1%E7%AE%97.gif"  width="720" height="1000" loading="lazy" decoding="async" /></details>
+<p>To pause and check the numbers, open the <a href="../chapters/01-neuron/images/en/07-%E5%AE%8C%E6%95%B4%E8%AE%A1%E7%AE%97.png">complete static diagram</a>, or move forward and backward in the <a href="../chapters/01-neuron/walkthrough.en.html">step-by-step demo</a>.</p><details class="inline-experiment"><summary><span>Try it here · Step-by-step experiment</span><small>Step through the calculation, forwards or backwards.</small></summary><p><a href="../chapters/01-neuron/walkthrough.en.html" class="js-experiment inline-expand">Expand workspace ↗</a> · <a href="../chapters/01-neuron/walkthrough.en.html" target="_blank" rel="noopener">Open in a new tab ↗</a></p><dialog class="inline-workspace experiment-viewer" aria-label="Step-by-step experiment"><header><strong>Step-by-step experiment</strong><div><a href="../chapters/01-neuron/walkthrough.en.html" target="_blank" rel="noopener">Open in a new tab <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button inline-close" type="button" aria-label="Return to reading">Return to reading <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe data-src="../chapters/01-neuron/walkthrough.en.html" title="Step-by-step experiment" loading="lazy"></iframe></dialog></details>
+<p>Calling the final output <code>y</code>, the formula and numbers together are:</p>
+<p><strong>y = ReLU(x₁w₁+x₂w₂+b) = ReLU(2×1+1×3−1) = 4</strong></p>
+<p>Multiply corresponding items and accumulate the products, and the same code can handle one, two, or more inputs:</p>
+<pre><code class="language-python">def neuron(inputs, weights, bias=0.0):
+    &quot;&quot;&quot;输入列表与权重逐项配对，加偏置、做 ReLU，返回一个数。&quot;&quot;&quot;
+    if len(inputs) != len(weights) or not inputs:
+        raise ValueError(&quot;输入与权重必须非空且等长&quot;)
+
+    total = 0.0
+    # 同一位置的输入乘自己的权重，再把各项贡献加起来。
+    for value, weight in zip(inputs, weights):
+        total += value * weight
+    z = total + bias
+    # ReLU 只改变负数；它的规则固定，可调的是 weights 和 bias。
+    return max(0.0, z)
+
+# 本次输入为 [2, 1]，参数是权重 [1, 3] 和偏置 -1。
+print(neuron([2, 1], [1, 3], -1))  # 4.0
+</code></pre>
+<p><code>inputs</code>, <code>weights</code>, and <code>bias</code> correspond to <code>x</code>, <code>w</code>, and <code>b</code>. <code>zip</code> pairs each input with its weight; the loop multiplies them, and <code>total += ...</code> accumulates the products. Finally, add the bias and apply ReLU. The initial check prevents unmatched weights or empty lists. Save this as <code>neuron.py</code> and run it using only standard Python features.</p>
+<h3 id="what-happens-when-you-change-one-number">What happens when you change one number?</h3>
+<p>Once the code prints 4, first try changing only the bias from −1 to 0. Then restore it and change the second input from 1 to 2. Change only one thing at a time:</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Change</th>
+<th>Multiply-and-add calculation</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Original example</td>
+<td>2×1 + 1×3 − 1</td>
+<td>4</td>
+</tr>
+<tr>
+<td>x₂: 1 → 2</td>
+<td>2×1 + 2×3 − 1</td>
+<td>7</td>
+</tr>
+<tr>
+<td>b: −1 → 0</td>
+<td>2×1 + 1×3 + 0</td>
+<td>5</td>
+</tr>
+</tbody>
+</table></div>
+<p>Increasing the second input by 1 increases the output by 3, because that input is first multiplied by its weight of 3. All three results are positive, so ReLU keeps each unchanged.</p>
+<section class="python-lab" id="python-lab" aria-labelledby="python-lab-title">
+<div class="lab-heading"><span>PYTHON · EDITABLE EXPERIMENT</span><h3 id="python-lab-title">Change it. Run it. See what happens.</h3></div>
+<p class="lab-challenge">Change x2 from 1 to 2. What happens to the output of 4?</p>
+<div class="lab-controls"><label for="lab-x2">Second input<input id="lab-x2" data-variable="x2" type="number" value="1" min="-10" max="10" step="1" required></label><label for="lab-bias">Bias<input id="lab-bias" data-variable="bias" type="number" value="-1" min="-20" max="20" step="1" required></label></div>
+<details class="lab-editor"><summary>Edit Python code</summary>
+<label class="lab-editor-label" for="lab-code">Python code</label>
+<p class="lab-editor-help" id="lab-code-help">Tab indents; Shift + Tab unindents. Press Esc then Tab to leave the editor. Ctrl / ⌘ + Enter runs the code.</p>
+<textarea id="lab-code" class="lab-code" aria-describedby="lab-code-help" wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" rows="10">from tiny_lm.scalar import forward, neuron
+
+x2 = 1
+bias = -1
+inputs = [2, x2]
+weights = [1, 3]
+
+print(&quot;weighted sum =&quot;, forward(inputs, weights, bias))
+print(&quot;output =&quot;, neuron(inputs, weights, bias))
+</textarea>
+</details>
+<div class="lab-actions"><button type="button" class="button primary lab-run" disabled>Run code</button><button type="button" class="button lab-stop" disabled>Stop</button><button type="button" class="button lab-reset" disabled>Reset example</button><button type="button" class="button lab-download" disabled>Download code</button></div>
+<p class="lab-status" role="status">Run the code to see the result below.</p>
+<pre class="lab-output" tabindex="0" aria-label="Program output">Ready to run…</pre>
+<noscript>Enable JavaScript to run here, or copy the example and run locally.</noscript>
+</section><h2 id="can-one-result-be-passed-to-the-same-function-again">Can one result be passed to the same function again?</h2>
+<p>Pass the first output, 4, back into <code>neuron</code>, using a weight of 0.5 and a bias of 1:</p>
+<pre><code class="language-python"># 沿用上一段的 neuron；前一个输出成为后一个神经元的输入。
+first = neuron([2, 1], [1, 3], -1)
+# 后一个神经元有自己的权重和偏置，并未修改前一个的参数。
+second = neuron([first], [0.5], 1)
+print(first, second)  # 4.0 3.0
+</code></pre>
+<p><img alt="The first neuron outputs 4; the second reads that 4 and calculates an output of 3" src="../chapters/01-neuron/images/en/06-%E8%BF%9E%E6%8E%A5%E4%B8%A4%E4%B8%AA%E7%A5%9E%E7%BB%8F%E5%85%83.svg"  width="1080" height="900" loading="lazy" decoding="async" /></p>
+<p>The second neuron still performs multiply-and-add followed by ReLU, but now it has only one input. Several neurons can each use their own parameters to produce a set of intermediate numbers, often called <strong>features</strong>. Their roles must be understood within the whole network; we cannot assume in advance that one number represents “apple” or “grammar.”</p>
+<p>Put two neurons side by side and pass their outputs to a third, and you get the following network:</p>
+<p><img alt="Two inputs feed two independent neurons, whose outputs become the inputs to the next layer" src="../chapters/01-neuron/images/en/09-%E4%BB%8E%E7%A5%9E%E7%BB%8F%E5%85%83%E5%88%B0%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C.svg"  width="1080" height="1095" loading="lazy" decoding="async" /></p>
+<ul>
+<li><strong>Input layer:</strong> the two points hold data and perform no additional calculation.</li>
+<li><strong>Hidden layer:</strong> A and B sit between the inputs and the final output. They read the same inputs and calculate using their own parameters.</li>
+<li><strong>Output layer:</strong> C takes the outputs of A and B as its two inputs and continues the calculation. This diagram also uses ReLU at C.</li>
+</ul>
+<p>Each connection entering a neuron corresponds to one weight; crossing lines perform no calculation. In the next lesson, we will express parallel calculations like A and B as a matrix to obtain a layer's multiple outputs at once.</p>
+<h2 id="three-short-exercises">Three short exercises</h2>
+<ol>
+<li>Keep the main example's inputs <code>[2, 1]</code> and weights <code>[1, 3]</code>, but change the bias to −6. What is <code>z</code>? What is the final output?</li>
+<li>In the single-input counterexample, keep the weight at 1 and change the bias from −1 to −2. Where does the bend move? What is the output for an input of 2?</li>
+<li>In the final network diagram, how many weights and biases are there? Do the two input points count as adjustable parameters?</li>
+</ol>
+<p>For the first exercise, set the bias to −6 in the interactive demo. For the second, check with <code>neuron([2], [1], -2)</code>.</p>
+<details class="answer">
+<summary>Reference answers</summary>
+<p>Answers: For the first exercise, <code>z=2×1+1×3−6=−1</code>, so the output is <strong>0</strong>. For the second, <code>z=x−2</code>; the bend moves to <strong>x=2</strong>, and an input of 2 produces <strong>0</strong>. The output becomes positive only above 2. For the third, A and B each have two incoming weights, and C has two more: <strong>6 weights</strong> in total. A, B, and C each have a bias: <strong>3 biases</strong>, making <strong>9 adjustable parameters</strong> altogether. The input points are data.</p>
+</details>
+<p>To have the companion program print this lesson's calculations, run the following from the <code>code</code> directory:</p>
+<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+python -m lessons.l01
+</code></pre>
+<p>On macOS, you can use <code>python3</code>; on Windows, you can also use <code>py -m lessons.l01</code>. See the <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md">companion code</a> for full installation and execution instructions.</p>
+<p>Companion resources: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l01.py">Entry point</a> · <a href="../chapters/01-neuron/walkthrough.en.html">Interactive demo</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/EXPERIMENTS.md">Actual model experiments</a></p>
+<p>Source navigation: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/scalar.py#L22">scalar.py · neuron</a>.</p></article><details class="lesson-video video-ready" id="lesson-video"><summary><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></path></svg>Watch the companion video<span class="video-duration">6:19</span><span class="video-language">Chinese audio</span></summary><div class="bilibili-embed"><iframe data-src="https://player.bilibili.com/player.html?bvid=BV1xjHg6ZEFD&amp;p=1&amp;autoplay=0&amp;danmaku=0" title="01 | Neurons: What Does a Model Calculate Before It Writes the Next Character? · B站视频" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><p class="video-actions"><a href="https://www.bilibili.com/video/BV1xjHg6ZEFD/?p=1" target="_blank" rel="noopener">Watch in HD on Bilibili ↗</a></p></div></details>
+<div class="reader-feedback"><span>Questions about this chapter?</span><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=question.yml&amp;title=%5B%E5%AD%A6%E4%B9%A0%5D+01+%7C+Neurons%3A+What+Does+a+Model+Calculate+Before+It+Writes+the+Next+Character%3F&amp;location=01+%7C+Neurons%3A+What+Does+a+Model+Calculate+Before+It+Writes+the+Next+Character%3F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F01.en.html" target="_blank" rel="noopener">Ask a question</a><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=content.yml&amp;title=%5B%E5%8B%98%E8%AF%AF%5D+01+%7C+Neurons%3A+What+Does+a+Model+Calculate+Before+It+Writes+the+Next+Character%3F&amp;location=01+%7C+Neurons%3A+What+Does+a+Model+Calculate+Before+It+Writes+the+Next+Character%3F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F01.en.html" target="_blank" rel="noopener">Suggest a correction</a></div><nav class="chapter-nav" aria-label="Previous and next articles"><a href="../course/00.en.html"><span>Previous <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></path></svg></span><strong>Before We Begin | Test the Finished Model, Then Build It from Scratch</strong></a><a href="../course/02.en.html"><span>Next <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></path></svg></span><strong>02 | Vectors and Matrices: Do Two Outputs Require Two Copies of the Code?</strong></a></nav><footer class="reader-footer">Hello LLM · Build a Small Model, Understand Large Models<details class="community-mini"><summary>Stay in touch · 好好用 AI</summary><div class="community-section"><div><h2>Stay in touch · 好好用 AI</h2><p>Follow the WeChat account to discuss what you learn and build.</p><p>For bugs and corrections, <a href="https://github.com/DavidDingXu/hello-llm/issues" target="_blank" rel="noopener">open a GitHub issue</a>.</p></div><a class="qr-link" href="../code/assets/wechat-official-account.jpg" target="_blank" rel="noopener" aria-label="Open the 好好用 AI WeChat QR code"><img src="../code/assets/wechat-official-account.jpg" alt="好好用 AI WeChat official account QR code" width="130" height="130" loading="lazy"><p class="qr-caption">Scan in WeChat · Open full image</p></a></div></details></footer></main>
+<aside class="context-sidebar" aria-label="Article navigation and tools"><div class="context-inner"><nav class="reading-route" aria-label="On this page"><details open><summary>On this page</summary><div class="toc">
+<ul>
+<li><a href="#to-change-the-result-first-identify-the-adjustable-numbers">To change the result, first identify the adjustable numbers</a></li>
+<li><a href="#first-calculate-that-4">First, calculate that 4</a></li>
+<li><a href="#some-tasks-remain-impossible-however-freely-we-adjust-the-parameters">Some tasks remain impossible, however freely we adjust the parameters</a></li>
+<li><a href="#clamp-negative-values-to-0-and-the-three-targets-line-up">Clamp negative values to 0, and the three targets line up</a></li>
+<li><a href="#return-to-that-4-and-turn-it-into-editable-code">Return to that 4 and turn it into editable code</a></li>
+<li><a href="#can-one-result-be-passed-to-the-same-function-again">Can one result be passed to the same function again?</a></li>
+<li><a href="#three-short-exercises">Three short exercises</a></li>
+</ul>
+</div>
+</details></nav>
+<section class="reading-settings"><h2>Reading settings</h2><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="Decrease text size">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="Increase text size">A+</button></div><span>Allow about 30 minutes</span><p class="lesson-goal">Explain the roles of inputs, parameters, and activation.</p></section>
+</div></aside></div><dialog class="search-dialog" id="search-dialog" aria-labelledby="search-label">
+<form method="dialog" class="search-heading"><label for="course-search" id="search-label"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/></circle><path d="m16 16 4.5 4.5"/></path></svg>Search course</label><button class="icon-button" aria-label="Close search"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></form>
+<input id="course-search" type="search" placeholder="Search concepts, code, or questions…" autocomplete="off" spellcheck="false">
+<p class="search-status" id="search-status" role="status">Search all 23 articles by keyword.</p>
+<div class="search-results" id="search-results"></div><footer>↑ ↓ Select result <span>Enter Open · Esc Close</span></footer></dialog>
+<dialog class="experiment-viewer" id="experiment-viewer" aria-labelledby="experiment-title"><header><strong id="experiment-title">Experiments</strong><div><a id="experiment-standalone" target="_blank" rel="noopener">Open separately <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a><button class="button" id="close-experiment" type="button">Back to reading <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></path></svg></button></div></header><iframe id="experiment-frame" title="Experiments" src="about:blank"></iframe></dialog>
+<dialog class="image-viewer" id="image-viewer" aria-label="Enlarge figure">
+<header><span>View figure</span><div class="image-actions"><button type="button" id="image-zoom-out" aria-label="Zoom out">−</button><output id="image-scale" aria-label="Zoom level">100%</output><button type="button" id="image-zoom-in" aria-label="Enlarge figure">＋</button><button type="button" id="image-size">Actual size</button><button type="button" id="close-image" autofocus>Close</button></div></header>
+<div class="image-canvas"><p id="image-status" role="status" hidden></p><img id="large-image" alt=""></div><footer><p id="image-description"></p><a id="original-image" target="_blank" rel="noopener">Open original image <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></path></svg></a></footer></dialog>
+<div class="toast" id="toast" role="status"></div></body></html>

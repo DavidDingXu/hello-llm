@@ -1,0 +1,237 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<meta name="source-sha256" content="f4064404b3f921ea3e28327d88de641c62f839e8171a5f17cdc4b522dfc7e1a5"><meta name="description" content="六个可见字符，却做了七次选择。把每个选出的字接回输入，追完前缀增长、采样和EOS结束。"><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/18.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="18｜生成：一句话究竟做了几次选择？ · Hello LLM"><meta property="og:description" content="六个可见字符，却做了七次选择。把每个选出的字接回输入，追完前缀增长、采样和EOS结束。"><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/18.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>18｜生成：一句话究竟做了几次选择？ · Hello LLM</title>
+<link rel="icon" href="../assets/favicon.png" type="image/png">
+<script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
+<script defer src="../code/visuals/reading_site/search-index.js?v=ea96857fef58"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="18" data-alternate-sections="[&quot;which-row-do-we-take-from-the-first-forward-pass&quot;, &quot;choose-the-most-probable-candidate-or-sample-one&quot;, &quot;feed-each-chosen-character-back-in&quot;, &quot;review-the-seven-choices&quot;, &quot;is-the-model-still-learning-during-this-process&quot;, &quot;two-prediction-questions&quot;]"><a class="skip-link" href="#main-content">跳到正文</a>
+<header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="打开课程目录" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+<a class="brand" href="../index.html" aria-label="Hello LLM · 学习站首页">
+<img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>手写小模型，看懂大模型</small></span></a>
+<nav class="header-nav" aria-label="主导航"><a href="../index.html#curriculum">学习路径</a><a href="../index.html#experiments">交互实验</a><a href="https://github.com/DavidDingXu/hello-llm" target="_blank" rel="noopener">GitHub <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a></nav>
+<div class="header-controls"><a class="language-switch" href="18.en.html" lang="en" aria-label="Switch to English">EN</a><button class="icon-button theme-toggle js-only" type="button" aria-label="切换到深色主题" title="切换到深色主题"><span class="theme-light-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A9 9 0 0 1 9.5 3.5a9 9 0 1 0 11 11Z"/></svg></span><span class="theme-dark-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></span></button>
+<button class="search-trigger js-only" type="button" aria-label="搜索课程"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><span>搜索课程</span><kbd>⌘ K</kbd></button>
+</div></div><div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div></header><div class="sidebar-scrim" hidden></div><div class="reader-layout"><aside class="course-sidebar" id="course-sidebar" aria-label="课程目录">
+<div class="sidebar-heading"><a href="../index.html">课程目录</a><button class="icon-button menu-close js-only" type="button" aria-label="关闭课程目录"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+<nav aria-label="全部文章"><div class="sidebar-guides"><a class="lesson-link" data-lesson="intro" href="../course/intro.html"><span class="lesson-number">·</span><span>专栏介绍</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="00" href="../course/00.html"><span class="lesson-number">·</span><span>开篇导学</span><span class="lesson-state" aria-hidden="true"></span></a></div><details class="sidebar-stage"><summary><span class="stage-index">第一部分</span>让数值网络学起来</summary><a class="lesson-link" data-lesson="01" href="../course/01.html"><span class="lesson-number">01</span><span>神经元</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="02" href="../course/02.html"><span class="lesson-number">02</span><span>向量与矩阵</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="03" href="../course/03.html"><span class="lesson-number">03</span><span>多层与非线性</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="04" href="../course/04.html"><span class="lesson-number">04</span><span>梯度与参数更新</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="05" href="../course/05.html"><span class="lesson-number">05</span><span>手写反向传播</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="06" href="../course/06.html"><span class="lesson-number">06</span><span>让网络学起来</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">第二部分</span>把文字接进来</summary><a class="lesson-link" data-lesson="07" href="../course/07.html"><span class="lesson-number">07</span><span>文字与向量</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="08" href="../course/08.html"><span class="lesson-number">08</span><span>分数与概率</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="09" href="../course/09.html"><span class="lesson-number">09</span><span>文本训练题</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">第三部分</span>读取前文，组装模型</summary><a class="lesson-link" data-lesson="10" href="../course/10.html"><span class="lesson-number">10</span><span>单头注意力</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="11" href="../course/11.html"><span class="lesson-number">11</span><span>因果掩码</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="12" href="../course/12.html"><span class="lesson-number">12</span><span>多头注意力</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="13" href="../course/13.html"><span class="lesson-number">13</span><span>旋转位置</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="14" href="../course/14.html"><span class="lesson-number">14</span><span>逐位置前馈</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="15" href="../course/15.html"><span class="lesson-number">15</span><span>残差与归一化</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="16" href="../course/16.html"><span class="lesson-number">16</span><span>完整模型前向</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage" open><summary><span class="stage-index">第四部分</span>预训练、生成与微调</summary><a class="lesson-link" data-lesson="17" href="../course/17.html"><span class="lesson-number">17</span><span>第一次预训练</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="18" href="../course/18.html" aria-current="page"><span class="lesson-number">18</span><span>逐字生成</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="19" href="../course/19.html"><span class="lesson-number">19</span><span>问答微调</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="20" href="../course/20.html"><span class="lesson-number">20</span><span>闭环与原理检验</span><span class="lesson-state" aria-hidden="true"></span></a></details><a class="lesson-link" data-lesson="end" href="../course/end.html"><span class="lesson-number">·</span><span>结束篇</span><span class="lesson-state" aria-hidden="true"></span></a></nav></aside><main class="reader-main" id="main-content"><div class="article-context"><span>预训练、生成与微调</span><div class="article-actions"><button type="button" class="copy-page-link js-only">复制链接</button><button type="button" class="focus-toggle js-only" aria-pressed="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg><span>专注阅读</span></button></div></div>
+<div class="mobile-context"><nav class="reading-route" aria-label="本篇路线"><details><summary>本篇目录</summary><div class="toc">
+<ul>
+<li><a href="#第一次前向要取哪一行">第一次前向，要取哪一行？</a></li>
+<li><a href="#选概率最大的还是按概率抽一个">选概率最大的，还是按概率抽一个？</a></li>
+<li><a href="#选出一个字就把它带回去">选出一个字，就把它带回去</a></li>
+<li><a href="#回看这七次选择">回看这七次选择</a></li>
+<li><a href="#这期间模型有没有继续学习">这期间，模型有没有继续学习？</a></li>
+<li><a href="#两道预测题">两道预测题</a></li>
+</ul>
+</div>
+</details></nav><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="减小正文字号">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="增大正文字号">A+</button></div></div><article id="article-body"><h1 id="18生成一句话究竟做了几次选择">18｜生成：一句话究竟做了几次选择？</h1>
+<p>手写小模型，看懂大模型 · 第 18 讲</p>
+<p>屏幕上出现“红色的苹果。”，只有六个可见字符，程序却做了<strong>七次选择</strong>。最后一次选出的不是字，而是结束标记 EOS。</p>
+<p>七次选择使用同一组预训练权重。每次选出的字都会追加进输入：选出“红”以后，模型就根据带着“红”的新前文预测“色”。</p>
+<p>下面固定提示词 <code>早上，小丁喜欢</code>，逐次记录送入的前文、选出的字符和停止原因。</p>
+<h2 id="第一次前向要取哪一行">第一次前向，要取哪一行？</h2>
+<p>提示词有 7 个字符，加 BOS 后是 8 个位置。模型会返回 <code>[1, 8, 79]</code>。这并不是已经替未来八个字打好了分：第 0 个 BOS 位置用于预测“早”，第 1 个位置用于预测“上”，依此类推，前面几行对应的目标早已出现在提示词里。</p>
+<p>最后位置装着“欢”。它能读取整个已知提示词，输出的分数才对应我们还没拿到的下一字。因此模型返回 <code>[1, 8, 79]</code> 后，取：</p>
+<pre><code class="language-python">import torch
+from tiny_lm.checkpoint import load_checkpoint
+
+# 加载预训练参数、词表与配置；后续前向使用这份保存的参数。
+model, tokenizer, _ = load_checkpoint(&quot;artifacts/first_run/pretrain.pt&quot;)
+# 一个样本，BOS 加七个提示字符，形成 [1,8] 的已知前文。
+inputs = torch.tensor([tokenizer.encode(&quot;早上，小丁喜欢&quot;, add_bos=True)])
+# 模型输出 [1,8,79]，只取最后位置预测尚未出现的下一项。
+next_logits = model(inputs)[0, -1]  # 79 项分数
+print(next_logits.shape)  # torch.Size([79])
+</code></pre>
+<p>上面加载的是作者随课提供的<code>first_run/pretrain.pt</code>，便于核对本文的七步数值。若你已经完成第17讲的训练，把路径换成<code>artifacts/my_run/pretrain.pt</code>，就是在使用自己的权重；词表和配置会随检查点一起恢复。先看自己那次<code>pretrain_log.json</code>中的步数，再对照生成结果。</p>
+<p><code>0</code> 选这个批次中的第一个样本，<code>−1</code> 选最后一个位置。前面的位置仍参与上下文计算，只是这一步不拿它们的输出重复生成已经给出的字符。</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/18-generation/images/web/01-%E6%9C%BA%E5%88%B6.svg" width="1540" height="470"><img data-full-figure="../chapters/18-generation/images/01-%E6%9C%BA%E5%88%B6.svg" alt="最后一个已知位置给出下一字分布，选择后追加，再送入同一模型" src="../chapters/18-generation/images/01-%E6%9C%BA%E5%88%B6.svg"  width="1080" height="2100" loading="eager" decoding="async" /></picture></p>
+<p>第一次选中“红”，它的编号 55 被追加到输入末尾。下一次输入从 8 项变成 9 项，最后位置变成“红”，于是开始预测后面的“色”。</p>
+<p>如果第一次选了另一个字，下一次也要把那个字带回去。不能提前拿原来张量的另一行当作第二个新字，因为那一行没有见过刚才的选择。这种将生成结果继续作为条件的方式，叫自回归生成。</p>
+<h2 id="选概率最大的还是按概率抽一个">选概率最大的，还是按概率抽一个？</h2>
+<p>最直接的方法是每次选最大概率的编号，称为<strong>贪心选择</strong>。在同一份参数和同一输入下，这个选择是确定的。它只比较当前这一步的候选，并没有先列出所有可能句子，再挑整句最好的。</p>
+<p>另一种方式是按概率抽样。比如三个候选概率为 <code>[0.1, 0.3, 0.6]</code>，最后一个更容易被抽中，但前两个也有机会。随机来源在“怎样选择”这一步，网络本身仍在执行同一套前向计算。</p>
+<p>抽样前还可以调整温度 <code>τ</code>：</p>
+<p><strong>p_j=exp(logit_j/τ)/Σ_k exp(logit_k/τ)，τ&gt;0</strong></p>
+<p>对分数 <code>[0, 1, 2]</code>，温度为 1 时，概率约为 <code>[0.0900, 0.2447, 0.6652]</code>；温度为 0.5，约为 <code>[0.0159, 0.1173, 0.8668]</code>；温度为 2，约为 <code>[0.1863, 0.3072, 0.5065]</code>。</p>
+<p>降低温度会让抽样更偏向高分项，提高温度给其他项更多机会。参数没有变化，变的是抽样分布的集中程度，也就不能靠温度修正模型记错的事实。贪心分支不使用温度。</p>
+<h2 id="选出一个字就把它带回去">选出一个字，就把它带回去</h2>
+<p>循环只需要保留当前编号序列，反复完成“前向、选字、追加”。编号 0、1、2、3 分别是 PAD、BOS、EOS、UNK；PAD、BOS、UNK 禁止输出，EOS 可以被选中。下面把算法单独写成一个可运行函数：</p>
+<pre><code class="language-python">@torch.no_grad()
+def continue_text(model, tokenizer, prompt, max_new_tokens=8,
+                  greedy=False, temperature=.8, seed=42):
+    &quot;&quot;&quot;固定权重逐项生成，返回可见续写与停止原因；每次重算完整前缀，无 KV cache。&quot;&quot;&quot;
+    if max_new_tokens &lt; 0 or (not greedy and temperature &lt;= 0):
+        raise ValueError(&quot;新增长度不能为负，采样温度必须为正&quot;)
+    tokens = [1] + tokenizer.encode(prompt)  # BOS 也占一个上下文位置。
+    if 3 in tokens or len(tokens) &gt; model.config.max_seq_len:
+        raise ValueError(&quot;提示词含未知字符或超过上下文长度&quot;)
+    device = next(model.parameters()).device
+    # 随机数只用于采样，不修改模型权重；固定种子便于对照。
+    rng = torch.Generator(device=device).manual_seed(seed)
+    generated, reason = [], &quot;max_new_tokens&quot;
+    model.eval()  # 切换评估模式；不建立反向记录由上面的 no_grad 装饰器负责。
+    for _ in range(max_new_tokens):
+        # 达到本模型的 32 项限制就停止，不裁掉旧字符继续写。
+        if len(tokens) &gt;= model.config.max_seq_len:
+            reason = &quot;context_limit&quot;
+            break
+        # 当前全部前文 [1,T] 重新前向，取最后位置的 [V] 候选分数。
+        inputs = torch.tensor([tokens], dtype=torch.long, device=device)
+        logits = model(inputs)[0, -1].clone()
+        # 禁止输出 PAD/BOS/UNK，保留 EOS；归一化后被禁项概率为 0。
+        logits[[0, 1, 3]] = float(&quot;-inf&quot;)
+        # 贪心不使用温度，采样才先除以 temperature；最后沿候选轴 Softmax。
+        probabilities = (logits if greedy else logits / temperature).softmax(-1)
+        if greedy:
+            selected = int(probabilities.argmax())
+        else:
+            selected = int(torch.multinomial(probabilities, 1, generator=rng).item())
+        # 选择结果接回输入，下一次前向才知道刚才选了哪个字。
+        tokens.append(selected)
+        if selected == 2:
+            # EOS 也消耗一次选择，但不加入返回的可见文本。
+            reason = &quot;eos&quot;
+            break
+        generated.append(selected)
+    return tokenizer.decode(generated), reason
+
+print(continue_text(model, tokenizer, &quot;早上，小丁喜欢&quot;, greedy=True))
+# ('红色的苹果。', 'eos')
+</code></pre>
+<p><code>argmax</code> 取最大项，<code>multinomial</code> 按概率抽一个编号。<code>tokens.append(selected)</code> 把新字加入下一次前向的输入。<code>@torch.no_grad()</code> 不建立反向记录，循环也没有更新参数的 <code>step()</code>。</p>
+<p>设成负无穷的三个特殊项概率为零，其他允许输出的项一起归一化。配套 <code>generate</code> 还会记录每步前五候选、恢复调用前的模型模式，这些记录工作不改变选字算法。</p>
+<p>本实现每次都把完整前缀重新送入模型，<strong>没有 KV cache</strong>。上下文最多 32 项，包含 BOS；提示词超过这个长度会报错，循环中一旦已有 32 项就停止，不裁掉旧字符再继续。较短提示词也可能提前遇到 EOS，或者用完指定的新 token 次数。</p>
+<p>EOS 是结束信号，不是要显示的文字。它会记入步骤记录，但不会加入返回的可见文本。因此“最多新增 8 个 token”不保证屏幕上一定出现 8 个字符。</p>
+<h2 id="回看这七次选择">回看这七次选择</h2>
+<p>加载第十七讲的预训练权重，使用贪心选择。日志按从 0 开始的编号记录七步：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>送入的编号数</th>
+<th>本步选择</th>
+<th>该选择概率，约</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>8</td>
+<td>红</td>
+<td>0.999767</td>
+</tr>
+<tr>
+<td>1</td>
+<td>9</td>
+<td>色</td>
+<td>0.999943</td>
+</tr>
+<tr>
+<td>2</td>
+<td>10</td>
+<td>的</td>
+<td>0.999990</td>
+</tr>
+<tr>
+<td>3</td>
+<td>11</td>
+<td>苹</td>
+<td>0.999931</td>
+</tr>
+<tr>
+<td>4</td>
+<td>12</td>
+<td>果</td>
+<td>0.999981</td>
+</tr>
+<tr>
+<td>5</td>
+<td>13</td>
+<td>。</td>
+<td>0.999900</td>
+</tr>
+<tr>
+<td>6</td>
+<td>14</td>
+<td>EOS</td>
+<td>0.999968</td>
+</tr>
+</tbody>
+</table></div>
+<p>前六次每次添一个字，第七次读到末尾的句号，选出 EOS。表里的概率屏蔽了三个特殊项，与第十六讲完整 79 项的分布口径略有不同。</p>
+<details class="motion-figure"><summary>展开观看动态过程</summary><img alt="同一权重下，七次前向、选择、追加与EOS停止的真实轨迹" src="../chapters/18-generation/images/%E8%BF%87%E7%A8%8B.gif"  width="648" height="1260" loading="lazy" decoding="async" /></details>
+<p>可以在<a href="../chapters/18-generation/walkthrough.html">交互演示</a>中逐步暂停，核对前缀与候选。下面的静态图展开第一次选择，并比较两次抽样结果。</p><details class="inline-experiment"><summary><span>动手实验 · 逐步演示</span><small>逐步核对计算过程，随时前进或后退。</small></summary><p><a href="../chapters/18-generation/walkthrough.html" class="js-experiment inline-expand">展开大窗口 ↗</a> · <a href="../chapters/18-generation/walkthrough.html" target="_blank" rel="noopener">在新标签页打开 ↗</a></p><dialog class="inline-workspace experiment-viewer" aria-label="逐步演示"><header><strong>逐步演示</strong><div><a href="../chapters/18-generation/walkthrough.html" target="_blank" rel="noopener">在新标签页打开 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button inline-close" type="button" aria-label="返回阅读">返回阅读 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe data-src="../chapters/18-generation/walkthrough.html" title="逐步演示" loading="lazy"></iframe></dialog></details>
+<p><img alt="第一次选择几乎全部分给红，其他候选在单独标明横轴的区域放大展示，保留未列候选总和及两个随机种子的实际采样文本" src="../chapters/18-generation/images/02-%E9%AA%8C%E8%AF%81.svg"  width="1080" height="2070" loading="lazy" decoding="async" /></p>
+<p>上方“红”的条形使用0到1的范围，下方放大区的横轴上限只有0.000100。概率数值本身没有变，不能跨区直接比较条长。</p>
+<h2 id="这期间模型有没有继续学习">这期间，模型有没有继续学习？</h2>
+<p>先把预训练权重固定，将温度设为0.8，种子分别取42和43。本次两次采样都生成了“红色的苹果。”：各步分布很集中，不同随机种子仍可能抽到相同序列；“采用随机采样”不意味着“每次结果必然不同”。</p>
+<p>比较生成前后的参数摘要，就能检查这七步中参数是否改变。下面调用配套实现，同时取得逐步日志：</p>
+<pre><code class="language-python">from tiny_lm.trace import parameter_digest
+from tiny_lm.generate import generate
+
+# 比较生成前后的参数值；输入会增长，参数应保持同一份。
+before = parameter_digest(model)
+result = generate(model, tokenizer, &quot;早上，小丁喜欢&quot;, greedy=True)
+assert parameter_digest(model) == before
+print(result[&quot;generated_text&quot;], result[&quot;stop_reason&quot;])
+</code></pre>
+<p>保存文件里的词表、配置与参数必须一起加载。只拿一份权重再随便配一个字符编号表，即使形状相同，编号指向的字符也可能已经变了。</p>
+<p>在 <code>code</code> 目录运行现成入口：</p>
+<p>如果已完成第17讲的训练，用自己的权重生成：</p>
+<pre><code class="language-bash"># 使用第17讲亲手训练并保存的权重。
+python -m lessons.l18 --checkpoint artifacts/my_run/pretrain.pt --prompt '早上，小丁喜欢' --greedy
+</code></pre>
+<p>要核对本文记录，则运行下面两条命令，分别使用作者权重做贪心选择和随机抽样：</p>
+<pre><code class="language-bash"># 加载指定权重并生成文字；本命令不更新参数。
+python -m lessons.l18 --checkpoint artifacts/first_run/pretrain.pt --prompt '早上，小丁喜欢' --greedy
+# 加载指定权重并生成文字；本命令不更新参数。
+python -m lessons.l18 --checkpoint artifacts/first_run/pretrain.pt --prompt '早上，小丁喜欢' --temperature 0.8
+</code></pre>
+<details class="optional">
+<summary>选读：每次都重读前文，可以少算一点吗？</summary>
+<p>生成第二个字时，我们又把整个前缀送入模型。但在参数固定、因果限制成立时，旧位置不能读取后来追加的字，它们在各层已经算出的 K、V 就可以留下来复用。新位置只计算自己的查询，再读取旧缓存和新追加的 K/V。</p>
+<p>这就是 KV cache。它保存的是这次生成的中间结果，模型参数仍然没有更新。</p>
+<p>用第16讲观察过的 Qwen3-0.6B 实际跑四步，查看每步送入几项：第一次输入完整的 16 个 token；之后每次只输入 1 个新 token，第一层缓存的位置数依次增长为 17、18、19。</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/18-generation/images/web/03-KV%E7%BC%93%E5%AD%98.svg" width="1504" height="840.8"><img alt="Qwen3-0.6B实测首次计算16行，后续每次只增加一行K和V，已有缓存继续复用" src="../chapters/18-generation/images/03-KV%E7%BC%93%E5%AD%98.svg"  width="1080" height="2040" loading="lazy" decoding="async" /></picture></p>
+<p>这四步选中的 token 依次是“天空”“的颜色”“通常”“被认为是”。公开模型的一个 token 可以覆盖多个汉字，四个 token 拼成的文字也比四个字长。这里只观察了开头四步，还没有生成完整回答。</p>
+<p>第四步若改回“不用缓存、重算全部19项”，得到的候选分数与缓存版本最大相差约 <code>0.0000725</code>，来自浮点计算的舍入差异；两种方法选出的下一项相同。<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/artifacts/reference/qwen3_trace.json">原始记录</a>同时保存了形状、候选和参数摘要。</p>
+</details>
+<h2 id="两道预测题">两道预测题</h2>
+<ol>
+<li>相同输入与权重前向两次，logits 一样，为什么采样文本仍可能不同？反过来，采样文本相同，是否说明没有调用随机选择？</li>
+<li>最高概率候选在温度从 1 改到 0.5 后，会不会变成另一个候选？抽样选中的候选有没有可能改变？</li>
+</ol>
+<details class="answer">
+<summary>参考答案</summary>
+<p>答案：第一题，分布由前向计算决定，抽哪个编号还取决于随机过程；同一分布可能抽到不同项，也可能重复抽到相同项。第二题，除以正温度不改变分数排序，所以最大项保持不变；但候选概率改变了，同一随机过程对应的选择仍可能改变。不能把分布的最大项与一次抽样的实际结果混为一谈。</p>
+</details>
+<p>代码与生成记录：<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l18.py">运行入口</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/generate.py">生成实现</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/artifacts/first_run/generation_comparison.json">三阶段逐步日志</a>。</p>
+<p>源码导航：<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/generate.py#L11">generate.py · generate</a>。</p></article><details class="lesson-video video-ready" id="lesson-video"><summary><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></svg>观看配套视频<span class="video-duration">4:50</span></summary><div class="bilibili-embed"><iframe data-src="https://player.bilibili.com/player.html?bvid=BV1qJHV6pELU&amp;p=1&amp;autoplay=0&amp;danmaku=0" title="18｜生成：一句话究竟做了几次选择？ · B站视频" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><p class="video-actions"><a href="https://www.bilibili.com/video/BV1qJHV6pELU/?p=1" target="_blank" rel="noopener">在 B 站高清观看 ↗</a></p></div></details>
+<div class="reader-feedback"><span>这一讲有疑问？</span><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=question.yml&amp;title=%5B%E5%AD%A6%E4%B9%A0%5D+18%EF%BD%9C%E7%94%9F%E6%88%90%EF%BC%9A%E4%B8%80%E5%8F%A5%E8%AF%9D%E7%A9%B6%E7%AB%9F%E5%81%9A%E4%BA%86%E5%87%A0%E6%AC%A1%E9%80%89%E6%8B%A9%EF%BC%9F&amp;location=18%EF%BD%9C%E7%94%9F%E6%88%90%EF%BC%9A%E4%B8%80%E5%8F%A5%E8%AF%9D%E7%A9%B6%E7%AB%9F%E5%81%9A%E4%BA%86%E5%87%A0%E6%AC%A1%E9%80%89%E6%8B%A9%EF%BC%9F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F18.html" target="_blank" rel="noopener">提出学习疑问</a><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=content.yml&amp;title=%5B%E5%8B%98%E8%AF%AF%5D+18%EF%BD%9C%E7%94%9F%E6%88%90%EF%BC%9A%E4%B8%80%E5%8F%A5%E8%AF%9D%E7%A9%B6%E7%AB%9F%E5%81%9A%E4%BA%86%E5%87%A0%E6%AC%A1%E9%80%89%E6%8B%A9%EF%BC%9F&amp;location=18%EF%BD%9C%E7%94%9F%E6%88%90%EF%BC%9A%E4%B8%80%E5%8F%A5%E8%AF%9D%E7%A9%B6%E7%AB%9F%E5%81%9A%E4%BA%86%E5%87%A0%E6%AC%A1%E9%80%89%E6%8B%A9%EF%BC%9F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F18.html" target="_blank" rel="noopener">反馈内容勘误</a></div><nav class="chapter-nav" aria-label="前后篇"><a href="../course/17.html"><span>上一篇 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg></span><strong>17｜预训练：训练题熟了，新题为什么更差？</strong></a><a href="../course/19.html"><span>下一篇 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><strong>19｜监督微调：会续写，为何还不会回答？</strong></a></nav><footer class="reader-footer">Hello LLM · 手写小模型，看懂大模型<details class="community-mini"><summary>关注与交流 · 好好用 AI</summary><div class="community-section"><div><h2>关注与交流 · 好好用 AI</h2><p>交流学习中的问题与实践心得。</p><p>代码问题和勘误，欢迎在 <a href="https://github.com/DavidDingXu/hello-llm/issues" target="_blank" rel="noopener">GitHub 提交 Issue</a>。</p></div><a class="qr-link" href="../code/assets/wechat-official-account.jpg" target="_blank" rel="noopener" aria-label="查看好好用 AI 公众号二维码原图"><img src="../code/assets/wechat-official-account.jpg" alt="好好用 AI 微信公众号二维码" width="130" height="130" loading="lazy"><p class="qr-caption">微信扫码 · 点击查看原图</p></a></div></details></footer></main>
+<aside class="context-sidebar" aria-label="本篇辅助导航"><div class="context-inner"><nav class="reading-route" aria-label="本篇路线"><details open><summary>本篇路线</summary><div class="toc">
+<ul>
+<li><a href="#第一次前向要取哪一行">第一次前向，要取哪一行？</a></li>
+<li><a href="#选概率最大的还是按概率抽一个">选概率最大的，还是按概率抽一个？</a></li>
+<li><a href="#选出一个字就把它带回去">选出一个字，就把它带回去</a></li>
+<li><a href="#回看这七次选择">回看这七次选择</a></li>
+<li><a href="#这期间模型有没有继续学习">这期间，模型有没有继续学习？</a></li>
+<li><a href="#两道预测题">两道预测题</a></li>
+</ul>
+</div>
+</details></nav>
+<section class="reading-settings"><h2>阅读设置</h2><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="减小正文字号">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="增大正文字号">A+</button></div><span>建议预留 40 分钟</span><p class="lesson-goal">写出生成循环并解释随机选择与停止条件。</p></section>
+</div></aside></div><dialog class="search-dialog" id="search-dialog" aria-labelledby="search-label">
+<form method="dialog" class="search-heading"><label for="course-search" id="search-label"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg>搜索课程</label><button class="icon-button" aria-label="关闭搜索"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></form>
+<input id="course-search" type="search" placeholder="搜索概念、代码或问题…" autocomplete="off" spellcheck="false">
+<p class="search-status" id="search-status" role="status">输入关键词，搜索全部 23 篇文章。</p>
+<div class="search-results" id="search-results"></div><footer>↑ ↓ 选择结果 <span>Enter 打开 · Esc 关闭</span></footer></dialog>
+<dialog class="experiment-viewer" id="experiment-viewer" aria-labelledby="experiment-title"><header><strong id="experiment-title">交互实验</strong><div><a id="experiment-standalone" target="_blank" rel="noopener">独立打开 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button" id="close-experiment" type="button">返回阅读 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe id="experiment-frame" title="交互实验" src="about:blank"></iframe></dialog>
+<dialog class="image-viewer" id="image-viewer" aria-label="放大配图">
+<header><span>查看配图</span><div class="image-actions"><button type="button" id="image-zoom-out" aria-label="缩小配图">−</button><output id="image-scale" aria-label="缩放比例">100%</output><button type="button" id="image-zoom-in" aria-label="放大配图">＋</button><button type="button" id="image-size">原尺寸</button><button type="button" id="close-image" autofocus>关闭</button></div></header>
+<div class="image-canvas"><p id="image-status" role="status" hidden></p><img id="large-image" alt=""></div><footer><p id="image-description"></p><a id="original-image" target="_blank" rel="noopener">打开原图 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a></footer></dialog>
+<div class="toast" id="toast" role="status"></div></body></html>

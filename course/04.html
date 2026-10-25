@@ -1,0 +1,231 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<meta name="source-sha256" content="c841f3adde69cf0d335d297285ac1a8680185d4548f6727827b68cbf0a1bb757"><meta name="description" content="同一个负梯度，小步更新让误差变小，大步却越过目标。用一条可重算的曲线，看清局部方向和学习率。"><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/04.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="04｜梯度：方向对了，为什么也会越改越差？ · Hello LLM"><meta property="og:description" content="同一个负梯度，小步更新让误差变小，大步却越过目标。用一条可重算的曲线，看清局部方向和学习率。"><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/04.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>04｜梯度：方向对了，为什么也会越改越差？ · Hello LLM</title>
+<link rel="icon" href="../assets/favicon.png" type="image/png">
+<script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
+<script defer src="../code/visuals/reading_site/search-index.js?v=ea96857fef58"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="04" data-alternate-sections="[&quot;equal-distances-from-the-target-should-receive-equal-scores&quot;, &quot;move-only-from-1-to-11&quot;, &quot;why-do-these-ratios-approach-16&quot;, &quot;back-to-the-opening-why-does-the-same-16-give-two-different-results&quot;, &quot;does-the-method-still-work-if-we-add-a-bias&quot;, &quot;put-both-parameters-in-the-same-plot&quot;, &quot;in-code-rerun-with-just-one-learning-rate-changed&quot;, &quot;two-exercises-on-locality-and-step-size&quot;]"><a class="skip-link" href="#main-content">跳到正文</a>
+<header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="打开课程目录" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+<a class="brand" href="../index.html" aria-label="Hello LLM · 学习站首页">
+<img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>手写小模型，看懂大模型</small></span></a>
+<nav class="header-nav" aria-label="主导航"><a href="../index.html#curriculum">学习路径</a><a href="../index.html#experiments">交互实验</a><a href="https://github.com/DavidDingXu/hello-llm" target="_blank" rel="noopener">GitHub <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a></nav>
+<div class="header-controls"><a class="language-switch" href="04.en.html" lang="en" aria-label="Switch to English">EN</a><button class="icon-button theme-toggle js-only" type="button" aria-label="切换到深色主题" title="切换到深色主题"><span class="theme-light-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A9 9 0 0 1 9.5 3.5a9 9 0 1 0 11 11Z"/></svg></span><span class="theme-dark-icon"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></span></button>
+<button class="search-trigger js-only" type="button" aria-label="搜索课程"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><span>搜索课程</span><kbd>⌘ K</kbd></button>
+</div></div><div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div></header><div class="sidebar-scrim" hidden></div><div class="reader-layout"><aside class="course-sidebar" id="course-sidebar" aria-label="课程目录">
+<div class="sidebar-heading"><a href="../index.html">课程目录</a><button class="icon-button menu-close js-only" type="button" aria-label="关闭课程目录"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+<nav aria-label="全部文章"><div class="sidebar-guides"><a class="lesson-link" data-lesson="intro" href="../course/intro.html"><span class="lesson-number">·</span><span>专栏介绍</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="00" href="../course/00.html"><span class="lesson-number">·</span><span>开篇导学</span><span class="lesson-state" aria-hidden="true"></span></a></div><details class="sidebar-stage" open><summary><span class="stage-index">第一部分</span>让数值网络学起来</summary><a class="lesson-link" data-lesson="01" href="../course/01.html"><span class="lesson-number">01</span><span>神经元</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="02" href="../course/02.html"><span class="lesson-number">02</span><span>向量与矩阵</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="03" href="../course/03.html"><span class="lesson-number">03</span><span>多层与非线性</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="04" href="../course/04.html" aria-current="page"><span class="lesson-number">04</span><span>梯度与参数更新</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="05" href="../course/05.html"><span class="lesson-number">05</span><span>手写反向传播</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="06" href="../course/06.html"><span class="lesson-number">06</span><span>让网络学起来</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">第二部分</span>把文字接进来</summary><a class="lesson-link" data-lesson="07" href="../course/07.html"><span class="lesson-number">07</span><span>文字与向量</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="08" href="../course/08.html"><span class="lesson-number">08</span><span>分数与概率</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="09" href="../course/09.html"><span class="lesson-number">09</span><span>文本训练题</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">第三部分</span>读取前文，组装模型</summary><a class="lesson-link" data-lesson="10" href="../course/10.html"><span class="lesson-number">10</span><span>单头注意力</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="11" href="../course/11.html"><span class="lesson-number">11</span><span>因果掩码</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="12" href="../course/12.html"><span class="lesson-number">12</span><span>多头注意力</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="13" href="../course/13.html"><span class="lesson-number">13</span><span>旋转位置</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="14" href="../course/14.html"><span class="lesson-number">14</span><span>逐位置前馈</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="15" href="../course/15.html"><span class="lesson-number">15</span><span>残差与归一化</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="16" href="../course/16.html"><span class="lesson-number">16</span><span>完整模型前向</span><span class="lesson-state" aria-hidden="true"></span></a></details><details class="sidebar-stage"><summary><span class="stage-index">第四部分</span>预训练、生成与微调</summary><a class="lesson-link" data-lesson="17" href="../course/17.html"><span class="lesson-number">17</span><span>第一次预训练</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="18" href="../course/18.html"><span class="lesson-number">18</span><span>逐字生成</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="19" href="../course/19.html"><span class="lesson-number">19</span><span>问答微调</span><span class="lesson-state" aria-hidden="true"></span></a><a class="lesson-link" data-lesson="20" href="../course/20.html"><span class="lesson-number">20</span><span>闭环与原理检验</span><span class="lesson-state" aria-hidden="true"></span></a></details><a class="lesson-link" data-lesson="end" href="../course/end.html"><span class="lesson-number">·</span><span>结束篇</span><span class="lesson-state" aria-hidden="true"></span></a></nav></aside><main class="reader-main" id="main-content"><div class="article-context"><span>让数值网络学起来</span><div class="article-actions"><button type="button" class="copy-page-link js-only">复制链接</button><button type="button" class="focus-toggle js-only" aria-pressed="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg><span>专注阅读</span></button></div></div>
+<div class="mobile-context"><nav class="reading-route" aria-label="本篇路线"><details><summary>本篇目录</summary><div class="toc">
+<ul>
+<li><a href="#离目标一样远分数也应该一样">离目标一样远，分数也应该一样</a></li>
+<li><a href="#不一下改很远只从-1-挪到-11">不一下改很远，只从 1 挪到 1.1</a></li>
+<li><a href="#这串比例为什么越来越接近-16">这串比例，为什么越来越接近 −16？</a></li>
+<li><a href="#回到开头同一个-16为什么得到两种结果">回到开头：同一个 −16，为什么得到两种结果？</a></li>
+<li><a href="#再加一个偏置这个办法还能用吗">再加一个偏置，这个办法还能用吗？</a></li>
+<li><a href="#把两个参数放到同一张图里">把两个参数放到同一张图里</a></li>
+<li><a href="#在程序里只换一个学习率重跑">在程序里，只换一个学习率重跑</a></li>
+<li><a href="#两道题检查局部与步长">两道题，检查“局部”与“步长”</a></li>
+</ul>
+</div>
+</details></nav><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="减小正文字号">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="增大正文字号">A+</button></div></div><article id="article-body"><h1 id="04梯度方向对了为什么也会越改越差">04｜梯度：方向对了，为什么也会越改越差？</h1>
+<p>手写小模型，看懂大模型 · 第 04 讲</p>
+<p>预测只有 2，目标是 6。把参数往能增大预测的方向调，结果却到了 11.6，比原来离目标还远。</p>
+<p>函数是 <code>prediction=2w</code>：输入固定为 2，只改权重 <code>w</code>。从同一起点、朝同一方向再试一次，缩小幅度后，预测停在了 5.2。</p>
+<p>方向明明相同，为什么结果差这么多？先给“更错了”一个能比较的数字。</p>
+<h2 id="离目标一样远分数也应该一样">离目标一样远，分数也应该一样</h2>
+<p>从 <code>w=1</code> 开始，预测为 2，减去目标 6 得到 −4。若预测变成 10，差值是 4；两者离目标一样远，却有正负之分。多条数据的正负差还可能相互抵消。</p>
+<p>一种简单办法，是把差值平方：</p>
+<p><strong>L = (prediction−target)²</strong></p>
+<p><code>L</code> 叫作<strong>损失</strong>。差得越远，平方越大；预测恰好等于目标，损失为 0。现在不论预测落在目标哪边，都能用同一把尺比较。</p>
+<p>本例只有一个预测，因此：</p>
+<p><strong>L(w) = (2w−6)²</strong></p>
+<p>代入 <code>w=1</code>，得到 <strong>L(1)=(2−6)²=16</strong>。</p>
+<p>多份预测各自算平方误差再求平均，叫<strong>均方误差</strong>，简称 MSE。这里只有一项，MSE 就是这个平方。</p>
+<p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/04-gradients/images/web/01-%E6%9C%BA%E5%88%B6.svg" width="1540" height="470"><img data-full-figure="../chapters/04-gradients/images/01-%E6%9C%BA%E5%88%B6.svg" alt="输入、权重、预测、目标与平方损失形成一条明确计算链" src="../chapters/04-gradients/images/01-%E6%9C%BA%E5%88%B6.svg"  width="1080" height="1830" loading="eager" decoding="async" /></picture></p>
+<p>图中当前损失为 16，试改参数后就与它比较。</p>
+<h2 id="不一下改很远只从-1-挪到-11">不一下改很远，只从 1 挪到 1.1</h2>
+<p>只把 <code>w</code> 从 1 增加到 1.1，其他条件不变，看损失会不会降低。</p>
+<p>预测从 2 变成 2.2，损失从 16 变成 <strong>(2.2−6)²=14.44</strong>。增加权重，确实让这次预测更接近目标了。</p>
+<p>但“降低了 1.56”还没有说明参数改动与损失变化的比例。用损失变化除以参数变化：</p>
+<p><strong>(14.44−16) ÷ (1.1−1) = −15.6</strong></p>
+<p>它的含义是：在这小段区间内，权重每增加 1 个单位，损失平均变化约 −15.6 个单位。实际只增加了 0.1，因此损失变化是这个比例乘 0.1。</p>
+<p>把尝试的幅度继续缩小：</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>权重变化</th>
+<th>新权重</th>
+<th>新损失</th>
+<th>损失变化÷权重变化</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>+0.1</td>
+<td>1.1</td>
+<td>14.44</td>
+<td>−15.6</td>
+</tr>
+<tr>
+<td>+0.01</td>
+<td>1.01</td>
+<td>15.8404</td>
+<td>−15.96</td>
+</tr>
+<tr>
+<td>+0.001</td>
+<td>1.001</td>
+<td>15.984004</td>
+<td>−15.996</td>
+</tr>
+</tbody>
+</table></div>
+<p>尝试幅度越小，这个比例越接近 <strong>−16</strong>，也就越能反映 <code>w=1</code> <strong>附近</strong>的变化。</p>
+<h2 id="这串比例为什么越来越接近-16">这串比例，为什么越来越接近 −16？</h2>
+<p>这种在某个位置的局部变化率，叫作<strong>导数</strong>，写成：</p>
+<p><strong>dL/dw = −16，当前 w=1</strong></p>
+<p><code>dL/dw</code> 整体表示“损失相对权重的局部变化率”，<code>L、w</code> 标明正在考察哪两个量。负号告诉我们：此时稍微增大 <code>w</code>，损失会减小。</p>
+<p>它还能估计足够小的改动：若 <code>Δw</code> 很小，损失变化约为 <strong>−16×Δw</strong>。例如增加 0.01，估计损失变化为 −0.16；实际是 −0.1596，很接近，但不是完全相等。</p>
+<p>这一例可以直接算出变化率从哪来。用 <code>δ</code> 表示权重的一小份改动：</p>
+<pre><code class="language-text">L(w+δ) = (2w−6+2δ)²
+       = (2w−6)² + 4(2w−6)δ + 4δ²
+
+[L(w+δ)−L(w)] / δ = 4(2w−6) + 4δ
+</code></pre>
+<p>当 <code>δ</code> 趋近 0，右边的 <code>4δ</code> 趋近 0，留下：</p>
+<p><strong>dL/dw = 4(2w−6)</strong></p>
+<p>代入 <code>w=1</code>，就是 <code>4×(2−6)=−16</code>。这条式子适用于本例任意 <code>w</code>，但每个位置的导数值不同。到了 <code>w=4</code>，导数变成 8；到了恰好预测为 6 的 <code>w=3</code>，导数为 0。</p>
+<p>在曲线上，导数就是当前点的局部坡度。它描述附近怎样变化，不承诺沿这个方向走任意远都有效。</p>
+<h2 id="回到开头同一个-16为什么得到两种结果">回到开头：同一个 −16，为什么得到两种结果？</h2>
+<p>现在知道，从 <code>w=1</code> 出发，稍微增加权重有利。但导数只管附近。若把它的相反数 16 整个加到权重上，<code>w</code> 就会跳到 17，早已越过让预测等于 6 的位置。</p>
+<p>需要再乘一个正数，把一次改动缩到合适幅度。这个数叫<strong>学习率</strong>，记作 <code>η</code>。先取 <code>η=0.1</code>：</p>
+<p><strong>新 w = 旧 w − 学习率×导数</strong></p>
+<p><strong>w_new = 1−0.1×(−16)=2.6</strong></p>
+<p>导数为负，减去负数相当于增加权重。重新前向计算：</p>
+<p><strong>prediction = 2×2.6=5.2</strong></p>
+<p><strong>L = (5.2−6)²=0.64</strong></p>
+<p>损失从 16 降到 0.64。这次更新有效，却还没有到本例的最优值 <code>w=3</code>。</p>
+<p><img alt="损失曲线上的局部变化，以及不同步长的更新结果" src="../chapters/04-gradients/images/02-%E9%AA%8C%E8%AF%81.svg"  width="1080" height="1950" loading="lazy" decoding="async" /></p>
+<p>曲线横轴是权重 <code>w</code>，纵轴是损失 <code>L(w)</code>。沿曲线找到 <code>w=1</code>，再比较更新后落到哪里；箭头的方向来自负导数，箭头长度还要看学习率。</p>
+<p>再从原来的 <code>w=1</code> 出发，同一个导数 −16，只把学习率改成 0.3，新权重就变成 <strong>5.8</strong>。预测 11.6，损失 <strong>(11.6−6)²=31.36</strong>。开头那次变差，就是这样发生的。</p>
+<p><strong>沿局部的下降方向更新，也可能因为步子太大而增加损失。</strong></p>
+<details class="motion-figure"><summary>展开观看动态过程</summary><img alt="损失曲线上的局部变化率、更新距离与新损失" src="../chapters/04-gradients/images/%E8%BF%87%E7%A8%8B.gif"  width="648" height="1170" loading="lazy" decoding="async" /></details>
+<p>动图把当前点、局部坡度和新落点接在一起。可以在<a href="../chapters/04-gradients/walkthrough.html">交互演示</a>里分别停在两种步长的结果，比较它们落到了曲线的哪里。</p><details class="inline-experiment"><summary><span>动手实验 · 逐步演示</span><small>逐步核对计算过程，随时前进或后退。</small></summary><p><a href="../chapters/04-gradients/walkthrough.html" class="js-experiment inline-expand">展开大窗口 ↗</a> · <a href="../chapters/04-gradients/walkthrough.html" target="_blank" rel="noopener">在新标签页打开 ↗</a></p><dialog class="inline-workspace experiment-viewer" aria-label="逐步演示"><header><strong>逐步演示</strong><div><a href="../chapters/04-gradients/walkthrough.html" target="_blank" rel="noopener">在新标签页打开 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button inline-close" type="button" aria-label="返回阅读">返回阅读 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe data-src="../chapters/04-gradients/walkthrough.html" title="逐步演示" loading="lazy"></iframe></dialog></details>
+<section class="python-lab" id="python-lab" aria-labelledby="python-lab-title">
+<div class="lab-heading"><span>PYTHON · 可编辑实验</span><h3 id="python-lab-title">改一改，运行看看</h3></div>
+<p class="lab-challenge">先运行一步，再把学习率从 0.1 改成 0.3；误差还会下降吗？</p>
+<div class="lab-controls"><label for="lab-learning_rate">学习率<input id="lab-learning_rate" data-variable="learning_rate" type="number" value="0.1" min="0.001" max="1" step="0.001" required></label><label for="lab-steps">更新步数<input id="lab-steps" data-variable="steps" type="number" value="1" min="1" max="100" step="1" required></label></div>
+<details class="lab-editor"><summary>修改 Python 代码</summary>
+<label class="lab-editor-label" for="lab-code">Python 代码</label>
+<p class="lab-editor-help" id="lab-code-help">Tab 缩进，Shift + Tab 反缩进；按 Esc 后再按 Tab 离开代码框。Ctrl / ⌘ + Enter 运行。</p>
+<textarea id="lab-code" class="lab-code" aria-describedby="lab-code-help" wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" rows="12">learning_rate = 0.1
+steps = 1
+x, target, weight = 2.0, 6.0, 1.0
+
+print(f&quot;start: weight={weight:.4f}, loss={(weight*x-target)**2:.4f}&quot;)
+for step in range(steps):
+    prediction = weight * x
+    gradient = 2 * (prediction - target) * x
+    weight -= learning_rate * gradient
+    loss = (weight * x - target) ** 2
+    print(f&quot;step {step+1}: weight={weight:.4f}, loss={loss:.4f}&quot;)
+</textarea>
+</details>
+<div class="lab-actions"><button type="button" class="button primary lab-run" disabled>运行代码</button><button type="button" class="button lab-stop" disabled>停止</button><button type="button" class="button lab-reset" disabled>恢复示例</button><button type="button" class="button lab-download" disabled>下载代码</button></div>
+<p class="lab-status" role="status">点击运行，结果显示在下面。</p>
+<pre class="lab-output" tabindex="0" aria-label="运行输出">等待运行…</pre>
+<noscript>启用 JavaScript 后可在这里运行代码，也可以复制示例在本地执行。</noscript>
+</section><h2 id="再加一个偏置这个办法还能用吗">再加一个偏置，这个办法还能用吗？</h2>
+<p>给预测增加一个可调偏置：<code>prediction=2w+b</code>。此时想知道 <code>w</code> 的影响，就暂时保持 <code>b</code> 不变；想知道 <code>b</code> 的影响，就暂时保持 <code>w</code> 不变。</p>
+<p>这种“其他参数固定，只考察一个参数”的变化率，叫作<strong>偏导数</strong>，用 <code>∂</code> 标记：</p>
+<pre><code class="language-text">∂L/∂w = 4(prediction−6)
+∂L/∂b = 2(prediction−6)
+</code></pre>
+<p>在 <code>w=1、b=0</code> 时，两个偏导分别是 −16、−8。权重影响预测的倍率是输入 2，偏置直接加到预测上，所以两者不一样。</p>
+<p>把这些偏导按参数的位置放回去，就得到<strong>梯度</strong> <code>[-16, -8]</code>。</p>
+<p>上面的更新实验仍然只改 <code>w</code>，<code>b</code> 保持 0。如果改成两个参数一起训练，就要先在同一组旧参数上算好两个偏导，再一起更新；下一讲会在多层网络里展开这件事。</p>
+<h2 id="把两个参数放到同一张图里">把两个参数放到同一张图里</h2>
+<p>现在损失是 <strong>L(w,b)=(2w+b−6)²</strong>。地面上的两根轴分别放 <code>w</code>、<code>b</code>，高度放损失：每一组参数都对应曲面上的一个点。</p>
+<p><img alt="地面两轴分别是权重w与偏置b，高度是平方损失；蓝线固定b为0，青线表示两个参数一起更新时的路径" src="../chapters/04-gradients/images/03-%E4%B8%A4%E4%B8%AA%E5%8F%82%E6%95%B0%E7%9A%84%E6%8D%9F%E5%A4%B1%E6%9B%B2%E9%9D%A2.svg"  width="1080" height="1140" loading="lazy" decoding="async" /></p>
+<p>蓝线把 <code>b</code> 固定为0，就是前面只改 <code>w</code> 时的抛物线。从 <code>w=1、b=0</code> 出发，若学习率仍取0.1，这次同时使用梯度 <code>[-16,-8]</code>，就会到达 <code>w=2.6、b=0.8</code>：预测为6，损失为0。两个参数共同决定同一个高度，并非各有一份互不相干的损失。</p>
+<p>可以在<a href="../chapters/04-gradients/lab3d.html">三维演示</a>里旋转视角、分别调两个参数，再比较“只改w”和“一起改”的结果。谷底不是唯一一点：只要 <code>2w+b=6</code>，这一题的损失都是0。只有一条训练题，还不能唯一确定这两个参数。</p><details class="inline-experiment"><summary><span>动手实验 · 三维损失曲面</span><small>调整参数和学习率，沿真实损失曲面查看更新路径。</small></summary><p><a href="../chapters/04-gradients/lab3d.html" class="js-experiment inline-expand">展开大窗口 ↗</a> · <a href="../chapters/04-gradients/lab3d.html" target="_blank" rel="noopener">在新标签页打开 ↗</a></p><dialog class="inline-workspace experiment-viewer" aria-label="三维损失曲面"><header><strong>三维损失曲面</strong><div><a href="../chapters/04-gradients/lab3d.html" target="_blank" rel="noopener">在新标签页打开 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button inline-close" type="button" aria-label="返回阅读">返回阅读 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe data-src="../chapters/04-gradients/lab3d.html" title="三维损失曲面" loading="lazy"></iframe></dialog></details>
+<h2 id="在程序里只换一个学习率重跑">在程序里，只换一个学习率重跑</h2>
+<p>下面的代码只依赖 Python 标准功能。中心差分分别尝试 <code>w+ε</code> 和 <code>w−ε</code>，用两边的损失差估计导数，适合核对手算。这里的 <code>ε</code> 对应代码里的 <code>epsilon</code>；两次尝试的权重相距 <code>2ε</code>，所以要用损失差除以 <code>2ε</code>。</p>
+<pre><code class="language-python"># 输入与目标固定；本例只调整标量参数 w。
+x, target = 2.0, 6.0
+
+
+def loss_at(w):
+    &quot;&quot;&quot;用给定权重预测，返回它与目标之间的平方误差。&quot;&quot;&quot;
+    prediction = x * w
+    return (prediction - target) ** 2
+
+
+def central_difference(function, w, epsilon=1e-5):
+    &quot;&quot;&quot;在同一权重两侧各试一次，用损失差估计当前位置的导数。&quot;&quot;&quot;
+    return (function(w + epsilon) - function(w - epsilon)) / (2 * epsilon)
+
+
+w = 1.0
+print(&quot;输入、权重、目标：&quot;, x, w, target)
+print(&quot;当前预测与损失：&quot;, x * w, loss_at(w))
+for delta in [0.1, 0.01, 0.001]:
+    # 这里求小区间内的平均变化率，delta 越小越接近局部导数。
+    rate = (loss_at(w + delta) - loss_at(w)) / delta
+    print(&quot;试改幅度、变化比例：&quot;, delta, rate)
+
+# 平方误差对预测的导数，乘预测对 w 的导数 x。
+gradient = 2 * (x * w - target) * x
+print(&quot;公式与差分：&quot;, gradient, central_difference(loss_at, w))
+
+for learning_rate in [0.1, 0.3]:
+    # 两次都从原来的 w 出发，只比较步长，不把第一次结果接着更新。
+    new_w = w - learning_rate * gradient
+    print(&quot;学习率、新权重、新损失：&quot;, learning_rate, new_w, loss_at(new_w))
+</code></pre>
+<p>导数公式先算平方误差对差值的变化率 <code>2×(prediction−target)</code>，再乘预测对权重的变化率 <code>x</code>。下讲会解释为什么串联计算的变化率这样相乘。</p>
+<p>两个学习率都从原来的 <code>w=1</code> 出发，代码没有把第一次更新的结果当成第二次起点。输出的小数末尾可能有浮点舍入差异，比较时看适当位数。</p>
+<p>差分要为每个参数重新计算两次损失。网络有 9000 个参数，就要为这份输入多算 18000 次。下一讲用反向传播计算这些梯度。</p>
+<h2 id="两道题检查局部与步长">两道题，检查“局部”与“步长”</h2>
+<ol>
+<li>只把输入从 2 改成 <code>x=1</code>，仍取 <code>w=1</code>、目标 6、学习率 0.1。导数、新权重与更新后损失各是多少？能否照搬原来的导数 −16？</li>
+<li>回到输入 <code>x=2</code> 的原例，改从 <code>w=4</code> 出发，仍只更新权重，学习率为 0.1。导数是多少？新权重与损失是多少？</li>
+</ol>
+<details class="answer">
+<summary>参考答案</summary>
+<p>答案：第一题，当前预测为 1，导数为 <code>2×(1−6)×1=−10</code>，新权重为 <strong>1−0.1×(−10)=2</strong>，更新后预测为 2，损失为 <strong>(2−6)²=16</strong>。输入改变了预测及预测对权重的变化率，不能照搬原来的 −16。第二题，导数 <code>4×(8−6)=8</code>，新权重 <strong>4−0.1×8=3.2</strong>，预测 6.4，损失 <strong>0.16</strong>。这次导数为正，因此往较小的权重更新。</p>
+</details>
+<p>在 <code>code</code> 目录运行：</p>
+<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+python -m lessons.l04
+</code></pre>
+<p>配套入口：<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l04.py">运行入口</a> · <a href="../chapters/04-gradients/walkthrough.html">交互演示</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md">环境说明</a></p>
+<p>源码导航：<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/experiments.py#L50">experiments.py · lesson04</a>。</p></article><details class="lesson-video video-ready" id="lesson-video"><summary><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></svg>观看配套视频<span class="video-duration">5:14</span></summary><div class="bilibili-embed"><iframe data-src="https://player.bilibili.com/player.html?bvid=BV1EhHg6EEhy&amp;p=1&amp;autoplay=0&amp;danmaku=0" title="04｜梯度：方向对了，为什么也会越改越差？ · B站视频" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><p class="video-actions"><a href="https://www.bilibili.com/video/BV1EhHg6EEhy/?p=1" target="_blank" rel="noopener">在 B 站高清观看 ↗</a></p></div></details>
+<div class="reader-feedback"><span>这一讲有疑问？</span><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=question.yml&amp;title=%5B%E5%AD%A6%E4%B9%A0%5D+04%EF%BD%9C%E6%A2%AF%E5%BA%A6%EF%BC%9A%E6%96%B9%E5%90%91%E5%AF%B9%E4%BA%86%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B9%9F%E4%BC%9A%E8%B6%8A%E6%94%B9%E8%B6%8A%E5%B7%AE%EF%BC%9F&amp;location=04%EF%BD%9C%E6%A2%AF%E5%BA%A6%EF%BC%9A%E6%96%B9%E5%90%91%E5%AF%B9%E4%BA%86%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B9%9F%E4%BC%9A%E8%B6%8A%E6%94%B9%E8%B6%8A%E5%B7%AE%EF%BC%9F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F04.html" target="_blank" rel="noopener">提出学习疑问</a><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=content.yml&amp;title=%5B%E5%8B%98%E8%AF%AF%5D+04%EF%BD%9C%E6%A2%AF%E5%BA%A6%EF%BC%9A%E6%96%B9%E5%90%91%E5%AF%B9%E4%BA%86%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B9%9F%E4%BC%9A%E8%B6%8A%E6%94%B9%E8%B6%8A%E5%B7%AE%EF%BC%9F&amp;location=04%EF%BD%9C%E6%A2%AF%E5%BA%A6%EF%BC%9A%E6%96%B9%E5%90%91%E5%AF%B9%E4%BA%86%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B9%9F%E4%BC%9A%E8%B6%8A%E6%94%B9%E8%B6%8A%E5%B7%AE%EF%BC%9F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F04.html" target="_blank" rel="noopener">反馈内容勘误</a></div><nav class="chapter-nav" aria-label="前后篇"><a href="../course/03.html"><span>上一篇 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg></span><strong>03｜非线性：四行规则，为什么乘加函数做不到？</strong></a><a href="../course/05.html"><span>下一篇 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><strong>05｜反向传播：9个参数，难道要逐个试？</strong></a></nav><footer class="reader-footer">Hello LLM · 手写小模型，看懂大模型<details class="community-mini"><summary>关注与交流 · 好好用 AI</summary><div class="community-section"><div><h2>关注与交流 · 好好用 AI</h2><p>交流学习中的问题与实践心得。</p><p>代码问题和勘误，欢迎在 <a href="https://github.com/DavidDingXu/hello-llm/issues" target="_blank" rel="noopener">GitHub 提交 Issue</a>。</p></div><a class="qr-link" href="../code/assets/wechat-official-account.jpg" target="_blank" rel="noopener" aria-label="查看好好用 AI 公众号二维码原图"><img src="../code/assets/wechat-official-account.jpg" alt="好好用 AI 微信公众号二维码" width="130" height="130" loading="lazy"><p class="qr-caption">微信扫码 · 点击查看原图</p></a></div></details></footer></main>
+<aside class="context-sidebar" aria-label="本篇辅助导航"><div class="context-inner"><nav class="reading-route" aria-label="本篇路线"><details open><summary>本篇路线</summary><div class="toc">
+<ul>
+<li><a href="#离目标一样远分数也应该一样">离目标一样远，分数也应该一样</a></li>
+<li><a href="#不一下改很远只从-1-挪到-11">不一下改很远，只从 1 挪到 1.1</a></li>
+<li><a href="#这串比例为什么越来越接近-16">这串比例，为什么越来越接近 −16？</a></li>
+<li><a href="#回到开头同一个-16为什么得到两种结果">回到开头：同一个 −16，为什么得到两种结果？</a></li>
+<li><a href="#再加一个偏置这个办法还能用吗">再加一个偏置，这个办法还能用吗？</a></li>
+<li><a href="#把两个参数放到同一张图里">把两个参数放到同一张图里</a></li>
+<li><a href="#在程序里只换一个学习率重跑">在程序里，只换一个学习率重跑</a></li>
+<li><a href="#两道题检查局部与步长">两道题，检查“局部”与“步长”</a></li>
+</ul>
+</div>
+</details></nav>
+<section class="reading-settings"><h2>阅读设置</h2><div class="font-controls js-only"><button type="button" data-font="-1" aria-label="减小正文字号">A−</button><span data-font-size-label>18</span><button type="button" data-font="1" aria-label="增大正文字号">A+</button></div><span>建议预留 40 分钟</span><p class="lesson-goal">区分梯度给出的局部方向与实际更新步长。</p></section>
+</div></aside></div><dialog class="search-dialog" id="search-dialog" aria-labelledby="search-label">
+<form method="dialog" class="search-heading"><label for="course-search" id="search-label"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg>搜索课程</label><button class="icon-button" aria-label="关闭搜索"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></form>
+<input id="course-search" type="search" placeholder="搜索概念、代码或问题…" autocomplete="off" spellcheck="false">
+<p class="search-status" id="search-status" role="status">输入关键词，搜索全部 23 篇文章。</p>
+<div class="search-results" id="search-results"></div><footer>↑ ↓ 选择结果 <span>Enter 打开 · Esc 关闭</span></footer></dialog>
+<dialog class="experiment-viewer" id="experiment-viewer" aria-labelledby="experiment-title"><header><strong id="experiment-title">交互实验</strong><div><a id="experiment-standalone" target="_blank" rel="noopener">独立打开 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a><button class="button" id="close-experiment" type="button">返回阅读 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div></header><iframe id="experiment-frame" title="交互实验" src="about:blank"></iframe></dialog>
+<dialog class="image-viewer" id="image-viewer" aria-label="放大配图">
+<header><span>查看配图</span><div class="image-actions"><button type="button" id="image-zoom-out" aria-label="缩小配图">−</button><output id="image-scale" aria-label="缩放比例">100%</output><button type="button" id="image-zoom-in" aria-label="放大配图">＋</button><button type="button" id="image-size">原尺寸</button><button type="button" id="close-image" autofocus>关闭</button></div></header>
+<div class="image-canvas"><p id="image-status" role="status" hidden></p><img id="large-image" alt=""></div><footer><p id="image-description"></p><a id="original-image" target="_blank" rel="noopener">打开原图 <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6m0-6-9 9M10 4H4v16h16v-6"/></svg></a></footer></dialog>
+<div class="toast" id="toast" role="status"></div></body></html>

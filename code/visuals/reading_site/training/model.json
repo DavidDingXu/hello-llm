@@ -261,10 +261,11 @@
     "code/tiny_lm/losses.py": "b3b8e92e5afd92289db4fc9a0df3482ff1ca556f1a9bb4cc9ab28d835e37e905",
     "code/tiny_lm/generate.py": "5742adb687a885621083b9618452b98d7a23a3680821a2159df018efaa243d43",
     "code/tiny_lm/checkpoint.py": "28d210073cf10677be355205d2dadc45a0e383fe7191996f7e9a4d7a72c1bbbc",
+    "code/artifacts/first_run/initial.pt": "f4182e12d50dee3ddc8dfa0a48454f38517e0f4578db8e33d58dc3d109fd7f3e",
     "code/artifacts/first_run/pretrain.pt": "d512807ecd9a7e54af0d7d7f4e4fb44871094661e3e4157a23ae1360ccc823aa",
     "code/requirements.txt": "32f0bed4bab3aeb535cb8a1a35f4db28e93d0af973ae3044bde84611b180e052",
     "code/requirements-browser-training.txt": "b0d1d2b9ca872317c1bd87fd8a9e79108f0b9af09361d94d38c0d561331b8b5a",
-    "code/visuals/export_browser_training.py": "86929dcaa378c547ecbb16f7913588ac86c038bb51f03199c427c3d18ac53ac5"
+    "code/visuals/export_browser_training.py": "ef2b7ccac06ace5b6702efe2cafd913a001130bf24c87db1c80bd079b8ee92db"
   },
   "export_validation": {
     "loss": 4.76837158203125e-07,

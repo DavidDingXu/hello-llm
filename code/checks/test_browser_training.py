@@ -18,7 +18,7 @@ sys.path.insert(0, str(CODE))
 from tiny_lm import train
 from tiny_lm.checkpoint import load_checkpoint
 from tiny_lm.data import build_records, make_pretrain_batch, make_sft_batch
-from tiny_lm.model import ModelConfig, TinyLM
+from tiny_lm.model import ModelConfig
 from tiny_lm.tokenizer import CharTokenizer
 from visuals.export_browser_training import DESTINATION, check_assets, training_recipe
 from visuals.training_lab import render_training_lab
@@ -58,8 +58,12 @@ class BrowserTrainingChecks(unittest.TestCase):
         optimizer, presets = training_recipe(train)
         self.assertEqual(json.loads(json.dumps(optimizer)), self.manifest['optimizer'])
         self.assertEqual(presets, self.manifest['presets'])
-        torch.manual_seed(presets['pretrain']['seed'])
-        initial = TinyLM(ModelConfig(vocab_size=self.tokenizer.vocab_size))
+        # 精确核对保存的课程权重；相同种子在不同平台上不保证逐位一致。
+        initial, saved_tokenizer, metadata = load_checkpoint(CODE / 'artifacts/first_run/initial.pt')
+        self.assertEqual(initial.config, ModelConfig(vocab_size=self.tokenizer.vocab_size))
+        self.assertEqual(saved_tokenizer.itos, self.tokenizer.itos)
+        self.assertEqual(metadata['stage'], 'initial')
+        self.assertEqual(metadata['seed'], presets['pretrain']['seed'])
         pretrained, _, _ = load_checkpoint(CODE / 'artifacts/first_run/pretrain.pt')
         for name, model in [('initial', initial), ('pretrained', pretrained)]:
             expected = np.concatenate([p.detach().numpy().ravel() for p in model.parameters()])

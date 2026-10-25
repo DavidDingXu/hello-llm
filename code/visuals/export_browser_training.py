@@ -15,7 +15,7 @@ COLUMN = CODE.parent
 DESTINATION = Path(__file__).with_name('reading_site') / 'training'
 SOURCE_FILES = [*(CODE/'tiny_lm'/name for name in ('model.py','layers.py','attention.py','rope.py',
     'train.py','data.py','tokenizer.py','losses.py','generate.py','checkpoint.py')),
-    CODE/'artifacts/first_run/pretrain.pt', CODE/'requirements.txt',
+    CODE/'artifacts/first_run/initial.pt', CODE/'artifacts/first_run/pretrain.pt', CODE/'requirements.txt',
     CODE/'requirements-browser-training.txt', Path(__file__)]
 
 
@@ -71,7 +71,7 @@ def build():
     from tiny_lm.checkpoint import load_checkpoint
     from tiny_lm.data import build_records, make_pretrain_batch, make_sft_batch
     from tiny_lm.losses import token_loss
-    from tiny_lm.model import ModelConfig, TinyLM
+    from tiny_lm.model import ModelConfig
     from tiny_lm.tokenizer import CharTokenizer
 
     torch.set_num_threads(1)
@@ -79,7 +79,13 @@ def build():
     torch.manual_seed(presets['pretrain']['seed'])
     groups, tokenizer = build_records(), CharTokenizer.for_course()
     config = ModelConfig(vocab_size=tokenizer.vocab_size)
-    model = TinyLM(config)
+    # 固定课程记录的实验起点，避免不同平台重新抽样时的浮点差异。
+    model, initial_tokenizer, initial_metadata = load_checkpoint(CODE/'artifacts/first_run/initial.pt')
+    if (model.config != config or initial_tokenizer.itos != tokenizer.itos
+            or initial_metadata.get('stage') != 'initial'
+            or initial_metadata.get('seed') != presets['pretrain']['seed']):
+        raise ValueError('初始检查点与课程模型、词表或随机种子不一致')
+    model.train()
     batch_size, positions = presets['pretrain']['batch_size'], config.max_seq_len
     if batch_size != presets['sft']['batch_size']:
         raise ValueError('预训练与微调批量变化后需重新定义浏览器图输入')

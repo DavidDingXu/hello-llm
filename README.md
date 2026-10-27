@@ -92,3 +92,7 @@ Hello LLM 是「好好用 AI」原创的语言模型入门课程。沿着一个 
 ## 许可
 
 代码采用 [PolyForm Noncommercial 1.0.0](LICENSE)，原创教材、图解、视频与数据采用 [CC BY-NC 4.0](LICENSE-CONTENT)，供非商业学习、修改与分享。详见[许可说明](LICENSING.md)。
+
+## 友链
+
+[LINUX DO](https://linux.do/)

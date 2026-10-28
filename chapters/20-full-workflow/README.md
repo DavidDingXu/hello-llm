@@ -190,7 +190,7 @@ python -m tiny_lm.train --out artifacts/my_swapped_run
 <details class="optional" markdown="1">
 <summary>展开核对代码：重新加载权重，逐题打印实际结果</summary>
 
-将下面的代码保存为仓库根目录的`check_swapped.py`，运行`python check_swapped.py`。它会加载磁盘上的新权重，重新生成四条结果。
+将下面的代码保存到当前配套代码目录，文件名为`check_swapped.py`（与`tiny_lm/`、`artifacts/`同级），在该目录运行`python check_swapped.py`。它会加载磁盘上的新权重，重新生成四条结果。
 
 ```python
 from pathlib import Path

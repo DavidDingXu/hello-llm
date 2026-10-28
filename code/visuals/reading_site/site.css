@@ -278,3 +278,100 @@ html:has(dialog:modal){overflow:hidden}
 
 .video-duration{white-space:nowrap;flex-shrink:0}
 [data-theme=dark] .brand small{color:var(--muted)}
+
+/* The homepage leads with one experiment and the reading route. */
+.home-page .home-hero{grid-template-columns:1.12fr 1fr;gap:56px;padding-block:48px}
+.home-page .hero-copy .book-eyebrow{margin:0 0 18px;font-size:12px;letter-spacing:.12em}
+.home-page .hero-copy h1{font-size:46px;line-height:1.25}
+.home-page .hero-copy>p{margin-top:20px;line-height:1.8}
+.home-page .hero-actions{gap:12px;margin-top:24px}
+.home-page .hero-actions .button{font-size:14px;padding:13px 18px;gap:8px}
+.home-page .hero-actions .button.secondary{background:var(--paper);color:var(--accent);border-color:var(--line)}
+.home-page .hero-copy p.hero-note{margin-top:16px;min-height:0;font-size:12px}
+.hero-download{display:inline-flex;align-items:center;gap:8px;margin-top:12px;font-size:12px;color:var(--muted)}
+.hero-download .icon{width:14px;height:14px}
+.learning-example{min-width:0;padding:26px 28px;border:1px solid var(--line);border-radius:8px;background:var(--paper)}
+.learning-example .example-label{font-size:11px;letter-spacing:.08em;color:var(--muted)}
+.learning-example h2{margin:12px 0 18px;font-size:23px;line-height:1.45;font-weight:650;letter-spacing:-.02em}
+.example-question{font-size:16px;line-height:1.6}
+.example-answers{margin:18px 0 0}
+.example-answers>div{display:grid;grid-template-columns:96px minmax(0,1fr);align-items:baseline;gap:16px;padding:14px 0;border-top:1px solid var(--line)}
+.example-answers dt{font-size:12px;color:var(--muted)}
+.example-answers dd{margin:0;font-size:19px;line-height:1.5}
+.example-answers>div:last-child dd{color:var(--accent);font-weight:600}
+.learning-example .example-note{border-top:1px solid var(--line);padding-top:13px;margin-top:0;font-size:12px;line-height:1.8;color:var(--muted)}
+.example-note a{display:inline-flex;align-items:center;gap:4px;margin-left:8px;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+.example-note .icon{width:12px;height:12px}
+.home-page .curriculum-section{padding-top:36px}
+.home-page .curriculum-section .section-heading{margin-bottom:14px}
+.learning-prerequisites{max-width:80ch;margin:0 0 28px;font-size:13px;line-height:1.9;color:var(--muted)}
+.home-resources{border-top:1px solid var(--line);padding-block:32px}
+.home-resources .section-heading{margin-bottom:20px}
+.resource-list{border-top:1px solid var(--line);font-size:14px}
+.resource-list summary{padding:18px 0;cursor:pointer;color:var(--ink)}
+.resource-list>div{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 28px;padding-bottom:14px}
+.resource-list a{display:flex;align-items:center;gap:10px;padding:12px 0;font-size:13px;line-height:1.7;color:var(--muted)}
+.resource-list a:hover{color:var(--accent)}
+.resource-list a>span,.resource-list a>small{font:11px var(--mono)}
+.resource-list a .icon{flex-shrink:0;width:14px;margin-left:auto}
+.resource-list>p{margin:0 0 12px}
+.resource-list>p a{width:fit-content}
+html[lang=en] .example-answers>div{grid-template-columns:110px minmax(0,1fr)}
+html[lang=en] .example-answers dd{font-size:16px}
+@media(max-width:860px){
+ .home-page .home-hero{gap:30px;grid-template-columns:1fr;max-width:660px;padding-block:36px}
+ .home-page .hero-copy h1{font-size:40px}
+ .resource-list>div{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:600px){
+ .home-page .home-hero{gap:24px;padding-block:28px}
+ .home-page .hero-copy h1{font-size:34px}
+ .home-page .hero-copy .book-eyebrow{font-size:10px;margin-bottom:14px}
+ .home-page .hero-copy>p{font-size:15px;margin-top:16px}
+ .home-page .hero-actions{gap:10px;margin-top:20px}
+ .home-page .hero-actions .button{font-size:13px;padding:12px 14px}
+ .home-page .hero-copy p.hero-note{font-size:11px;line-height:1.8;margin-top:14px}
+ .learning-example{padding:18px 20px}
+ .learning-example h2{font-size:20px;margin:10px 0 12px}
+ .example-question{font-size:14px}
+ .example-answers{margin-top:14px}
+ .example-answers>div{gap:10px;padding:12px 0;grid-template-columns:88px minmax(0,1fr)}
+ .example-answers dd{font-size:18px}
+ .learning-example .example-note{font-size:11px}
+ .home-page .curriculum-section{padding-top:28px}
+ .home-page .section-heading h2{font-size:24px}
+ .learning-prerequisites{font-size:12px;margin-bottom:22px}
+ .resource-list>div{grid-template-columns:1fr}
+ html[lang=en] .home-page .hero-copy h1{font-size:34px}
+ html[lang=en] .example-answers>div{grid-template-columns:100px minmax(0,1fr)}
+ html[lang=en] .example-answers dd{font-size:14px}
+}
+
+/* Training examples are readable before the advanced controls. */
+.training-samples{margin:22px 0;padding-block:18px;border-block:1px solid var(--line)}
+.training-samples h4,.training-results>h4{font-size:17px;line-height:1.5;margin:0 0 10px}
+.training-lab .training-data-summary,.training-lab .sample-change-note{font-size:13px;line-height:1.8;color:var(--muted);margin:10px 0}
+.sample-previews{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0}
+.sample-previews>div{min-width:0;padding:12px 14px;background:var(--paper);border-left:2px solid var(--line)}
+.sample-previews span{font-size:12px;color:var(--muted)}
+.sample-previews p{white-space:pre-wrap;overflow-wrap:anywhere;margin:7px 0 0;font-size:14px;line-height:1.8}
+.training-lab .sample-editor{margin-top:14px}
+.sample-editor .sample-help{font-size:12px;line-height:1.8;color:var(--muted);margin:12px 0}
+.sample-selects{display:grid;grid-template-columns:1fr 1.5fr;gap:14px}
+.sample-editor label{display:block;min-width:0;margin:12px 0;font-size:13px;color:var(--muted)}
+.sample-editor select,.sample-editor textarea{display:block;width:100%;max-width:100%;min-width:0;margin-top:7px;padding:10px 12px;border:1px solid var(--line);border-radius:5px;background:var(--paper);color:var(--ink);font:16px/1.7 var(--sans)}
+.sample-editor textarea{resize:vertical;min-height:88px}
+.sample-editor textarea:read-only{background:var(--soft)}
+.sample-editor .sample-editor-status{font-size:13px;line-height:1.8;margin:10px 0;color:var(--muted)}
+.sample-editor .sample-error{color:#a13c2f}
+[data-theme=dark] .sample-editor .sample-error{color:#ffaaa0}
+.sample-vocab p{font-size:14px;word-break:break-all;line-height:2;padding:10px 0}
+.sample-tools{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.training-results>h4{margin-top:20px}
+.training-results .training-chart-tabs{margin-top:24px}
+@media(max-width:600px){.sample-previews,.sample-selects{grid-template-columns:minmax(0,1fr)}.training-samples{margin-block:18px}.sample-editor select{font-size:16px}.sample-previews p{font-size:14px}}
+#article-body .training-samples .training-data-summary,#article-body .sample-change-note{font-size:14px;line-height:1.75;margin:10px 0}
+#article-body .sample-previews p{font-size:14px;line-height:1.75;margin:6px 0 0}
+#article-body .sample-editor .sample-help,#article-body .sample-editor .sample-editor-status{font-size:13px;line-height:1.8;margin:10px 0}
+.training-edited-generations{display:grid;gap:12px}
+#article-body .training-edited .generation-text{white-space:pre-wrap;overflow-wrap:anywhere}

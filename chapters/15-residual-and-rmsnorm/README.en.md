@@ -71,25 +71,25 @@ import torch
 from torch import nn
 
 class RMSNorm(nn.Module):
-    """沿最后的特征轴做均方根缩放，不减均值，输入输出形状相同。"""
+    """Scale by the RMS over the final feature axis without subtracting the mean; preserve the input shape."""
     def __init__(self, width, eps=1e-5):
         super().__init__()
-        # 每个特征坐标各有一个可训练乘数，初值为 1。
+        # Each feature coordinate has a trainable multiplier initialized to 1.
         self.scale = nn.Parameter(torch.ones(width))
         self.eps = eps
 
     def forward(self, x):
-        # 对 [B,T,D] 得到 [B,T,1]；样本与位置不混在同一个均值中。
+        # [B,T,D] becomes [B,T,1]; compute a separate mean for each sample and position.
         mean_square = x.square().mean(dim=-1, keepdim=True)
-        # rsqrt 是 1/sqrt；eps 让零向量也有非零分母。
+        # rsqrt is 1/sqrt; eps gives even the zero vector a nonzero denominator.
         inverse_rms = torch.rsqrt(mean_square + self.eps)
-        # 共同分母广播回各坐标，再乘该坐标自己的 scale。
+        # Broadcast the shared denominator over the coordinates, then multiply by each coordinate's scale.
         return x * inverse_rms * self.scale
 
 norm = RMSNorm(2)
 x = torch.tensor([3., 4.])
-print(norm(x))       # 含 eps，约 [0.848528, 1.131370]
-print(norm(10 * x))  # 接近，但由于 eps，并非数学上完全相同
+print(norm(x))       # Including eps, approximately [0.848528, 1.131370]
+print(norm(10 * x))  # Close, but not mathematically identical because of eps
 print(norm(torch.zeros(2)))  # [0., 0.]
 ```
 
@@ -108,7 +108,7 @@ from tiny_lm.attention import split_heads, merge_heads, attention_2d
 from tiny_lm.rope import apply_rope
 
 class CausalSelfAttention(nn.Module):
-    """输入和输出都是[B,T,D]；四组投影参数随这个组件一起保存。"""
+    """Inputs and outputs are [B,T,D]; this component stores all four projection parameter sets."""
     def __init__(self, width, heads, theta=10000.):
         super().__init__()
         self.heads, self.theta = heads, theta
@@ -118,16 +118,16 @@ class CausalSelfAttention(nn.Module):
         self.out_proj = nn.Linear(width, width, bias=False)
 
     def forward(self, x):
-        # 三份投影先保留全部位置，再把特征分为[B,H,T,d]。
+        # All three projections retain every position, then split features into [B,H,T,d].
         q = split_heads(self.q_proj(x), self.heads)
         k = split_heads(self.k_proj(x), self.heads)
         v = split_heads(self.v_proj(x), self.heads)
         positions = torch.arange(x.shape[1], device=x.device)
-        # 位置改变Q/K的匹配，V保持原投影；旋转不改变张量形状。
+        # Position changes Q/K matching, while V keeps its original projection; rotation preserves tensor shapes.
         q, k = apply_rope(q, k, positions, self.theta)
-        # 每个头独立屏蔽未来、归一化，再汇总V。
+        # Each head independently masks future positions, normalizes, and aggregates V.
         context, _ = attention_2d(q, k, v, causal=True)
-        # 先按原位置拼回，再用输出投影混合各头；仍是位置表示。
+        # Concatenate by original position, then mix heads with the output projection; these are still position representations.
         return self.out_proj(merge_heads(context))
 ```
 
@@ -136,7 +136,7 @@ We can now trace the entire call sequence. `x` first produces Q/K/V; after split
 Check the assembled behavior again. Replacing the future third position should leave the first two positions unchanged. A shape-only check could miss an omitted causal mask.
 
 ```python
-# 这里核对刚刚写出的类；不加载训练权重，也没有参数更新。
+# Check the class just defined without loading trained weights or updating parameters.
 torch.manual_seed(42)
 assembled = CausalSelfAttention(64, 2)
 sample = torch.randn(1, 4, 64)
@@ -173,10 +173,10 @@ from tiny_lm.layers import SwiGLU
 from tiny_lm.model import ModelConfig
 
 class TransformerBlock(nn.Module):
-    """接收并返回 [B,T,D]，两条分支都采用先归一、后计算的 Pre-Norm。"""
+    """Take and return [B,T,D]; both branches use Pre-Norm, normalizing before computation."""
     def __init__(self, config):
         super().__init__()
-        # 两份 Norm 参数相互独立，分别服务注意力分支与前馈分支。
+        # The two Norm parameter sets are independent, one for attention and one for the feed-forward branch.
         self.norm1 = RMSNorm(config.d_model, config.norm_eps)
         self.attention = CausalSelfAttention(
             config.d_model, config.n_heads, config.rope_theta)
@@ -184,17 +184,17 @@ class TransformerBlock(nn.Module):
         self.ffn = SwiGLU(config.d_model, config.d_ff)
 
     def forward(self, x):
-        # 直路保留原始 x；只有送入注意力分支的副本先经过 norm1。
+        # The direct path keeps the original x; only the attention branch receives norm1(x).
         h = x + self.attention(self.norm1(x))
-        # 第二个直路保留刚得到的 h，FFN 接收的也由 h 而非旧 x 归一化。
+        # The second direct path keeps the new h; FFN also receives normalized h, not the original x.
         return h + self.ffn(self.norm2(h))
 
 torch.manual_seed(42)
 block = TransformerBlock(ModelConfig())
 inputs = torch.randn(1, 3, 64, requires_grad=True)
 outputs = block(inputs)
-print(inputs.shape, outputs.shape)  # 都是 [1,3,64]
-# 只检查直路与分支能否传回梯度；没有 step，因此没有修改参数。
+print(inputs.shape, outputs.shape)  # Both are [1,3,64]
+# Check gradient flow through the direct path and branches only; without step, parameters stay unchanged.
 outputs.square().mean().backward()
 assert torch.isfinite(inputs.grad).all()
 ```
@@ -218,7 +218,7 @@ For question one, RMS grows tenfold to approximately **35.355339**. Ignoring `ep
 Run this from the `code` companion code directory:
 
 ```bash
-# 在配套代码目录运行本讲实验，核对正文中的结果。
+# Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l15
 ```
 

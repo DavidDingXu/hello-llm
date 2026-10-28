@@ -18,12 +18,12 @@ The last position contains “欢”. It can read the whole known prompt, and it
 import torch
 from tiny_lm.checkpoint import load_checkpoint
 
-# 加载预训练参数、词表与配置；后续前向使用这份保存的参数。
+# Load pretrained parameters, vocabulary, and configuration; later forward passes use these saved parameters.
 model, tokenizer, _ = load_checkpoint("artifacts/first_run/pretrain.pt")
-# 一个样本，BOS 加七个提示字符，形成 [1,8] 的已知前文。
+# One sample: BOS plus seven prompt characters gives known context of shape [1,8].
 inputs = torch.tensor([tokenizer.encode("早上，小丁喜欢", add_bos=True)])
-# 模型输出 [1,8,79]，只取最后位置预测尚未出现的下一项。
-next_logits = model(inputs)[0, -1]  # 79 项分数
+# The model returns [1,8,79]; use only the final position to predict the next unseen item.
+next_logits = model(inputs)[0, -1]  # 79 scores
 print(next_logits.shape)  # torch.Size([79])
 ```
 
@@ -59,37 +59,37 @@ The loop only needs to retain the current ID sequence and repeat “forward pass
 @torch.no_grad()
 def continue_text(model, tokenizer, prompt, max_new_tokens=8,
                   greedy=False, temperature=.8, seed=42):
-    """固定权重逐项生成，返回可见续写与停止原因；每次重算完整前缀，无 KV cache。"""
+    """Generate token by token with fixed weights; return visible text and the stop reason, recomputing the full prefix without a KV cache."""
     if max_new_tokens < 0 or (not greedy and temperature <= 0):
         raise ValueError("新增长度不能为负，采样温度必须为正")
-    tokens = [1] + tokenizer.encode(prompt)  # BOS 也占一个上下文位置。
+    tokens = [1] + tokenizer.encode(prompt)  # BOS also occupies one context position.
     if 3 in tokens or len(tokens) > model.config.max_seq_len:
         raise ValueError("提示词含未知字符或超过上下文长度")
     device = next(model.parameters()).device
-    # 随机数只用于采样，不修改模型权重；固定种子便于对照。
+    # Randomness is only for sampling, not weight updates; fix the seed for comparison.
     rng = torch.Generator(device=device).manual_seed(seed)
     generated, reason = [], "max_new_tokens"
-    model.eval()  # 切换评估模式；不建立反向记录由上面的 no_grad 装饰器负责。
+    model.eval()  # Switch to evaluation mode; the no_grad decorator above disables gradient tracking.
     for _ in range(max_new_tokens):
-        # 达到本模型的 32 项限制就停止，不裁掉旧字符继续写。
+        # Stop at this model's 32-item limit; do not discard old characters to continue generation.
         if len(tokens) >= model.config.max_seq_len:
             reason = "context_limit"
             break
-        # 当前全部前文 [1,T] 重新前向，取最后位置的 [V] 候选分数。
+        # Recompute the full current prefix [1,T] and take the last position's [V] candidate scores.
         inputs = torch.tensor([tokens], dtype=torch.long, device=device)
         logits = model(inputs)[0, -1].clone()
-        # 禁止输出 PAD/BOS/UNK，保留 EOS；归一化后被禁项概率为 0。
+        # Disallow PAD/BOS/UNK but retain EOS; forbidden items have probability 0 after normalization.
         logits[[0, 1, 3]] = float("-inf")
-        # 贪心不使用温度，采样才先除以 temperature；最后沿候选轴 Softmax。
+        # Greedy selection ignores temperature; sampling divides by temperature before Softmax over candidates.
         probabilities = (logits if greedy else logits / temperature).softmax(-1)
         if greedy:
             selected = int(probabilities.argmax())
         else:
             selected = int(torch.multinomial(probabilities, 1, generator=rng).item())
-        # 选择结果接回输入，下一次前向才知道刚才选了哪个字。
+        # Append the selected item to the input so the next forward pass can use it.
         tokens.append(selected)
         if selected == 2:
-            # EOS 也消耗一次选择，但不加入返回的可见文本。
+            # EOS also consumes a selection step but is excluded from the returned visible text.
             reason = "eos"
             break
         generated.append(selected)
@@ -141,7 +141,7 @@ Compare parameter digests before and after generation to check whether parameter
 from tiny_lm.trace import parameter_digest
 from tiny_lm.generate import generate
 
-# 比较生成前后的参数值；输入会增长，参数应保持同一份。
+# Compare parameter values before and after generation; inputs grow, but parameters should remain unchanged.
 before = parameter_digest(model)
 result = generate(model, tokenizer, "早上，小丁喜欢", greedy=True)
 assert parameter_digest(model) == before
@@ -155,16 +155,16 @@ Run the supplied entry point from the `code` companion code directory.
 If you completed Lesson 17's training, generate with your own weights:
 
 ```bash
-# 使用第17讲亲手训练并保存的权重。
+# Use the weights you trained and saved in Lesson 17.
 python -m lessons.l18 --checkpoint artifacts/my_run/pretrain.pt --prompt '早上，小丁喜欢' --greedy
 ```
 
 To verify the record in this lesson, run the following two commands with the author's weights, using greedy selection and random sampling respectively:
 
 ```bash
-# 加载指定权重并生成文字；本命令不更新参数。
+# Load the specified weights and generate text; this command does not update parameters.
 python -m lessons.l18 --checkpoint artifacts/first_run/pretrain.pt --prompt '早上，小丁喜欢' --greedy
-# 加载指定权重并生成文字；本命令不更新参数。
+# Load the specified weights and generate text; this command does not update parameters.
 python -m lessons.l18 --checkpoint artifacts/first_run/pretrain.pt --prompt '早上，小丁喜欢' --temperature 0.8
 ```
 

@@ -10,7 +10,7 @@
 
 ```bash
 git clone https://github.com/DavidDingXu/hello-llm.git
-cd hello-llm/配套代码
+cd hello-llm/code
 ```
 
 也可以下载 GitHub 的 ZIP，解压后进入 `code/`。下面的命令都在这个目录执行。
@@ -74,20 +74,20 @@ Windows / Linux 先按 [PyTorch 官方 CPU 安装方式](https://pytorch.org/get
 macOS / Linux：
 
 ```bash
-.venv/bin/python -m tiny_lm.train --out artifacts/my_run
+.venv/bin/python -m tiny_lm.train --out artifacts/quickstart_run
 ```
 
 Windows PowerShell：
 
 ```powershell
-.\.venv\Scripts\python.exe -m tiny_lm.train --out artifacts/my_run
+.\.venv\Scripts\python.exe -m tiny_lm.train --out artifacts/quickstart_run
 ```
 
-命令依次准备数据、预训练、问答微调并生成对照。结果写入指定目录，包含权重、训练日志与数据快照。重复实验使用不同的输出目录，便于比较。
+命令依次准备数据、预训练、问答微调并生成对照。结果写入指定目录，包含权重、训练日志与数据快照。这次体验保存在 `artifacts/quickstart_run`；第17—19讲的逐讲实验另用 `artifacts/my_run`。重复实验时换一个目录，避免把不同轮次的权重和日志混在一起。
 
 ## 常见问题
 
-- **提示找不到 `lessons`**：确认当前目录为 `hello-llm/配套代码`，并用 `-m lessons.lXX` 运行。
+- **提示找不到 `lessons`**：确认当前目录为 `hello-llm/code`，并用 `-m lessons.lXX` 运行。
 - **安装了依赖仍提示缺包**：检查是否仍在使用 `.venv` 内的解释器，安装与运行必须对应。
 - **提示找不到 Python 3.12**：先安装 Python 3.12，重新打开终端后再创建虚拟环境。macOS / Linux 用 `python3.12 --version`、Windows 用 `py -3.12 --version` 核对。
 - **安装时提示没有匹配的 NumPy 或 PyTorch 版本**：先核对 Python 版本和系统架构；不要把系统自带的旧 Python 环境用于第 06 讲之后的固定依赖。

@@ -56,27 +56,27 @@ The rearrangement itself adds no parameters and changes no values. The code need
 import torch
 
 def split_heads(x, heads):
-    """把 [B,T,D] 的特征分为 H 组，返回 [B,H,T,d]，其中 d=D/H。"""
+    """Split [B,T,D] features into H groups, returning [B,H,T,d], where d=D/H."""
     batch, positions, width = x.shape
     if heads <= 0 or width % heads != 0:
         raise ValueError("表示宽度必须能被头数整除")
-    # 先得到 [B,T,H,d]，再交换位置轴与头轴；每个头仍保留全部位置。
+    # First form [B,T,H,d], then swap the position and head axes; each head retains all positions.
     return x.reshape(batch, positions, heads,
                      width // heads).transpose(1, 2)
 
 def merge_heads(x):
-    """逆转分头重排，将同一位置的各头结果拼成 [B,T,H*d]。"""
+    """Reverse the head split, concatenating each position's head outputs into [B,T,H*d]."""
     batch, heads, positions, width = x.shape
-    # contiguous 仅整理交换轴后的内存布局，不改变坐标对应的数值。
+    # contiguous reorganizes memory after the axis swap without changing the value at any coordinate.
     return x.transpose(1, 2).contiguous().reshape(
         batch, positions, heads * width)
 
-# 0—11 用来追踪坐标，不是字符编号；一个样本、三个位置、四维表示。
+# 0—11 track coordinates, not character IDs: one sample, three positions, and four-dimensional representations.
 x = torch.arange(12, dtype=torch.float32).reshape(1, 3, 4)
 heads = split_heads(x, 2)
 print(heads)
 assert heads.shape == (1, 2, 3, 2)
-# 除了形状与往返，还要核对具体位置，防止两次错误重排恰好互相抵消。
+# Check specific entries as well as shapes and round trips; two incorrect rearrangements could cancel each other out.
 assert heads[0, 0, 1].tolist() == [4., 5.]
 assert heads[0, 1, 1].tolist() == [6., 7.]
 assert torch.equal(merge_heads(heads), x)
@@ -130,39 +130,39 @@ import math
 from torch import nn
 
 def attend(q, k, v):
-    """对 [...,T,d] 做因果注意力；样本、头等前导轴各自独立计算。"""
-    # Q/K 分头后为 [B,H,T,d]，得分为 [B,H,T,T]；缩放用 d 而非总宽度。
+    """Apply causal attention to [...,T,d], computing independently along leading axes such as samples and heads."""
+    # Split Q/K are [B,H,T,d] and scores are [B,H,T,T]; scale using d, not the total width.
     scores = q @ k.transpose(-2, -1) / math.sqrt(q.shape[-1])
     length = q.shape[-2]
-    # True 是可读位置；这张 [T,T] 掩码会广播到所有样本和头。
+    # True marks visible positions; this [T,T] mask broadcasts to every sample and head.
     visible = torch.ones(length, length, dtype=torch.bool,
                          device=q.device).tril()
-    # 沿最后的 K 位置轴归一化；未来先置 -inf，才会分到零比例。
+    # Normalize over the final K-position axis; mask future scores with -inf first to give them zero weight.
     weights = torch.softmax(
         scores.masked_fill(~visible, float("-inf")), dim=-1)
     return weights @ v
 
 torch.manual_seed(42)
-# 四个 Linear 保存各自的参数，前三个生成 Q/K/V，最后一个混合各头结果。
+# Four Linear layers hold separate parameters: three produce Q/K/V, and the last combines head outputs.
 q_proj = nn.Linear(4, 4, bias=False)
 k_proj = nn.Linear(4, 4, bias=False)
 v_proj = nn.Linear(4, 4, bias=False)
 out_proj = nn.Linear(4, 4, bias=False)
 
-# 投影 [1,3,4] 后再分头，每个 Q/K/V 均为 [1,2,3,2]。
+# Project [1,3,4], then split into heads; Q, K, and V each become [1,2,3,2].
 q = split_heads(q_proj(x), 2)
 k = split_heads(k_proj(x), 2)
 v = split_heads(v_proj(x), 2)
 context = attend(q, k, v)
-# 先按位置拼回四维，再经输出投影；不是把两个头逐项相加。
+# Concatenate heads back into four dimensions per position, then project; do not add the heads elementwise.
 output = out_proj(merge_heads(context))
 
-# 参考路径每次取一个头，输入形状变成 [B,T,d]。
+# The reference calculation takes one head at a time, with input shape [B,T,d].
 reference_heads = []
 for head in range(2):
     reference_heads.append(attend(q[:, head], k[:, head],
                                   v[:, head]))
-# stack 在轴 1 恢复头轴，与一次批量计算的 [B,H,T,d] 对齐。
+# stack restores the head axis at axis 1, matching the batched result's [B,H,T,d] shape.
 reference = torch.stack(reference_heads, dim=1)
 assert torch.allclose(context, reference)
 assert output.shape == x.shape
@@ -213,13 +213,13 @@ For question one, the shape is `[1, 1, 3, 4]`, and position 1 contains `[4, 5, 6
 For question two, no. In the correct result, head 0 receives `[0,1]` and `[4,5]` at its two positions. Without swapping the axes, it receives `[0,1]` and `[2,3]`, mistaking another feature group from position 0 for position 1. The two axes happen to have equal lengths, so a shape check cannot detect the mistake.
 
 ```python
-# 沿用前面的 split_heads；这次让位置数与头数都为2，避免只靠形状判定。
+# Reuse split_heads; set both position and head counts to 2 to show why shape checks alone are insufficient.
 short_x = torch.arange(8, dtype=torch.float32).reshape(1, 2, 4)
 correct = split_heads(short_x, 2)
-# 故意漏掉 transpose：轴的长度没变，头与位置的含义却被混淆了。
+# Deliberately omit transpose: axis lengths stay the same, but head and position meanings become mixed up.
 wrong = short_x.reshape(1, 2, 2, 2)
 assert correct.shape == wrong.shape == (1, 2, 2, 2)
-print("头0、位置1：", correct[0, 0, 1], wrong[0, 0, 1])
+print("Head 0, position 1:", correct[0, 0, 1], wrong[0, 0, 1])
 assert correct[0, 0, 1].tolist() == [4., 5.]
 assert wrong[0, 0, 1].tolist() == [2., 3.]
 ```
@@ -231,7 +231,7 @@ If you get these axes reversed, label the two length-2 axes “position” and �
 Run this from the companion code directory:
 
 ```bash
-# 在配套代码目录运行本讲实验，核对正文中的结果。
+# Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l12
 ```
 

@@ -204,7 +204,7 @@ print(batched.shape)  # torch.Size([1, 3, 2])
 python -m lessons.l14
 ```
 
-macOS 可把 `python` 换成 `python3`，Windows 可使用已安装环境里的 `py`。配套代码：[运行入口](https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l14.py) · [前馈网络源码](https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/layers.py)。
+沿用安装依赖时的虚拟环境解释器：macOS / Linux 用 `.venv/bin/python -m lessons.l14`，Windows PowerShell 用 `.\.venv\Scripts\python.exe -m lessons.l14`。配套代码：[运行入口](https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l14.py) · [前馈网络源码](https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/layers.py)。
 
 源码导航：[layers.py · SwiGLU](https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/layers.py#L33)。
 

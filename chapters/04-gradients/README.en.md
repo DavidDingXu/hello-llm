@@ -141,37 +141,37 @@ In the [3D demo](https://daviddingxu.github.io/hello-llm/chapters/04-gradients/l
 The following code uses only standard Python features. A central difference tries `w+ε` and `w−ε`, then estimates the derivative from the loss difference on the two sides. It is useful for checking hand calculations. Here, `ε` corresponds to `epsilon` in the code; the two trial weights are `2ε` apart, so divide the loss difference by `2ε`.
 
 ```python
-# 输入与目标固定；本例只调整标量参数 w。
+# Keep the input and target fixed; this example changes only the scalar parameter w.
 x, target = 2.0, 6.0
 
 
 def loss_at(w):
-    """用给定权重预测，返回它与目标之间的平方误差。"""
+    """Predict using the given weight and return the squared error against the target."""
     prediction = x * w
     return (prediction - target) ** 2
 
 
 def central_difference(function, w, epsilon=1e-5):
-    """在同一权重两侧各试一次，用损失差估计当前位置的导数。"""
+    """Evaluate both sides of the weight and use the loss difference to estimate its derivative."""
     return (function(w + epsilon) - function(w - epsilon)) / (2 * epsilon)
 
 
 w = 1.0
-print("输入、权重、目标：", x, w, target)
-print("当前预测与损失：", x * w, loss_at(w))
+print("Input, weight, target:", x, w, target)
+print("Current prediction and loss:", x * w, loss_at(w))
 for delta in [0.1, 0.01, 0.001]:
-    # 这里求小区间内的平均变化率，delta 越小越接近局部导数。
+    # This is the average rate of change over a small interval; smaller delta approaches the local derivative.
     rate = (loss_at(w + delta) - loss_at(w)) / delta
-    print("试改幅度、变化比例：", delta, rate)
+    print("Perturbation, rate of change:", delta, rate)
 
-# 平方误差对预测的导数，乘预测对 w 的导数 x。
+# Multiply the squared error's derivative with respect to the prediction by x, the prediction's derivative with respect to w.
 gradient = 2 * (x * w - target) * x
-print("公式与差分：", gradient, central_difference(loss_at, w))
+print("Analytic and finite-difference derivatives:", gradient, central_difference(loss_at, w))
 
 for learning_rate in [0.1, 0.3]:
-    # 两次都从原来的 w 出发，只比较步长，不把第一次结果接着更新。
+    # Start both trials from the original w to compare step sizes; do not continue from the first update.
     new_w = w - learning_rate * gradient
-    print("学习率、新权重、新损失：", learning_rate, new_w, loss_at(new_w))
+    print("Learning rate, new weight, new loss:", learning_rate, new_w, loss_at(new_w))
 ```
 
 The derivative formula first takes the rate of change of squared error with respect to the difference, `2×(prediction−target)`, then multiplies it by the rate of change of the prediction with respect to the weight, `x`. The next lesson will explain why rates of change multiply along a chain of calculations.
@@ -195,7 +195,7 @@ Answers: For the first exercise, the current prediction is 1, and the derivative
 Run this from the `code` directory:
 
 ```bash
-# 在配套代码目录运行本讲实验，核对正文中的结果。
+# Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l04
 ```
 

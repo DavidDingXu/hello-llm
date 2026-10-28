@@ -116,38 +116,38 @@ Nor do we append a position index as a new coordinate. The 32 dimensions remain 
 import torch
 
 def apply_rope(q, k, positions, theta=10000.):
-    """按位置旋转 [B,H,T,d] 的 Q/K，返回同形结果；V 不进入此函数。"""
+    """Rotate [B,H,T,d] Q/K by position and return the same shapes; V is not passed to this function."""
     width = q.shape[-1]
     if (q.shape != k.shape or width % 2 != 0
             or positions.ndim != 1 or len(positions) != q.shape[-2]):
         raise ValueError("Q/K同形、头宽度为偶数，位置数等于序列长度")
 
-    # 每个相邻坐标对配一个固定频率，共 d/2 项，不是可训练参数。
+    # Assign a fixed frequency to each adjacent coordinate pair: d/2 values, none trainable.
     frequency = theta ** (-torch.arange(
         0, width, 2, device=q.device, dtype=q.dtype) / width)
-    # [T,1] 的位置乘 [1,d/2] 的频率，得到每个位置、每对坐标的弧度。
+    # [T,1] positions times [1,d/2] frequencies give the angle in radians for every position and coordinate pair.
     angles = positions.to(device=q.device, dtype=q.dtype)[:, None] * frequency[None, :]
     cosine, sine = angles.cos(), angles.sin()
 
     def rotate(x):
-        """对 (0,1)、(2,3)…配对，保持原来的相邻坐标顺序。"""
-        # 两个切片均为 [B,H,T,d/2]，分别取每对的第一项和第二项。
+        """Pair (0,1), (2,3), and so on, preserving the original adjacent-coordinate order."""
+        # Both slices are [B,H,T,d/2], selecting the first and second coordinates of each pair.
         a, b = x[..., 0::2], x[..., 1::2]
-        # [T,d/2] 的正余弦自动广播到样本轴和头轴。
+        # The [T,d/2] sines and cosines broadcast over the sample and head axes.
         rotated = torch.stack((a * cosine - b * sine,
                                a * sine + b * cosine), dim=-1)
-        # stack 得到 [...,d/2,2]，合并最后两轴还原成 [...,d]。
+        # stack gives [...,d/2,2]; merge the final two axes to restore [...,d].
         return rotated.flatten(-2)
 
     return rotate(q), rotate(k)
 
-# 一个样本、一个头、三个位置、每位置两维；三处内容相同，只改变位置。
+# One sample, one head, three positions, and two dimensions per position; content is identical, only position changes.
 q = torch.tensor([[[[1., 0.], [1., 0.], [1., 0.]]]])
 k = q.clone()
 positions = torch.arange(3)
 rotated_q, rotated_k = apply_rope(q, k, positions)
-# 位置 1 的第一对频率为 1，所以转 1 弧度，不是四分之一圈。
-print(rotated_q[0, 0, 1])  # 约[0.54030231, 0.84147098]
+# At position 1, the first pair's frequency is 1, so it rotates by 1 radian, not a quarter turn.
+print(rotated_q[0, 0, 1])  # Approximately [0.54030231, 0.84147098]
 print(rotated_q @ rotated_k.transpose(-2, -1))
 ```
 
@@ -171,20 +171,20 @@ The following snippet recomputes only the final query, for which all three keys 
 
 ```python
 def read_last(keys, values):
-    """固定位置2的查询；K/V按当前顺序放置，再旋转、算比例、汇总。"""
-    # 增加样本与头两根轴，把 [3,2] 的 K 放成 [1,1,3,2]。
+    """Fix the query at position 2; place K/V in their current order, rotate, compute attention weights, and aggregate."""
+    # Add sample and head axes to turn K from [3,2] into [1,1,3,2].
     rq, rk = apply_rope(q, keys[None, None], positions)
-    # 只取最后一行 Q；三项得分都除以头宽度2的平方根。
+    # Take only the last Q row; divide all three scores by the square root of head width 2.
     scores = (rq[0, 0, -1] @ rk[0, 0].T) / (2 ** 0.5)
     return scores.softmax(-1) @ values
 
 keys = torch.tensor([[1., 0.], [0., 1.], [1., 1.]])
 values = torch.tensor([[1., 0.], [0., 2.], [1., 2.]])
-# K和对应V一起换位；查询内容与 positions=[0,1,2] 保持原样。
+# Swap K and its corresponding V together; keep the query content and positions=[0,1,2] unchanged.
 order = torch.tensor([1, 0, 2])
 original = read_last(keys, values)
 swapped = read_last(keys[order], values[order])
-print(original, swapped)  # 约 [0.6047,1.6751]、[0.6475,1.4569]
+print(original, swapped)  # Approximately [0.6047,1.6751] and [0.6475,1.4569]
 assert not torch.allclose(original, swapped)
 ```
 
@@ -199,13 +199,13 @@ Check two rotation properties in code: vector lengths are preserved, and rotatin
 Continue with:
 
 ```python
-# 内容保持不变，所有位置同时加 7，检查相对位置关系是否保留。
+# Keep content fixed and add 7 to every position to check whether relative position relationships are preserved.
 shift_q, shift_k = apply_rope(q, k, positions + 7)
-# 最后两轴得到 [T,T] 点积表，这里尚未缩放或做 Softmax。
+# The final two axes form a [T,T] dot-product table; scaling and Softmax have not been applied yet.
 dots = rotated_q @ rotated_k.transpose(-2, -1)
 shift_dots = shift_q @ shift_k.transpose(-2, -1)
 
-# 沿特征轴量长度；旋转不应拉长向量，共同平移也不应改变对应点积。
+# Measure length over the feature axis; rotation should preserve it, and shifting all positions equally should preserve dot products.
 assert torch.allclose(q.norm(dim=-1), rotated_q.norm(dim=-1))
 assert torch.allclose(dots, shift_dots, atol=1e-6)
 ```
@@ -241,7 +241,7 @@ For question one, both position differences are 1, so both dot products are `cos
 Run this from the companion code directory:
 
 ```bash
-# 在配套代码目录运行本讲实验，核对正文中的结果。
+# Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l13
 ```
 

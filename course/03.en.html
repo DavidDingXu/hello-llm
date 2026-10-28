@@ -1,14 +1,14 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
-<meta name="source-sha256" content="3ade57940dadeed2ce112c6b1fe85213b080a67a5dbc164cf1403a4185ce2a26"><meta name="description" content="The first three rules can all be satisfied, but the fourth must fail. Follow the four inputs to see why another layer is not enough and what ReLU changes."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/03.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="03 | Nonlinearity: Why Can Multiply-and-Add Not Express Four Simple Rules? · Hello LLM"><meta property="og:description" content="The first three rules can all be satisfied, but the fourth must fail. Follow the four inputs to see why another layer is not enough and what ReLU changes."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/03.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>03 | Nonlinearity: Why Can Multiply-and-Add Not Express Four Simple Rules? · Hello LLM</title>
+<meta name="source-sha256" content="660c59d060dd3a3139eba07cb3fa33803d5b83dcabd50feb053e1d67894e1123"><meta name="description" content="The first three rules can all be satisfied, but the fourth must fail. Follow the four inputs to see why another layer is not enough and what ReLU changes."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/03.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="03 | Nonlinearity: Why Can Multiply-and-Add Not Express Four Simple Rules? · Hello LLM"><meta property="og:description" content="The first three rules can all be satisfied, but the fourth must fail. Follow the four inputs to see why another layer is not enough and what ReLU changes."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/03.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>03 | Nonlinearity: Why Can Multiply-and-Add Not Express Four Simple Rules? · Hello LLM</title>
 <link rel="icon" href="../assets/favicon.png" type="image/png">
 <script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
-<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
-<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
-<script defer src="../code/visuals/reading_site/search-index.en.js?v=11db81a4dd60"></script>
-<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
-<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
-<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="03" data-alternate-sections="[&quot;前三行都对第四行却不对了&quot;, &quot;再接一层能绕过去吗&quot;, &quot;相加之前把负差值截掉&quot;, &quot;把刚才两条分支装回网络&quot;, &quot;只改一行看看结果会不会消失&quot;, &quot;两道改数题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=0a8bea167aca">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=0a8bea167aca">
+<script defer src="../code/visuals/reading_site/search-index.en.js?v=97f9a5a6b415"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=0a8bea167aca"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=0a8bea167aca"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=0a8bea167aca"></script></head><body class="article-page" data-root="../" data-page="03" data-alternate-sections="[&quot;前三行都对第四行却不对了&quot;, &quot;再接一层能绕过去吗&quot;, &quot;相加之前把负差值截掉&quot;, &quot;把刚才两条分支装回网络&quot;, &quot;只改一行看看结果会不会消失&quot;, &quot;两道改数题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
 <header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="Open course contents" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></path></svg></button>
 <a class="brand" href="../index.en.html" aria-label="Hello LLM · 学习站首页">
 <img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>Build a Small Model, Understand Large Models</small></span></a>
@@ -146,13 +146,13 @@ W2 = [[1, 1]]       b2 = [0]
 
 
 def forward(inputs, params):
-    &quot;&quot;&quot;用两层参数计算一份输入，返回预测值和本次的中间结果。&quot;&quot;&quot;
-    # 第一层每行权重产生一个 z，再逐项经过 ReLU 得到隐藏值。
+    &quot;&quot;&quot;Apply two layers to one input and return its prediction and intermediate results.&quot;&quot;&quot;
+    # Each weight row in the first layer produces one z; apply ReLU to each to get hidden values.
     z = linear(inputs, params[&quot;W1&quot;], params[&quot;b1&quot;])
     hidden = [relu(value) for value in z]
-    # 输出层读取两个隐藏值；它只做乘加，列表中只有一个结果。
+    # The output layer reads both hidden values and applies a linear transform, returning a one-item list.
     prediction = linear(hidden, params[&quot;W2&quot;], params[&quot;b2&quot;])[0]
-    # 缓存输入、激活前后数值，后面反向计算会读取它们；这里不改参数。
+    # Cache the input and values before and after activation for backpropagation; parameters stay unchanged.
     cache = {
         &quot;x&quot;: list(inputs), &quot;z&quot;: z, &quot;h&quot;: hidden,
         &quot;prediction&quot;: prediction,
@@ -160,14 +160,14 @@ def forward(inputs, params):
     return prediction, cache
 
 
-# 手工指定两条差值分支的参数；W1 的两行对应两个隐藏单元。
+# Set the two difference branches by hand; the two rows of W1 correspond to two hidden units.
 params = {
     &quot;W1&quot;: [[1, -1], [-1, 1]], &quot;b1&quot;: [0, 0],
     &quot;W2&quot;: [[1, 1]], &quot;b2&quot;: [0],
 }
 samples = [[0, 0], [0, 1], [1, 0], [1, 1]]
 for x in samples:
-    # 四份输入复用同一组参数，分别查看 z、ReLU 后的 h 与最终输出。
+    # All four inputs share parameters; inspect z, h after ReLU, and the final output for each.
     prediction, cache = forward(x, params)
     print(x, cache[&quot;z&quot;], cache[&quot;h&quot;], prediction)
 </code></pre>
@@ -212,7 +212,7 @@ for inputs in ([0, 0], [0, 1], [1, 0], [1, 1]):
 <p>Answers: For the first exercise, <code>z=[−0.5, 0.5]</code>, <code>h=[0, 0.5]</code>, and the output is <strong>0.5</strong>. It is determined by the current function and parameters; the four binary targets do not specify an answer for this new input. For the second, both outputs are <strong>0</strong>. Changing parameters still cannot meet all four requirements exactly, because all purely multiply-and-add layers can still be combined into one affine function, and the original contradiction remains.</p>
 </details>
 <p>Run this from the <code>code</code> directory:</p>
-<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+<pre><code class="language-bash"># Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l03
 </code></pre>
 <p>Companion resources: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l03.py">Entry point</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/manual_mlp.py">Two-layer forward implementation</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md">Environment setup</a></p>

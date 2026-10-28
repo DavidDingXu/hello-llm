@@ -92,16 +92,16 @@ import math
 import torch
 
 def attention(q, k, v, causal=True):
-    """汇总可见位置的 V；本例输入均为 [T,2]，返回 [T,2] 与 [T,T]。"""
-    # 行是发起查询的位置，列是被读取的 K 位置；按查询向量宽度缩放点积。
+    """Aggregate V at visible positions; inputs are [T,2], and outputs are [T,2] and [T,T]."""
+    # Rows are query positions and columns are K positions; scale dot products by the query width's square root.
     scores = q @ k.transpose(-2, -1) / math.sqrt(q.shape[-1])
     if causal:
-        # True 表示允许读取：下三角包含当前位置和过去，排除未来。
+        # True means visible: the lower triangle includes current and past positions, excluding the future.
         visible = torch.ones(scores.shape[-2:], dtype=torch.bool,
                              device=scores.device).tril()
-        # ~visible 选中未来格；必须在 Softmax 前置为 -inf，使其指数为 0。
+        # ~visible selects future entries; set them to -inf before Softmax so their exponentials become 0.
         scores = scores.masked_fill(~visible, float("-inf"))
-    # 最后一轴是 K 位置，每个查询行独立分配总和为 1 的比例。
+    # The last axis contains K positions; each query row distributes attention weights that sum to 1.
     weights = torch.softmax(scores, dim=-1)
     return weights @ v, weights
 
@@ -111,7 +111,7 @@ v = torch.tensor([[1., 0.], [0., 2.], [1., 2.]])
 output, weights = attention(q, k, v, causal=True)
 print(weights)
 print(output)
-# 核对未来位置的比例为零，而不是只把它们的 V 向量清零。
+# Check that future positions receive zero attention weight, rather than merely zeroing their V vectors.
 assert weights[0, 1:].eq(0).all()
 assert weights[1, 2].item() == 0.
 assert torch.allclose(weights.sum(dim=-1), torch.ones(3))
@@ -127,21 +127,21 @@ Test the mask by modifying the input. Keep the same projections: `Q=K=X`, and V 
 
 ```python
 def run(x, causal):
-    """固定投影 Q=K=X，只将 V 的第二坐标乘 2，便于比较可见范围。"""
+    """Fix Q=K=X and double only V's second coordinate to compare visibility ranges."""
     values = x @ torch.tensor([[1., 0.], [0., 2.]]).T
     return attention(x, x, values, causal=causal)[0]
 
 x = torch.tensor([[1., 0.], [0., 1.], [1., 1.]])
 changed_x = x.clone()
-# 只替换位置 2；位置 0、1 的输入和计算参数均保持原样。
+# Replace only position 2; inputs at positions 0 and 1 and all parameters stay unchanged.
 changed_x[2] = torch.tensor([4., 0.])
 
 before = run(x, causal=True)
 after = run(changed_x, causal=True)
 assert torch.allclose(before[:2], after[:2])
-print("因果前缀差值", (before[:2] - after[:2]).abs().max().item())
+print("Causal-prefix difference:", (before[:2] - after[:2]).abs().max().item())
 
-# 对照：取消因果限制后，位置 2 可以影响前两行。
+# Control: without the causal constraint, position 2 can affect the first two rows.
 open_before = run(x, causal=False)
 open_after = run(changed_x, causal=False)
 assert not torch.allclose(open_before[:2], open_after[:2])
@@ -188,7 +188,7 @@ For question one, no. The weights are approximately `[0.5035, 0.2483, 0.2483]`, 
 Run this from the companion code directory:
 
 ```bash
-# 在配套代码目录运行本讲实验，核对正文中的结果。
+# Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l11
 ```
 

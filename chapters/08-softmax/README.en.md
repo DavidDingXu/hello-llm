@@ -85,18 +85,18 @@ Be sure to **subtract the same maximum value from the whole row**, rather than s
 import math
 
 def softmax(scores):
-    """把同一位置的全部候选分数，转换为总和为 1 的概率列表。"""
+    """Convert all candidate scores at one position into probabilities summing to 1."""
     if not scores:
         raise ValueError("至少需要一个候选分数")
-    # 整行减同一个最大值，保留相对差距，同时避免指数过大。
+    # Subtract the same row maximum from every score to preserve gaps and avoid oversized exponentials.
     maximum = max(scores)
     positive = [math.exp(s - maximum) for s in scores]
-    # 所有候选共用这个分母；此时 positive 还不是概率。
+    # All candidates share this denominator; positive does not yet contain probabilities.
     total = sum(positive)
     return [value / total for value in positive]
 
 p = softmax([0., 1., 2.])
-# 共同平移分数后概率应相同，只有候选间的差距在这里起作用。
+# Shifting all scores equally should preserve probabilities; only the gaps between candidates matter here.
 shifted = softmax([1000., 1001., 1002.])
 print(p)
 assert abs(sum(p) - 1.) < 1e-12
@@ -117,23 +117,23 @@ Expand the three candidates to the course vocabulary's 79 entries and place the 
 import torch
 from torch import nn
 
-# 固定随机初值，只检查形状与概率；本段没有目标标签或参数更新。
+# Fix the random initialization and check shapes and probabilities only; there are no targets or parameter updates.
 torch.manual_seed(42)
-# 两份独立参数：先按编号选出 64 维向量，再给 79 个候选各算一项分数。
+# Two independent parameter sets: look up a 64-dimensional vector, then score each of the 79 candidates.
 embedding = nn.Embedding(79, 64)
 projection = nn.Linear(64, 79, bias=False)
 
-# 一条样本的“小丁喜欢”，编号形状为 [1,4]。
+# One sample containing “小丁喜欢”, with ID shape [1,4].
 ids = torch.tensor([[27, 6, 22, 44]], dtype=torch.long)
 hidden = embedding(ids)
 logits = projection(hidden)
-# 只沿最后的词表候选轴归一化，每个位置各有一份分布，不混合不同位置。
+# Normalize only over the final vocabulary axis; each position gets its own distribution.
 probabilities = torch.softmax(logits, dim=-1)
 
 print(hidden.shape)         # [1, 4, 64]
 print(logits.shape)         # [1, 4, 79]
 print(probabilities.sum(dim=-1))
-# 对每个位置分别求和，四行概率的和都应接近 1。
+# Sum separately at each position; all four rows should sum to approximately 1.
 assert torch.allclose(probabilities.sum(dim=-1),
                       torch.ones(1, 4))
 ```
@@ -171,7 +171,7 @@ Answers: For the first exercise, subtracting the same number preserves the distr
 Run this from the companion code directory:
 
 ```bash
-# 在配套代码目录运行本讲实验，核对正文中的结果。
+# Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l08
 ```
 

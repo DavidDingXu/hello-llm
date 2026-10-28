@@ -36,7 +36,6 @@ These directions can also lead to a small application, such as answering questio
 
 Save your current results, then change one condition. When you encounter an unfamiliar model, you can investigate it just as you traced the row for “欢”: follow the input, ask what information it read, find which calculation changed the result, and determine which parameters training changed.
 
-Next time, continue with a question an experiment can test.
 
 <!-- chapter-navigation:start -->
 

@@ -70,22 +70,22 @@ from tiny_lm.tokenizer import CharTokenizer
 torch.set_num_threads(1)
 torch.manual_seed(42)
 tokenizer = CharTokenizer.for_course()
-# 新建随机模型检查依赖路径，不要求先训练；eval 本身不修改参数。
+# Create a random model to check dependency paths without training; eval itself does not change parameters.
 model = TinyLM(ModelConfig()).eval()
 
-# BOS 加十三个字符得到 [1,14]，输出将是每个位置的 79 项候选分数。
+# BOS plus thirteen characters gives [1,14]; the output has 79 candidate scores at each position.
 ids = torch.tensor([tokenizer.encode(
     "早上，小丁喜欢红色的苹果。", add_bos=True)])
 changed = ids.clone()
 assert tokenizer.itos[int(ids[0, 8])] == "红"
-# 只改位置 8 的输入编号，词表、参数和更早位置都不改。
+# Change only the input ID at position 8; keep the vocabulary, parameters, and earlier positions fixed.
 changed[0, 8] = tokenizer.stoi["黄"]
 
-# 两次只做前向，不计算梯度也不更新参数。
+# Run two forward passes without computing gradients or updating parameters.
 with torch.no_grad():
     before = model(ids)
     after = model(changed)
-# :8 对应位置 0—7；最大值覆盖这些位置的全部候选分数。
+# :8 selects positions 0—7; take the maximum over all candidate scores at those positions.
 prefix_difference = (before[:, :8] - after[:, :8]).abs().max()
 suffix_difference = (before[:, 8:] - after[:, 8:]).abs().max()
 print(float(prefix_difference), float(suffix_difference))
@@ -109,21 +109,21 @@ from tiny_lm.data import build_records, make_sft_batch
 from tiny_lm.losses import token_loss
 
 record = build_records()["sft_train"][0]
-# 同一条问答的输入始终不变，只比较两种损失标签。
+# Keep the same question-answer input fixed and compare only two sets of loss targets.
 x, correct = make_sft_batch([record], tokenizer)
-# 首个非 -100 的标签是首答案“红”；复制后只把这一题额外忽略。
+# The first target other than -100 is the first answer character, “红”; copy the labels and additionally ignore only this target.
 first = int((correct[0] != -100).nonzero()[0].item())
 wrong = correct.clone()
 wrong[0, first] = -100
 
 with torch.no_grad():
-    # 前向只运行一次；两种评分共用同一份 [B,T,V] 原始分数。
-    logits = model(x)  # 两种标签共用这一份分数
+    # Run the forward pass once; both scoring methods use the same [B,T,V] raw scores.
+    logits = model(x)  # Both target sets use these same scores
     correct_loss = token_loss(logits, correct)
     wrong_loss = token_loss(logits, wrong)
 
-# 列出实际参与平均的目标与数量，防止把评分内容改变误认成模型变化。
-for name, labels in [("正确", correct), ("错后一格", wrong)]:
+# List the scored targets and their count to distinguish a changed scoring set from a changed model.
+for name, labels in [("Correct targets", correct), ("First answer target omitted", wrong)]:
     indices = (labels[0] != -100).nonzero().flatten().tolist()
     targets = [tokenizer.itos[int(labels[0, i])] for i in indices]
     print(name, len(indices), targets)
@@ -174,7 +174,7 @@ Before running, write down your predictions. Will editing these two entries imme
 Then run this from the code repository root:
 
 ```bash
-# 从随机参数重新训练，结果写入新目录，便于与原实验比较。
+# Retrain from random parameters and save to a new directory for comparison with the original experiment.
 python -m tiny_lm.train --out artifacts/my_swapped_run
 ```
 
@@ -192,7 +192,7 @@ The continuation prompts mean “In the morning, Xiaoding likes” and “In the
 <details class="optional" markdown="1">
 <summary>Expand the verification code: reload weights and print each actual result</summary>
 
-Save the code below as `check_swapped.py` at the repository root and run `python check_swapped.py`. It loads the new weights from disk and generates the four results again.
+Save the code below as `check_swapped.py` in the code directory, alongside `tiny_lm/` and `artifacts/`, and run `python check_swapped.py` from that directory. It loads the new weights from disk and generates the four results again.
 
 ```python
 from pathlib import Path
@@ -200,8 +200,8 @@ from tiny_lm.checkpoint import load_checkpoint
 from tiny_lm.generate import generate
 
 def check_swapped_run(run_dir):
-    """重载两个阶段的权重，核对四条输出；返回实际结果，便于继续比较。"""
-    # 每个阶段使用与其训练形式对应的题；字符串中的 \n 是真正的换行。
+    """Reload both stages' weights and check four outputs; return the actual results for further comparison."""
+    # Use prompts matching each stage's training format; \n in the strings becomes an actual newline.
     cases = {
         "pretrain": [("早上，小丁喜欢", "黄色的香蕉。"),
                      ("晚上，小周拿着", "红色的苹果。")],
@@ -210,28 +210,28 @@ def check_swapped_run(run_dir):
     }
     results = []
     for stage, questions in cases.items():
-        # 每份检查点都带着自己的词表和参数，生成不依赖当前 FACTS。
+        # Each checkpoint carries its own vocabulary and parameters; generation does not depend on current FACTS.
         model, tokenizer, _ = load_checkpoint(Path(run_dir) / f"{stage}.pt")
         count = sum(p.numel() for p in model.parameters())
-        print(stage, "词表：", model.config.vocab_size, "参数：", count)
+        print(stage, "Vocabulary size:", model.config.vocab_size, "Parameters:", count)
         for prompt, expected in questions:
-            # 固定用最高分选择，避免抽样随机性干扰这次比较。
+            # Always select the highest-scoring item to keep sampling randomness out of this comparison.
             output = generate(model, tokenizer, prompt,
                               max_new_tokens=8, greedy=True)
             actual = output["generated_text"]
-            # 文字一致还不够：也检查模型是否选到了 EOS。
+            # Matching text is not enough; also check whether the model selected EOS.
             matched = actual == expected and output["stop_reason"] == "eos"
             results.append({"stage": stage, "prompt": prompt,
                             "actual": actual, "expected": expected,
                             "matched": matched})
             print(repr(prompt), "→", actual,
-                  "符合预期" if matched else "需要检查",
-                  "停止原因：", output["stop_reason"])
-    print("符合预期：", sum(row["matched"] for row in results), "/", len(results))
+                  "Matches" if matched else "Needs checking",
+                  "Stop reason:", output["stop_reason"])
+    print("Matches:", sum(row["matched"] for row in results), "/", len(results))
     return results
 
 if __name__ == "__main__":
-    # 改成 artifacts/first_run，可以重新查看旧模型的答案。
+    # Change this to artifacts/first_run to inspect the original model's answers again.
     check_swapped_run("artifacts/my_swapped_run")
 ```
 
@@ -342,14 +342,14 @@ The reference result is stored in `artifacts/transfer_challenge.json`, including
 Run the two controlled comparisons and this lesson's overview:
 
 ```bash
-# 在配套代码目录运行本讲实验，核对正文中的结果。
+# Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l20
 ```
 
 Check numerical behavior, data boundaries, the model, and saving/reloading. The original replay reads `first_run/data/`, while new runs read their own snapshots, so these checks still work after editing FACTS:
 
 ```bash
-# 运行项目的正确性检查。
+# Run the project's correctness checks.
 python -m unittest discover -s checks -v
 ```
 

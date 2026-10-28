@@ -127,25 +127,25 @@ The following core code retains parameters, scores, proportions, and outputs for
 import math
 import torch
 
-# 三个位置各有两个坐标；这是构造数值，不预先指定中文语义。
+# Three positions with two coordinates each; these are constructed values with no assigned linguistic meaning.
 x = torch.tensor([[1., 0.], [0., 1.], [1., 1.]])
-# 三组可训练投影参数：Q/K 在本例保留坐标，V 把第二坐标乘 2。
+# Three trainable projections: Q/K preserve coordinates here, while V multiplies the second coordinate by 2.
 wq = torch.eye(2, requires_grad=True)
 wk = torch.eye(2, requires_grad=True)
 wv = torch.tensor([[1., 0.], [0., 2.]], requires_grad=True)
 q, k, v = x @ wq.T, x @ wk.T, x @ wv.T
 
 def attention(q, k, v):
-    """每行 Q 查询各行 K，再汇总 V；返回输出、匹配分数与读取比例。"""
-    # 行选查询位置，列选被读位置；除以查询宽度的平方根来缓和分数尺度。
+    """Let each Q row query the K rows and aggregate V; return outputs, matching scores, and attention weights."""
+    # Rows select query positions and columns select read positions; divide by the square root of query width to scale scores.
     scores = q @ k.transpose(-2, -1) / math.sqrt(q.shape[-1])
-    # 每行在被读位置之间分配比例；这里尚未加掩码，允许读取全部位置。
+    # Each row distributes weight over read positions; there is no mask yet, so every position is visible.
     weights = torch.softmax(scores, dim=-1)
-    # [3,3] 比例乘 [3,2] 内容，得到 [3,2]；比例是本次算出的量，不是参数。
+    # [3,3] weights times [3,2] values gives [3,2]; these weights are computed for this pass, not model parameters.
     return weights @ v, scores, weights
 
 output, scores, weights = attention(q, k, v)
-# 单独重算第 0 个查询，与矩阵版第一行核对，使用同一份 K/V。
+# Recompute query 0 separately using the same K/V and compare it with the matrix version's first row.
 first_scores = (q[0] @ k.T) / math.sqrt(2)
 first_weights = torch.softmax(first_scores, dim=-1)
 first_output = first_weights @ v
@@ -154,7 +154,7 @@ print(scores)
 print(weights)
 print(output)
 assert torch.allclose(first_output, output[0])
-# 三个查询各自一行，分别沿被读位置求和，不能把九项一起归一化。
+# Each of the three queries has its own row; sum over read positions, not all nine entries together.
 assert torch.allclose(weights.sum(dim=-1), torch.ones(3))
 ```
 
@@ -174,12 +174,12 @@ A model can be built that way, but it restricts the matching scores. If both sid
 If we want to allow “position 0 scores position 1 highly, but the reverse direction scores low,” independent projection tables can express that difference. Construct an example with two input rows, `[[1,0],[0,1]]`, and inspect the dot products before scaling or normalization:
 
 ```python
-# 这是单独的构造实验；两行输入、每行两个坐标，不代表具体词义。
+# This separate constructed example has two input rows with two coordinates each, without assigned word meanings.
 pair_x = torch.tensor([[1., 0.], [0., 1.]])
-pair_q = pair_x @ torch.eye(2).T  # 查询投影暂取单位矩阵。
-# 共用投影时，K与Q相同，两个方向的点积都是0。
+pair_q = pair_x @ torch.eye(2).T  # Use the identity matrix for the query projection.
+# With shared projections, K equals Q and both directional dot products are 0.
 shared_scores = pair_q @ pair_q.T
-# 换一张键投影表，得到 K=[[0,0],[2,0]]，保持Q不变。
+# Change the key projection to get K=[[0,0],[2,0]], keeping Q unchanged.
 key_projection = torch.tensor([[0., 2.], [0., 0.]])
 pair_k = pair_x @ key_projection.T
 separate_scores = pair_q @ pair_k.T
@@ -204,9 +204,9 @@ Hold Q and K fixed, and change the third V row from `[1, 2]` to `[3, 2]`. Neithe
 Coordinate 0 of position 0 increases by `2×0.4011≈0.8022`, while coordinate 1 stays unchanged. Continue with this code to check:
 
 ```python
-# 沿用上段的 Q/K 与 attention；复制 V 的数值，本次只做固定比例的干预。
+# Reuse Q/K and attention from above; copy V's values to test a change with fixed attention weights.
 changed_v = v.detach().clone()
-# 只改第三行的第 0 坐标，不重新生成 Q/K，因此匹配分数与比例应保持不变。
+# Change only coordinate 0 of the third V row; Q/K, matching scores, and attention weights should stay unchanged.
 changed_v[2, 0] = 3.
 changed_output, _, changed_weights = attention(q, k, changed_v)
 assert torch.allclose(changed_weights, weights)
@@ -238,7 +238,7 @@ Answers: For the first exercise, the increase is `2×0.4011≈0.8022`, and the w
 Run this from the companion code directory:
 
 ```bash
-# 在配套代码目录运行本讲实验，核对正文中的结果。
+# Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l10
 ```
 

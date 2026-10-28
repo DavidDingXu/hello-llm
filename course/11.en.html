@@ -1,14 +1,14 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
-<meta name="source-sha256" content="bb85898ae1e3673a8281f7fa4f7cb3c5bf55ce7427111407822364533da185cb"><meta name="description" content="The future answer is already in memory. Why can the current position still not read it? Draw the permitted connections, then exclude forbidden scores before normalization."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/11.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="11 | Causal Masks: Why Is Parallel Training Not Peeking at the Answer? · Hello LLM"><meta property="og:description" content="The future answer is already in memory. Why can the current position still not read it? Draw the permitted connections, then exclude forbidden scores before normalization."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/11.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>11 | Causal Masks: Why Is Parallel Training Not Peeking at the Answer? · Hello LLM</title>
+<meta name="source-sha256" content="22d23958f50d07bcfc32b74319f0d2fbfe500a417da8d7abb73029e645b88c0d"><meta name="description" content="The future answer is already in memory. Why can the current position still not read it? Draw the permitted connections, then exclude forbidden scores before normalization."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/11.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="11 | Causal Masks: Why Is Parallel Training Not Peeking at the Answer? · Hello LLM"><meta property="og:description" content="The future answer is already in memory. Why can the current position still not read it? Draw the permitted connections, then exclude forbidden scores before normalization."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/11.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>11 | Causal Masks: Why Is Parallel Training Not Peeking at the Answer? · Hello LLM</title>
 <link rel="icon" href="../assets/favicon.png" type="image/png">
 <script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
-<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
-<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
-<script defer src="../code/visuals/reading_site/search-index.en.js?v=11db81a4dd60"></script>
-<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
-<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
-<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="11" data-alternate-sections="[&quot;把可能泄露答案的那一格找出来&quot;, &quot;先把不该存在的连接划掉&quot;, &quot;把未来得分改成-0能不能堵住&quot;, &quot;把限制写进核心代码&quot;, &quot;现在把未来换掉检查它是否还在漏&quot;, &quot;既然各看各的前缀为什么还能一起算&quot;, &quot;两道检查题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=0a8bea167aca">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=0a8bea167aca">
+<script defer src="../code/visuals/reading_site/search-index.en.js?v=97f9a5a6b415"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=0a8bea167aca"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=0a8bea167aca"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=0a8bea167aca"></script></head><body class="article-page" data-root="../" data-page="11" data-alternate-sections="[&quot;把可能泄露答案的那一格找出来&quot;, &quot;先把不该存在的连接划掉&quot;, &quot;把未来得分改成-0能不能堵住&quot;, &quot;把限制写进核心代码&quot;, &quot;现在把未来换掉检查它是否还在漏&quot;, &quot;既然各看各的前缀为什么还能一起算&quot;, &quot;两道检查题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
 <header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="Open course contents" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></path></svg></button>
 <a class="brand" href="../index.en.html" aria-label="Hello LLM · 学习站首页">
 <img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>Build a Small Model, Understand Large Models</small></span></a>
@@ -82,16 +82,16 @@
 import torch
 
 def attention(q, k, v, causal=True):
-    &quot;&quot;&quot;汇总可见位置的 V；本例输入均为 [T,2]，返回 [T,2] 与 [T,T]。&quot;&quot;&quot;
-    # 行是发起查询的位置，列是被读取的 K 位置；按查询向量宽度缩放点积。
+    &quot;&quot;&quot;Aggregate V at visible positions; inputs are [T,2], and outputs are [T,2] and [T,T].&quot;&quot;&quot;
+    # Rows are query positions and columns are K positions; scale dot products by the query width's square root.
     scores = q @ k.transpose(-2, -1) / math.sqrt(q.shape[-1])
     if causal:
-        # True 表示允许读取：下三角包含当前位置和过去，排除未来。
+        # True means visible: the lower triangle includes current and past positions, excluding the future.
         visible = torch.ones(scores.shape[-2:], dtype=torch.bool,
                              device=scores.device).tril()
-        # ~visible 选中未来格；必须在 Softmax 前置为 -inf，使其指数为 0。
+        # ~visible selects future entries; set them to -inf before Softmax so their exponentials become 0.
         scores = scores.masked_fill(~visible, float(&quot;-inf&quot;))
-    # 最后一轴是 K 位置，每个查询行独立分配总和为 1 的比例。
+    # The last axis contains K positions; each query row distributes attention weights that sum to 1.
     weights = torch.softmax(scores, dim=-1)
     return weights @ v, weights
 
@@ -101,7 +101,7 @@ v = torch.tensor([[1., 0.], [0., 2.], [1., 2.]])
 output, weights = attention(q, k, v, causal=True)
 print(weights)
 print(output)
-# 核对未来位置的比例为零，而不是只把它们的 V 向量清零。
+# Check that future positions receive zero attention weight, rather than merely zeroing their V vectors.
 assert weights[0, 1:].eq(0).all()
 assert weights[1, 2].item() == 0.
 assert torch.allclose(weights.sum(dim=-1), torch.ones(3))
@@ -111,21 +111,21 @@ assert torch.allclose(weights.sum(dim=-1), torch.ones(3))
 <h2 id="change-the-future-and-check-for-leakage">Change the Future and Check for Leakage</h2>
 <p>Test the mask by modifying the input. Keep the same projections: <code>Q=K=X</code>, and V multiplies the second coordinate by 2. Change the final input position from <code>[1, 1]</code> to <code>[4, 0]</code>. Its Q, K, and V all change, but positions 0 and 1 are not allowed to read it, so their outputs should stay the same.</p>
 <pre><code class="language-python">def run(x, causal):
-    &quot;&quot;&quot;固定投影 Q=K=X，只将 V 的第二坐标乘 2，便于比较可见范围。&quot;&quot;&quot;
+    &quot;&quot;&quot;Fix Q=K=X and double only V's second coordinate to compare visibility ranges.&quot;&quot;&quot;
     values = x @ torch.tensor([[1., 0.], [0., 2.]]).T
     return attention(x, x, values, causal=causal)[0]
 
 x = torch.tensor([[1., 0.], [0., 1.], [1., 1.]])
 changed_x = x.clone()
-# 只替换位置 2；位置 0、1 的输入和计算参数均保持原样。
+# Replace only position 2; inputs at positions 0 and 1 and all parameters stay unchanged.
 changed_x[2] = torch.tensor([4., 0.])
 
 before = run(x, causal=True)
 after = run(changed_x, causal=True)
 assert torch.allclose(before[:2], after[:2])
-print(&quot;因果前缀差值&quot;, (before[:2] - after[:2]).abs().max().item())
+print(&quot;Causal-prefix difference:&quot;, (before[:2] - after[:2]).abs().max().item())
 
-# 对照：取消因果限制后，位置 2 可以影响前两行。
+# Control: without the causal constraint, position 2 can affect the first two rows.
 open_before = run(x, causal=False)
 open_after = run(changed_x, causal=False)
 assert not torch.allclose(open_before[:2], open_after[:2])
@@ -153,7 +153,7 @@ assert not torch.allclose(open_before[:2], open_after[:2])
 <p>For question one, no. The weights are approximately <code>[0.5035, 0.2483, 0.2483]</code>, so the future remains visible. For question two, in a causal computation with fixed parameters, position 0 should remain unchanged. Position 2 may read position 1 and may therefore change. If only the target label changes, with inputs and parameters held fixed, all forward outputs remain the same. What changes is the loss and the gradients that may subsequently be computed.</p>
 </details>
 <p>Run this from the companion code directory:</p>
-<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+<pre><code class="language-bash"># Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l11
 </code></pre>
 <p>Complete entry points: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l11.py">Lesson runner</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/attention.py">Attention component</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md">Environment setup</a></p>

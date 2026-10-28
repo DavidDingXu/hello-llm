@@ -107,25 +107,25 @@ from torch import nn
 import torch.nn.functional as F
 
 class SwiGLU(nn.Module):
-    """对每个位置独立做 D→F→D 变换，输入与输出的最后一维均为 D。"""
+    """Apply D→F→D independently at each position; the final input and output dimensions are both D."""
     def __init__(self, width, expanded):
         super().__init__()
-        # up、gate 是两套独立投影参数；down 将扩宽后的表示送回原宽度。
+        # up and gate have independent projection parameters; down returns the expanded representation to its original width.
         self.up = nn.Linear(width, expanded, bias=False)
         self.gate = nn.Linear(width, expanded, bias=False)
         self.down = nn.Linear(expanded, width, bias=False)
 
     def forward(self, x):
-        # 两条支路读取同一份 x，分别得到 [...,F] 的内容与门控前数值。
+        # Both branches read the same x, producing [...,F] content values and gate preactivations.
         u = self.up(x)
         a = self.gate(x)
-        # g 是逐坐标乘数，可为负或大于 1，不是注意力概率。
-        g = F.silu(a)  # 等价于 a * torch.sigmoid(a)
-        # * 按同一位置、同一坐标相乘；down 再将 F 维投影回 D 维。
+        # g contains per-coordinate multipliers that may be negative or greater than 1; they are not attention probabilities.
+        g = F.silu(a)  # Equivalent to a * torch.sigmoid(a)
+        # * multiplies matching coordinates at each position; down projects F dimensions back to D.
         return self.down(u * g)
 
 ffn = SwiGLU(2, 4)
-# 仅为手算对照写入固定参数，不为这些赋值建立反向记录；参数仍可训练。
+# Write fixed parameters for the hand calculation without tracking the assignments; the parameters remain trainable.
 with torch.no_grad():
     ffn.up.weight.copy_(torch.tensor([
         [1., 0.], [0., 1.], [1., 1.], [1., -1.]]))
@@ -138,8 +138,8 @@ x = torch.tensor([1., 2.])
 u, a = ffn.up(x), ffn.gate(x)
 print("up:", u)
 print("gate:", F.silu(a))
-print("相乘:", u * F.silu(a))
-print("输出:", ffn(x))  # 约 [1.924234, -1.761594]
+print("Product:", u * F.silu(a))
+print("Output:", ffn(x))  # Approximately [1.924234, -1.761594]
 ```
 
 `no_grad()` surrounds the manual parameter assignment, so the assignment does not create a backward-computation record. Normal calls to `ffn(x)` still allow all three parameter groups to receive gradients. Autograd, which we have already studied, handles the derivatives of the activation and multiplication.
@@ -155,22 +155,22 @@ So far, we have tracked only one position. If we change the third position, will
 Run the following comparison, first processing all positions together and then calling the FFN one position at a time:
 
 ```python
-# [B,T,D]=[1,3,2]；同一套 FFN 参数分别作用于每个位置。
+# [B,T,D]=[1,3,2]; the same FFN parameters apply separately at each position.
 sequence = torch.tensor([[[1., 2.], [2., 1.], [-1., 1.]]],
                         requires_grad=True)  # [1,3,2]
 batched = ffn(sequence)
-# 逐位置运行并恢复位置轴，结果应与一次批量运行相同。
+# Run each position separately and restore the position axis; the result should match batched execution.
 one_by_one = torch.stack([
     ffn(sequence[:, t, :]) for t in range(sequence.shape[1])
 ], dim=1)
 assert torch.allclose(batched, one_by_one)
 
-# 只改位置 2；独立 FFN 不读取其他位置，所以位置 0 的输出保持不变。
+# Change only position 2; a standalone FFN does not read other positions, so position 0's output stays unchanged.
 changed = sequence.detach().clone()
 changed[:, 2, :] = torch.tensor([10., -3.])
 assert torch.allclose(ffn(changed)[:, 0], batched[:, 0])
 
-# 用演示标量检查梯度通路；这里没有优化器更新，也不是下一字训练损失。
+# Use a demonstration scalar to check gradient paths; there is no optimizer update or next-token training loss here.
 batched.square().mean().backward()
 assert all(p.grad is not None and torch.isfinite(p.grad).all()
            for p in ffn.parameters())
@@ -200,11 +200,11 @@ For question one, the product becomes `u=[1, 2, 3, −1]`, and down outputs **[4
 Run the lesson entry point from the `code` companion code directory:
 
 ```bash
-# 在配套代码目录运行本讲实验，核对正文中的结果。
+# Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l14
 ```
 
-On macOS, you can replace `python` with `python3`; on Windows, you can use `py` from your installed environment. Companion code: [Lesson runner](https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l14.py) · [Feed-forward network source](https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/layers.py).
+Use the same virtual-environment interpreter that installed the dependencies: `.venv/bin/python -m lessons.l14` on macOS/Linux, or `.\.venv\Scripts\python.exe -m lessons.l14` in Windows PowerShell. Companion code: [Lesson runner](https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l14.py) · [Feed-forward network source](https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/layers.py).
 
 Source navigation: [layers.py · SwiGLU](https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/layers.py#L33).
 

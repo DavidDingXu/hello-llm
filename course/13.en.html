@@ -1,14 +1,14 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
-<meta name="source-sha256" content="0620f799e73dbe51d64330b628ec21c40d369f7f42fa433a648e9f130c32461d"><meta name="description" content="Reordering content can leave an attention result unchanged. Use two rotating arrows to connect coordinates, radians, and relative position step by step."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/13.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="13 | RoPE: How Does the Model Know the Order? · Hello LLM"><meta property="og:description" content="Reordering content can leave an attention result unchanged. Use two rotating arrows to connect coordinates, radians, and relative position step by step."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/13.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>13 | RoPE: How Does the Model Know the Order? · Hello LLM</title>
+<meta name="source-sha256" content="43fa05d3f7782b82bac1f412594e05e96c00dabe3ba93e7551786817f321e413"><meta name="description" content="Reordering content can leave an attention result unchanged. Use two rotating arrows to connect coordinates, radians, and relative position step by step."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/13.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="13 | RoPE: How Does the Model Know the Order? · Hello LLM"><meta property="og:description" content="Reordering content can leave an attention result unchanged. Use two rotating arrows to connect coordinates, radians, and relative position step by step."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/13.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>13 | RoPE: How Does the Model Know the Order? · Hello LLM</title>
 <link rel="icon" href="../assets/favicon.png" type="image/png">
 <script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
-<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
-<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
-<script defer src="../code/visuals/reading_site/search-index.en.js?v=11db81a4dd60"></script>
-<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
-<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
-<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="13" data-alternate-sections="[&quot;先转四分之一圈坐标发生了什么&quot;, &quot;把位置-1-代进去会得到-01-吗&quot;, &quot;同样的内容不同的位置差&quot;, &quot;两个坐标能转32-个坐标怎样办&quot;, &quot;把旋转公式原样写成代码&quot;, &quot;回到开头的换序题这次还一样吗&quot;, &quot;是位置在起作用还是向量被意外放大了&quot;, &quot;隔得更远分数就一定更低吗&quot;, &quot;两道改数题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=0a8bea167aca">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=0a8bea167aca">
+<script defer src="../code/visuals/reading_site/search-index.en.js?v=97f9a5a6b415"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=0a8bea167aca"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=0a8bea167aca"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=0a8bea167aca"></script></head><body class="article-page" data-root="../" data-page="13" data-alternate-sections="[&quot;先转四分之一圈坐标发生了什么&quot;, &quot;把位置-1-代进去会得到-01-吗&quot;, &quot;同样的内容不同的位置差&quot;, &quot;两个坐标能转32-个坐标怎样办&quot;, &quot;把旋转公式原样写成代码&quot;, &quot;回到开头的换序题这次还一样吗&quot;, &quot;是位置在起作用还是向量被意外放大了&quot;, &quot;隔得更远分数就一定更低吗&quot;, &quot;两道改数题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
 <header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="Open course contents" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></path></svg></button>
 <a class="brand" href="../index.en.html" aria-label="Hello LLM · 学习站首页">
 <img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>Build a Small Model, Understand Large Models</small></span></a>
@@ -92,38 +92,38 @@
 <pre><code class="language-python">import torch
 
 def apply_rope(q, k, positions, theta=10000.):
-    &quot;&quot;&quot;按位置旋转 [B,H,T,d] 的 Q/K，返回同形结果；V 不进入此函数。&quot;&quot;&quot;
+    &quot;&quot;&quot;Rotate [B,H,T,d] Q/K by position and return the same shapes; V is not passed to this function.&quot;&quot;&quot;
     width = q.shape[-1]
     if (q.shape != k.shape or width % 2 != 0
             or positions.ndim != 1 or len(positions) != q.shape[-2]):
         raise ValueError(&quot;Q/K同形、头宽度为偶数，位置数等于序列长度&quot;)
 
-    # 每个相邻坐标对配一个固定频率，共 d/2 项，不是可训练参数。
+    # Assign a fixed frequency to each adjacent coordinate pair: d/2 values, none trainable.
     frequency = theta ** (-torch.arange(
         0, width, 2, device=q.device, dtype=q.dtype) / width)
-    # [T,1] 的位置乘 [1,d/2] 的频率，得到每个位置、每对坐标的弧度。
+    # [T,1] positions times [1,d/2] frequencies give the angle in radians for every position and coordinate pair.
     angles = positions.to(device=q.device, dtype=q.dtype)[:, None] * frequency[None, :]
     cosine, sine = angles.cos(), angles.sin()
 
     def rotate(x):
-        &quot;&quot;&quot;对 (0,1)、(2,3)…配对，保持原来的相邻坐标顺序。&quot;&quot;&quot;
-        # 两个切片均为 [B,H,T,d/2]，分别取每对的第一项和第二项。
+        &quot;&quot;&quot;Pair (0,1), (2,3), and so on, preserving the original adjacent-coordinate order.&quot;&quot;&quot;
+        # Both slices are [B,H,T,d/2], selecting the first and second coordinates of each pair.
         a, b = x[..., 0::2], x[..., 1::2]
-        # [T,d/2] 的正余弦自动广播到样本轴和头轴。
+        # The [T,d/2] sines and cosines broadcast over the sample and head axes.
         rotated = torch.stack((a * cosine - b * sine,
                                a * sine + b * cosine), dim=-1)
-        # stack 得到 [...,d/2,2]，合并最后两轴还原成 [...,d]。
+        # stack gives [...,d/2,2]; merge the final two axes to restore [...,d].
         return rotated.flatten(-2)
 
     return rotate(q), rotate(k)
 
-# 一个样本、一个头、三个位置、每位置两维；三处内容相同，只改变位置。
+# One sample, one head, three positions, and two dimensions per position; content is identical, only position changes.
 q = torch.tensor([[[[1., 0.], [1., 0.], [1., 0.]]]])
 k = q.clone()
 positions = torch.arange(3)
 rotated_q, rotated_k = apply_rope(q, k, positions)
-# 位置 1 的第一对频率为 1，所以转 1 弧度，不是四分之一圈。
-print(rotated_q[0, 0, 1])  # 约[0.54030231, 0.84147098]
+# At position 1, the first pair's frequency is 1, so it rotates by 1 radian, not a quarter turn.
+print(rotated_q[0, 0, 1])  # Approximately [0.54030231, 0.84147098]
 print(rotated_q @ rotated_k.transpose(-2, -1))
 </code></pre>
 <p><code>0::2</code> selects entries 0, 2, 4, and so on; <code>1::2</code> selects entries 1, 3, 5, and so on. These provide the two members of each adjacent coordinate pair. <code>stack</code> places the two new coordinates together, and <code>flatten(-2)</code> restores the full feature axis.</p>
@@ -136,20 +136,20 @@ print(rotated_q @ rotated_k.transpose(-2, -1))
 <p>Recompute the scaling, Softmax, and aggregation. The original order gives approximately <code>[0.6047,1.6751]</code>; the swapped order gives approximately <code>[0.6475,1.4569]</code>. The distinction previously erased by summation now affects the output.</p>
 <p>The following snippet recomputes only the final query, for which all three keys are visible. Reuse <code>q</code>, <code>positions</code>, and <code>apply_rope</code> from the previous snippet:</p>
 <pre><code class="language-python">def read_last(keys, values):
-    &quot;&quot;&quot;固定位置2的查询；K/V按当前顺序放置，再旋转、算比例、汇总。&quot;&quot;&quot;
-    # 增加样本与头两根轴，把 [3,2] 的 K 放成 [1,1,3,2]。
+    &quot;&quot;&quot;Fix the query at position 2; place K/V in their current order, rotate, compute attention weights, and aggregate.&quot;&quot;&quot;
+    # Add sample and head axes to turn K from [3,2] into [1,1,3,2].
     rq, rk = apply_rope(q, keys[None, None], positions)
-    # 只取最后一行 Q；三项得分都除以头宽度2的平方根。
+    # Take only the last Q row; divide all three scores by the square root of head width 2.
     scores = (rq[0, 0, -1] @ rk[0, 0].T) / (2 ** 0.5)
     return scores.softmax(-1) @ values
 
 keys = torch.tensor([[1., 0.], [0., 1.], [1., 1.]])
 values = torch.tensor([[1., 0.], [0., 2.], [1., 2.]])
-# K和对应V一起换位；查询内容与 positions=[0,1,2] 保持原样。
+# Swap K and its corresponding V together; keep the query content and positions=[0,1,2] unchanged.
 order = torch.tensor([1, 0, 2])
 original = read_last(keys, values)
 swapped = read_last(keys[order], values[order])
-print(original, swapped)  # 约 [0.6047,1.6751]、[0.6475,1.4569]
+print(original, swapped)  # Approximately [0.6047,1.6751] and [0.6475,1.4569]
 assert not torch.allclose(original, swapped)
 </code></pre>
 <p>In this example, position differences change the aggregate. If the swapped content is identical, or contributions cancel, the output may still be the same.</p>
@@ -157,13 +157,13 @@ assert not torch.allclose(original, swapped)
 <p>Check two rotation properties in code: vector lengths are preserved, and rotating two vectors by the same angle preserves their dot product. Incorrect coordinate rearrangement or scaling can violate these properties.</p>
 <p><picture class="wide-figure"><source media="(min-width: 1280px)" srcset="../chapters/13-rope/images/en/web/02-%E9%AA%8C%E8%AF%81.svg" width="1504" height="850.8"><img alt="Vector lengths agree before and after rotation; shifting both positions preserves the dot product, while changing only the relative distance changes it" src="../chapters/13-rope/images/en/02-%E9%AA%8C%E8%AF%81.svg"  width="1080" height="2085" loading="lazy" decoding="async" /></picture></p>
 <p>Continue with:</p>
-<pre><code class="language-python"># 内容保持不变，所有位置同时加 7，检查相对位置关系是否保留。
+<pre><code class="language-python"># Keep content fixed and add 7 to every position to check whether relative position relationships are preserved.
 shift_q, shift_k = apply_rope(q, k, positions + 7)
-# 最后两轴得到 [T,T] 点积表，这里尚未缩放或做 Softmax。
+# The final two axes form a [T,T] dot-product table; scaling and Softmax have not been applied yet.
 dots = rotated_q @ rotated_k.transpose(-2, -1)
 shift_dots = shift_q @ shift_k.transpose(-2, -1)
 
-# 沿特征轴量长度；旋转不应拉长向量，共同平移也不应改变对应点积。
+# Measure length over the feature axis; rotation should preserve it, and shifting all positions equally should preserve dot products.
 assert torch.allclose(q.norm(dim=-1), rotated_q.norm(dim=-1))
 assert torch.allclose(dots, shift_dots, atol=1e-6)
 </code></pre>
@@ -185,7 +185,7 @@ assert torch.allclose(dots, shift_dots, atol=1e-6)
 <p>For question one, both position differences are 1, so both dot products are <code>cos(1)≈0.54030231</code>. For question two, the angles are 1 and 0.01 radians, giving approximately <code>[0.54030231, 0.84147098, 0.99995000, 0.00999983]</code>. The length remains <code>√2</code>. Rotating the second pair by 1 radian as well would omit the frequency difference.</p>
 </details>
 <p>Run this from the companion code directory:</p>
-<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+<pre><code class="language-bash"># Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l13
 </code></pre>
 <p>Complete entry points: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l13.py">Lesson runner</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/rope.py">RoPE implementation</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md">Environment setup</a></p>

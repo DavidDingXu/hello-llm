@@ -55,19 +55,19 @@ from torch import nn
 
 
 class TensorMLP(nn.Module):
-    """两层网络：一行放一份输入，返回每份输入各自的一项预测。"""
+    """A two-layer network: one input per row, one prediction per input."""
     def __init__(self, params):
         super().__init__()
-        # Parameter 登记可训练浮点数；各样本共用这些权重和偏置。
+        # Parameter registers trainable floating-point values; all samples share these weights and biases.
         self.W1 = nn.Parameter(torch.tensor(params["W1"], dtype=torch.float32))
         self.b1 = nn.Parameter(torch.tensor(params["b1"], dtype=torch.float32))
         self.W2 = nn.Parameter(torch.tensor(params["W2"], dtype=torch.float32))
         self.b2 = nn.Parameter(torch.tensor(params["b2"], dtype=torch.float32))
 
     def forward(self, x):
-        # x 为 [B,D]，W1 为 [H,D]；转置后乘加得到 [B,H]，每行都加 b1。
+        # x is [B,D] and W1 is [H,D]; multiplying by W1.T gives [B,H], then b1 is added to each row.
         hidden = torch.relu(x @ self.W1.T + self.b1)
-        # 输出层只做乘加，结果为 [B,1]，允许出现负预测。
+        # The output layer is linear, returning [B,1]; predictions may be negative.
         return hidden @ self.W2.T + self.b2
 ```
 
@@ -76,35 +76,35 @@ This class only defines how the network calculates; no training has happened yet
 `SGD` is the optimizer used here. Without extra options such as momentum, it applies the update rule we already learned: `parameter−learning rate×gradient`. `model.parameters()` supplies the model's registered parameters to it.
 
 ```python
-# 沿用手算例的初值，先核对自动求导，再进行后面的四样本实验。
+# Use the hand-calculated example's initial values to check autograd before the four-sample experiment.
 params = {
     "W1": [[1., 0.], [0., 1.]], "b1": [0., 0.],
     "W2": [[1., -1.]], "b2": [0.],
 }
 model = TensorMLP(params)
-# 输入与目标都按行放样本，目标保留 [B,1]，与预测逐项对齐。
+# Inputs and targets store samples by row; keep targets as [B,1] to match predictions element by element.
 x = torch.tensor([[1., 2.]])
 target = torch.tensor([[1.]])
 optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
 
-# 清除旧 .grad，防止本次反向的结果加到上次梯度上。
+# Clear old .grad values so this backward pass does not add to the previous gradients.
 optimizer.zero_grad()
 prediction = model(x)
-# 对每份样本算平方误差再平均，得到一个可用于反向的标量损失。
+# Average the samples' squared errors to get a scalar loss for backpropagation.
 loss = (prediction - target).square().mean()
-# 只把梯度写入各参数的 .grad，此时参数值没有更新。
+# Store gradients in each parameter's .grad; parameter values have not changed.
 loss.backward()
-print("预测、损失：", prediction.item(), loss.item())
+print("Prediction, loss:", prediction.item(), loss.item())
 for name, parameter in model.named_parameters():
     print(name, parameter.grad.tolist())
 
-# SGD 在这一步才执行“参数 - 学习率 × 梯度”。
+# Only here does SGD apply parameter - learning rate × gradient.
 optimizer.step()
 with torch.no_grad():
-    # 用新参数重新检查结果；检查过程无需再建立求导记录。
+    # Check the result using the new parameters; this check does not need gradient tracking.
     new_prediction = model(x)
     new_loss = (new_prediction - target).square().mean()
-print("更新后：", new_prediction.item(), new_loss.item())
+print("After the update:", new_prediction.item(), new_loss.item())
 ```
 
 `loss.backward()` starts from the scalar loss and calculates gradients, storing the results in each parameter's `.grad`. It does not update parameters; the later `optimizer.step()` does that.
@@ -154,7 +154,7 @@ The input in the diagram has shape `[4,2]`, and the hidden result has shape `[4,
 Continue after the earlier class definition and create a new model and optimizer. All initial values are listed below, and the learning rate is 0.1. These values produce the four initial predictions from the opening:
 
 ```python
-# 沿用上段的 TensorMLP 和 torch，重新建立 2→4→1 网络及优化器。
+# Reuse TensorMLP and torch from above; create a new 2→4→1 network and optimizer.
 torch.set_num_threads(1)
 xor_params = {
     "W1": [[.4, -.2], [-.3, .5], [.2, .3], [-.4, -.1]],
@@ -162,29 +162,29 @@ xor_params = {
     "W2": [[.5, -.4, .3, .2]], "b2": [0.],
 }
 model = TensorMLP(xor_params)
-# 四行输入与四行目标一一对应，共用同一组模型参数。
+# The four input rows match the four target rows; all use the same model parameters.
 x = torch.tensor([[0., 0.], [0., 1.], [1., 0.], [1., 1.]])
 target = torch.tensor([[0.], [1.], [1.], [0.]])
 optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
 history = []
 
 for step in range(501):
-    # 每次用当前参数重新计算本批梯度，先清掉上一批留下的值。
+    # Clear the previous batch's gradients before recomputing this batch's gradients at the current parameters.
     optimizer.zero_grad()
     prediction = model(x)
-    # mean 除以四个样本数；反向时每条样本的梯度贡献也乘 1/4。
+    # mean divides by four samples; each sample's gradient contribution is also multiplied by 1/4.
     loss = (prediction - target).square().mean()
     if step % 100 == 0:
         history.append((step, loss.item()))
     if step == 500:
-        # 第 0 次尚未更新，第 500 次已更新 500 次；记录后不再多更新一次。
+        # Step 0 precedes any updates; step 500 follows 500 updates. Record it without performing another update.
         break
     loss.backward()
     optimizer.step()
 
-print("更新步数与损失：", history)
-# detach 仅取出不追踪梯度的结果，展平后按样本顺序打印四项预测。
-print("最终四项预测：", prediction.detach().flatten().tolist())
+print("Update counts and losses:", history)
+# Detach the result from gradient tracking, then flatten it to print the four predictions in sample order.
+print("Final four predictions:", prediction.detach().flatten().tolist())
 ```
 
 Why use `range(501)` for a loop that runs through 500? Iteration 0 records the initial loss before any update. Iteration 500 records the result after 500 completed updates, then stops. The number of recordings and the number of updates are different counts.
@@ -230,12 +230,12 @@ For the first exercise, the loss is actually **0.5**. PyTorch automatically expa
 Only the four blue-framed cells are the intended comparisons, and all have squared error 0. The incorrect code averages the entire table: `8/16=0.5`. Check sample pairing and the shape of the loss array before deciding whether parameters need adjustment.
 
 ```python
-# 构造四项完全正确的预测，与上面的训练实验分开；每行仍是一份样本。
+# Create four exact predictions separately from the training experiment; each row is still one sample.
 perfect_prediction = torch.tensor([[0.], [1.], [1.], [0.]])
 flat_target = torch.tensor([0., 1., 1., 0.])
-# 故意保留一维目标：相减时交叉配对，得到16项平方误差。
+# Deliberately keep targets one-dimensional: subtraction pairs every prediction with every target, giving 16 squared errors.
 wrong_errors = (perfect_prediction - flat_target).square()
-# 还原为 [4,1] 后，才是每行预测与本行目标配对。
+# Reshape targets to [4,1] so each prediction is paired with the target in its own row.
 correct_errors = (perfect_prediction - flat_target[:, None]).square()
 print(wrong_errors.shape, wrong_errors.mean().item())  # [4,4]，0.5
 print(correct_errors.shape, correct_errors.mean().item())  # [4,1]，0.0
@@ -248,13 +248,13 @@ In `flat_target[:, None]`, `:` keeps all four entries, while `None` adds an axis
 For the second exercise, the first gradient is **−16**, and the second is **−32**, because two identical gradients have accumulated. Check with this independent small experiment:
 
 ```python
-# 沿用前面导入的 torch；本段只观察标量 w 的梯度，不做参数更新。
+# Reuse torch imported above; inspect the scalar w's gradient without updating it.
 w = torch.tensor(1.0, requires_grad=True)
 for _ in range(2):
-    # 每次重新前向建立计算图，但特意不清空 w.grad，观察两次梯度相加。
+    # Build a fresh graph on each forward pass, but leave w.grad uncleared to observe the two gradients adding up.
     loss = (2 * w - 6).square()
     loss.backward()
-    print(w.grad.item())  # -16.0，然后 -32.0
+    print(w.grad.item())  # -16.0, then -32.0
 ```
 
 Each loop iteration performs a new forward pass and creates that iteration's computation graph. It does not call backward repeatedly on the same already-consumed `loss`. To keep only the second pass's gradient here, set `w.grad=None` before its forward pass. In model training, `optimizer.zero_grad()` handles this for all parameters together.
@@ -268,7 +268,7 @@ This network still receives numbers. If the input becomes “小丁喜欢苹果�
 Run this from the `code` directory:
 
 ```bash
-# 在配套代码目录运行本讲实验，核对正文中的结果。
+# Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l06
 ```
 

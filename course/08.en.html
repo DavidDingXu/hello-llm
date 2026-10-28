@@ -1,14 +1,14 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
-<meta name="source-sha256" content="7bb1b005412cd6b371ac72057b92052d12ad1025e3689a7f93edbadb666bf532"><meta name="description" content="The score for “红” stays the same, but its probability decreases. Put red, yellow, and green in the same competition and calculate exponentials and normalization step by step."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/08.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="08 | Softmax: How Do Scores Become Next-Character Probabilities? · Hello LLM"><meta property="og:description" content="The score for “红” stays the same, but its probability decreases. Put red, yellow, and green in the same competition and calculate exponentials and normalization step by step."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/08.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>08 | Softmax: How Do Scores Become Next-Character Probabilities? · Hello LLM</title>
+<meta name="source-sha256" content="aa044ab757024ebd39b3c12bc1b2eef566ec72486f2aaf2f7758503308281d96"><meta name="description" content="The score for “红” stays the same, but its probability decreases. Put red, yellow, and green in the same competition and calculate exponentials and normalization step by step."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/08.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="08 | Softmax: How Do Scores Become Next-Character Probabilities? · Hello LLM"><meta property="og:description" content="The score for “红” stays the same, but its probability decreases. Put red, yellow, and green in the same competition and calculate exponentials and normalization step by step."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/08.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>08 | Softmax: How Do Scores Become Next-Character Probabilities? · Hello LLM</title>
 <link rel="icon" href="../assets/favicon.png" type="image/png">
 <script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
-<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
-<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
-<script defer src="../code/visuals/reading_site/search-index.en.js?v=11db81a4dd60"></script>
-<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
-<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
-<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="08" data-alternate-sections="[&quot;先把这三个分数算出来&quot;, &quot;分数有了直接除以总和行不行&quot;, &quot;那么三个分数一起加-1000-呢&quot;, &quot;从三个候选回到欢后面接什么字&quot;, &quot;有了概率就一定选最大的字吗&quot;, &quot;两道改数题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=0a8bea167aca">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=0a8bea167aca">
+<script defer src="../code/visuals/reading_site/search-index.en.js?v=97f9a5a6b415"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=0a8bea167aca"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=0a8bea167aca"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=0a8bea167aca"></script></head><body class="article-page" data-root="../" data-page="08" data-alternate-sections="[&quot;先把这三个分数算出来&quot;, &quot;分数有了直接除以总和行不行&quot;, &quot;那么三个分数一起加-1000-呢&quot;, &quot;从三个候选回到欢后面接什么字&quot;, &quot;有了概率就一定选最大的字吗&quot;, &quot;两道改数题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
 <header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="Open course contents" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></path></svg></button>
 <a class="brand" href="../index.en.html" aria-label="Hello LLM · 学习站首页">
 <img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>Build a Small Model, Understand Large Models</small></span></a>
@@ -97,18 +97,18 @@ p绿 = 7.38906 / 11.10734 ≈ 0.66524096
 <pre><code class="language-python">import math
 
 def softmax(scores):
-    &quot;&quot;&quot;把同一位置的全部候选分数，转换为总和为 1 的概率列表。&quot;&quot;&quot;
+    &quot;&quot;&quot;Convert all candidate scores at one position into probabilities summing to 1.&quot;&quot;&quot;
     if not scores:
         raise ValueError(&quot;至少需要一个候选分数&quot;)
-    # 整行减同一个最大值，保留相对差距，同时避免指数过大。
+    # Subtract the same row maximum from every score to preserve gaps and avoid oversized exponentials.
     maximum = max(scores)
     positive = [math.exp(s - maximum) for s in scores]
-    # 所有候选共用这个分母；此时 positive 还不是概率。
+    # All candidates share this denominator; positive does not yet contain probabilities.
     total = sum(positive)
     return [value / total for value in positive]
 
 p = softmax([0., 1., 2.])
-# 共同平移分数后概率应相同，只有候选间的差距在这里起作用。
+# Shifting all scores equally should preserve probabilities; only the gaps between candidates matter here.
 shifted = softmax([1000., 1001., 1002.])
 print(p)
 assert abs(sum(p) - 1.) &lt; 1e-12
@@ -122,23 +122,23 @@ assert all(abs(a - b) &lt; 1e-12 for a, b in zip(p, shifted))
 <pre><code class="language-python">import torch
 from torch import nn
 
-# 固定随机初值，只检查形状与概率；本段没有目标标签或参数更新。
+# Fix the random initialization and check shapes and probabilities only; there are no targets or parameter updates.
 torch.manual_seed(42)
-# 两份独立参数：先按编号选出 64 维向量，再给 79 个候选各算一项分数。
+# Two independent parameter sets: look up a 64-dimensional vector, then score each of the 79 candidates.
 embedding = nn.Embedding(79, 64)
 projection = nn.Linear(64, 79, bias=False)
 
-# 一条样本的“小丁喜欢”，编号形状为 [1,4]。
+# One sample containing “小丁喜欢”, with ID shape [1,4].
 ids = torch.tensor([[27, 6, 22, 44]], dtype=torch.long)
 hidden = embedding(ids)
 logits = projection(hidden)
-# 只沿最后的词表候选轴归一化，每个位置各有一份分布，不混合不同位置。
+# Normalize only over the final vocabulary axis; each position gets its own distribution.
 probabilities = torch.softmax(logits, dim=-1)
 
 print(hidden.shape)         # [1, 4, 64]
 print(logits.shape)         # [1, 4, 79]
 print(probabilities.sum(dim=-1))
-# 对每个位置分别求和，四行概率的和都应接近 1。
+# Sum separately at each position; all four rows should sum to approximately 1.
 assert torch.allclose(probabilities.sum(dim=-1),
                       torch.ones(1, 4))
 </code></pre>
@@ -161,7 +161,7 @@ assert torch.allclose(probabilities.sum(dim=-1),
 <p>Answers: For the first exercise, subtracting the same number preserves the distribution, which remains <code>[0.09003057, 0.24472847, 0.66524096]</code>. Multiplying by 2 widens the gaps and gives approximately <code>[0.01587624, 0.11731043, 0.86681333]</code>. For the second, the new probabilities are approximately <code>[0.21194156, 0.21194156, 0.57611688]</code>. The first candidate's exponential grows, increasing the shared denominator. The third candidate's numerator stays fixed, so its probability falls from approximately 0.665241 to 0.576117. Every Softmax output depends on the entire row of scores.</p>
 </details>
 <p>Run this from the companion code directory:</p>
-<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+<pre><code class="language-bash"># Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l08
 </code></pre>
 <p>Complete entry point: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l08.py">Entry point</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md">Environment setup</a></p>

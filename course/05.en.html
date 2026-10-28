@@ -1,14 +1,14 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
-<meta name="source-sha256" content="0be8b537773fdbe93a5f320d8bc830090a46d1f3e55ab327b9049d22d62c02eb"><meta name="description" content="The forward pass produces −1 and a loss of 4. Trace one path backward: why does a weight whose value is 0 have a gradient of −8?"><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/05.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="05 | Backpropagation: Must We Test All 9 Parameters One by One? · Hello LLM"><meta property="og:description" content="The forward pass produces −1 and a loss of 4. Trace one path backward: why does a weight whose value is 0 have a gradient of −8?"><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/05.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>05 | Backpropagation: Must We Test All 9 Parameters One by One? · Hello LLM</title>
+<meta name="source-sha256" content="68294993d00f43d117c9578f7999c62173faccdbc7032253fa241f3ad8cb72e5"><meta name="description" content="The forward pass produces −1 and a loss of 4. Trace one path backward: why does a weight whose value is 0 have a gradient of −8?"><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/05.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="05 | Backpropagation: Must We Test All 9 Parameters One by One? · Hello LLM"><meta property="og:description" content="The forward pass produces −1 and a loss of 4. Trace one path backward: why does a weight whose value is 0 have a gradient of −8?"><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/05.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>05 | Backpropagation: Must We Test All 9 Parameters One by One? · Hello LLM</title>
 <link rel="icon" href="../assets/favicon.png" type="image/png">
 <script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
-<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
-<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
-<script defer src="../code/visuals/reading_site/search-index.en.js?v=11db81a4dd60"></script>
-<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
-<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
-<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="05" data-alternate-sections="[&quot;1-是怎样算出来的&quot;, &quot;那个为-0-的权重增加一点会怎样&quot;, &quot;最后的平方误差只算一次&quot;, &quot;同一个-4怎样传到其他参数&quot;, &quot;一次更新1-变成了-02896&quot;, &quot;把这次逆序计算交给函数&quot;, &quot;试改刚才那个权重核对-8&quot;, &quot;两道追踪题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=0a8bea167aca">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=0a8bea167aca">
+<script defer src="../code/visuals/reading_site/search-index.en.js?v=97f9a5a6b415"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=0a8bea167aca"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=0a8bea167aca"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=0a8bea167aca"></script></head><body class="article-page" data-root="../" data-page="05" data-alternate-sections="[&quot;1-是怎样算出来的&quot;, &quot;那个为-0-的权重增加一点会怎样&quot;, &quot;最后的平方误差只算一次&quot;, &quot;同一个-4怎样传到其他参数&quot;, &quot;一次更新1-变成了-02896&quot;, &quot;把这次逆序计算交给函数&quot;, &quot;试改刚才那个权重核对-8&quot;, &quot;两道追踪题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
 <header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="Open course contents" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></path></svg></button>
 <a class="brand" href="../index.en.html" aria-label="Hello LLM · 学习站首页">
 <img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>Build a Small Model, Understand Large Models</small></span></a>
@@ -160,31 +160,31 @@ W2 = [[1.04, -0.92]]     b2 = [0.04]
 
 
 def backward(cache, target, params):
-    &quot;&quot;&quot;读取旧前向的缓存与参数，返回同形状的参数梯度，不更新参数。&quot;&quot;&quot;
-    # 先求平方损失对最终预测的导数，供前面的各条路径共用。
+    &quot;&quot;&quot;Read the cached forward values and original parameters; return matching parameter gradients without updating them.&quot;&quot;&quot;
+    # First differentiate the squared loss with respect to the prediction; earlier paths share this result.
     d_output = 2 * (cache[&quot;prediction&quot;] - target)
-    # 传回隐藏值时，分别乘上连接它们的输出权重。
+    # To propagate to each hidden value, multiply by its corresponding output weight.
     d_hidden = [d_output * weight for weight in params[&quot;W2&quot;][0]]
-    # ReLU 的局部导数：正区间传回原梯度，负区间与本实现的零点传回 0。
+    # ReLU passes the gradient through for positive inputs and returns 0 for negative inputs and, here, zero.
     d_z = [g if z &gt; 0 else 0.0
            for g, z in zip(d_hidden, cache[&quot;z&quot;])]
     return {
-        # 权重梯度 = 该单元收到的梯度 × 这条权重所乘的输入。
+        # Weight gradient = gradient received by the unit × input multiplied by that weight.
         &quot;W2&quot;: [[d_output * value for value in cache[&quot;h&quot;]]],
-        # 偏置直接相加，局部导数为 1，因此保留该单元收到的梯度。
+        # The bias is added directly, so its local derivative is 1 and its gradient equals the unit's incoming gradient.
         &quot;b2&quot;: [d_output],
         &quot;W1&quot;: [[g * value for value in cache[&quot;x&quot;]] for g in d_z],
         &quot;b1&quot;: d_z,
     }
 
 
-# 固定一条训练题；hand_example 提供正文列出的那组初始参数。
+# Fix one training example; hand_example supplies the initial parameters listed in the chapter.
 x, target = [1.0, 2.0], 1.0
 params = hand_example()
 prediction, cache = forward(x, params)
 gradients = backward(cache, target, params)
-print(&quot;预测与损失：&quot;, prediction, (prediction - target) ** 2)
-print(&quot;梯度：&quot;, gradients)
+print(&quot;Prediction and loss:&quot;, prediction, (prediction - target) ** 2)
+print(&quot;Gradients:&quot;, gradients)
 </code></pre>
 <p>The <code>d_</code> prefix is a naming convention; here it means the derivative of loss with respect to that quantity. <code>d_hidden</code> multiplies the output gradient by the corresponding weight. <code>d_z</code> uses the forward value <code>z</code> to decide whether the gradient passes through ReLU. Finally, each layer's weight gradients are “the gradient received by this layer × this layer's input.”</p>
 <p><code>backward</code> stores the gradients calculated by these local rules in a new dictionary and <strong>does not modify <code>params</code></strong>. <code>step</code> still handles parameter updates.</p>
@@ -219,25 +219,25 @@ print(&quot;parameters =&quot;, params)
 <noscript>Enable JavaScript to run here, or copy the example and run locally.</noscript>
 </section><h2 id="perturb-that-weight-to-check-8">Perturb that weight to check −8</h2>
 <p>Finite differences are slow, but they provide an independent check of the backward code. First, check only the path we traced, <code>W1[0][1]</code>, while keeping the other parameters fixed:</p>
-<pre><code class="language-python"># 接着上一段，x、target、params、gradients 仍对应同一次旧前向。
+<pre><code class="language-python"># Continue from above; x, target, params, and gradients still refer to the same original forward pass.
 epsilon = 1e-5
 old_value = params[&quot;W1&quot;][0][1]
-# 只试改第一行第二列的权重，其余参数保持原值。
+# Perturb only the weight in the first row, second column; keep every other parameter unchanged.
 params[&quot;W1&quot;][0][1] = old_value + epsilon
 plus = (forward(x, params)[0] - target) ** 2
 params[&quot;W1&quot;][0][1] = old_value - epsilon
 minus = (forward(x, params)[0] - target) ** 2
-# 先恢复原值，再把差分导数与反向得到的同一项梯度比较。
+# Restore the original value, then compare its finite-difference derivative with its backpropagation gradient.
 params[&quot;W1&quot;][0][1] = old_value
 numerical = (plus - minus) / (2 * epsilon)
-print(&quot;差分与反向：&quot;, numerical, gradients[&quot;W1&quot;][0][1])
+print(&quot;Finite difference and backpropagation:&quot;, numerical, gradients[&quot;W1&quot;][0][1])
 assert abs(numerical - gradients[&quot;W1&quot;][0][1]) &lt; 1e-7
 
-# 全部梯度都来自旧参数；统一更新后，重新前向，不能沿用旧隐藏值。
+# All gradients come from the original parameters; update them together, then recompute the forward pass and hidden values.
 step(params, gradients, learning_rate=0.01)
 new_prediction, _ = forward(x, params)
-print(&quot;更新后：&quot;, new_prediction, (new_prediction - target) ** 2)
-# 约为 -0.2896、1.66306816
+print(&quot;After the update:&quot;, new_prediction, (new_prediction - target) ** 2)
+# Approximately -0.2896 and 1.66306816
 </code></pre>
 <p>Increase the value slightly, decrease it slightly, and restore it after the calculations. Only then run <code>step</code>. Both gradient results are close to −8. The companion program keeps a complete check of all 9 parameters using the same principle.</p>
 <p>Finite differences check the calculation <strong>at the current point</strong>. Both <code>z</code> values here are far enough from 0 that tiny perturbations do not cross ReLU's bend. At the bend itself, a central difference need not equal the derivative chosen by the program, so the same error threshold is not a suitable correctness test there.</p>
@@ -254,7 +254,7 @@ print(&quot;更新后：&quot;, new_prediction, (new_prediction - target) ** 2)
 </details>
 <p>In the next lesson, we will switch to PyTorch, first check these hand calculations, and then observe the network's predictions after 500 updates.</p>
 <p>Run this from the <code>code</code> directory:</p>
-<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+<pre><code class="language-bash"># Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l05
 </code></pre>
 <p>Companion resources: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l05.py">Entry point</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/manual_mlp.py">Handwritten implementation</a> · <a href="../chapters/05-backpropagation/walkthrough.en.html">Interactive demo</a></p>

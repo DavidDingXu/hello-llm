@@ -1,14 +1,14 @@
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
-<meta name="source-sha256" content="347b5cfe38318bae68bfd09b6820d45bfc3ae0daaaf0230dfe50704c8dd997c9"><meta name="description" content="模型答错了，该查输入、生成还是训练？从一个可手算的小模型开始，理解文字生成、预训练与微调，为开发判断找到依据。"><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/intro.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="手写小模型，看懂大模型 · Hello LLM"><meta property="og:description" content="模型答错了，该查输入、生成还是训练？从一个可手算的小模型开始，理解文字生成、预训练与微调，为开发判断找到依据。"><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/intro.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>手写小模型，看懂大模型 · Hello LLM</title>
+<meta name="source-sha256" content="46b1091b4fe3eb6e195f2d55e19177a5145929073ad45517c1cbc8863c158f77"><meta name="description" content="模型答错了，该查输入、生成还是训练？从一个可手算的小模型开始，理解文字生成、预训练与微调，为开发判断找到依据。"><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/intro.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="手写小模型，看懂大模型 · Hello LLM"><meta property="og:description" content="模型答错了，该查输入、生成还是训练？从一个可手算的小模型开始，理解文字生成、预训练与微调，为开发判断找到依据。"><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/intro.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>手写小模型，看懂大模型 · Hello LLM</title>
 <link rel="icon" href="../assets/favicon.png" type="image/png">
 <script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
-<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
-<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
-<script defer src="../code/visuals/reading_site/search-index.js?v=ea96857fef58"></script>
-<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
-<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
-<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="intro" data-alternate-sections="[&quot;if-you-can-already-use-models-why-study-how-they-work&quot;, &quot;why-start-by-building-a-small-model&quot;, &quot;what-will-you-build&quot;, &quot;who-is-this-course-for&quot;, &quot;the-complete-20-lesson-curriculum&quot;, &quot;how-to-use-the-supporting-material&quot;]"><a class="skip-link" href="#main-content">跳到正文</a>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=0a8bea167aca">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=0a8bea167aca">
+<script defer src="../code/visuals/reading_site/search-index.js?v=b5ca43c00d17"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=0a8bea167aca"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=0a8bea167aca"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=0a8bea167aca"></script></head><body class="article-page" data-root="../" data-page="intro" data-alternate-sections="[&quot;if-you-can-already-use-models-why-study-how-they-work&quot;, &quot;why-start-by-building-a-small-model&quot;, &quot;what-will-you-build&quot;, &quot;who-is-this-course-for&quot;, &quot;the-complete-20-lesson-curriculum&quot;, &quot;how-to-use-the-supporting-material&quot;]"><a class="skip-link" href="#main-content">跳到正文</a>
 <header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="打开课程目录" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
 <a class="brand" href="../index.html" aria-label="Hello LLM · 学习站首页">
 <img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>手写小模型，看懂大模型</small></span></a>
@@ -65,7 +65,7 @@
 <li>独立接入含新字符的数据，检查词表、标签、模型与重载结果，写出有证据的实验说明。</li>
 </ul>
 <h2 id="适合怎样的读者">适合怎样的读者</h2>
-<p>不要求先学过 Python、机器学习、神经网络或微积分。可以先看图解、运行网页里的现成例子，再改一个数观察结果。想独立修改完整模型时，需要逐步熟悉函数、循环、数组和基本的类；配套代码和注释可以边读边学。</p>
+<p>不要求深度学习或微积分基础。没有 Python 基础，也可以先看图解、运行网页里的例子，再改一个数观察结果。要完成代码实战，需要熟悉函数、循环、列表和基本的类；第06讲开始使用 PyTorch，建议先按运行指南准备环境，再继续动手。</p>
 <p>课程使用Python和PyTorch。必要的语法与数学记号会在第一次使用时解释：先看把一个参数挪动一点，错误怎样变化，再认识导数；先把三个位置按比例汇总，再认识注意力里的符号。</p>
 <p>前五讲先手写乘加、网络与梯度，之后用PyTorch执行张量运算和自动求导。模型结构、训练步骤与生成循环仍由我们写出来。</p>
 <h2 id="20讲完整目录">20讲完整目录</h2>

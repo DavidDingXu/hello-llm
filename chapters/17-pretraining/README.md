@@ -180,7 +180,7 @@ python -m lessons.l17 --out artifacts/my_run --pretrain-steps 1000
 
 程序在指定目录保存初值与预训练模型、词表、配置和日志，并把本次实际使用的四组数据保存到该目录的`data/`。之后查看或回放这次实验，可以核对这份快照；重新训练不会覆盖仓库根目录的原始数据。当前权重文件没有保存 AdamW 的优化器状态，适合后面的生成与另起一轮微调，不能据此逐步恢复被中断的同一次 AdamW 训练。
 
-macOS 可用 `python3`，Windows 可用对应虚拟环境的 Python，安装命令见[配套说明](https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md)。本节的训练数值来自上述 macOS 环境；尚未提供同版实验在 Windows 上的重训记录。具体运行范围见[实验记录](https://github.com/DavidDingXu/hello-llm/blob/main/code/EXPERIMENTS.md)。
+上面的 `python` 指安装依赖时使用的虚拟环境解释器：macOS / Linux 替换为 `.venv/bin/python`，Windows PowerShell 替换为 `.\.venv\Scripts\python.exe`。安装命令见[配套说明](https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md)。本节的训练数值来自上述 macOS 环境；尚未提供同版实验在 Windows 上的重训记录。具体运行范围见[实验记录](https://github.com/DavidDingXu/hello-llm/blob/main/code/EXPERIMENTS.md)。
 
 <details class="optional" markdown="1">
 <summary>选读：AdamW比SGD多记了什么</summary>

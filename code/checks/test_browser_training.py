@@ -54,6 +54,80 @@ class BrowserTrainingChecks(unittest.TestCase):
             for indices in self.data['schedules'][stage]:
                 self.assertEqual([ids[i] for i in indices], sampler.sample(ids, preset['batch_size']))
 
+    @unittest.skipUnless(shutil.which('node'), '样本编辑检查需要 Node.js')
+    def test_edited_browser_samples_use_the_course_tokenization_and_loss_masks(self):
+        script = '''
+import {readableSamples, applySampleEdits} from %s;
+let input='';for await(const chunk of process.stdin)input+=chunk;
+const data=JSON.parse(input), before=JSON.stringify(data), raw=readableSamples(data);
+const edits=[{group:'pretrain_train',record_id:raw.pretrain_train[0].record_id,text:'早上，小丁喜欢黄色的香蕉。'},
+{group:'sft_train',record_id:raw.sft_train[0].record_id,prompt:raw.sft_train[0].prompt,answer:'黄色的香蕉。'}];
+const changed=applySampleEdits(data,edits,32);
+process.stdout.write(JSON.stringify({raw,edited:[changed.pretrain_train[0],changed.sft_train[0]],
+untouched:before===JSON.stringify(data),validationUnchanged:JSON.stringify(changed.sft_val)===JSON.stringify(data.groups.sft_val)}));
+''' % json.dumps((CODE / 'visuals/reading_site/training-engine.mjs').as_uri())
+        result = subprocess.run([shutil.which('node'), '--input-type=module', '-e', script],
+                                input=json.dumps(self.data), text=True, capture_output=True, check=True)
+        actual = json.loads(result.stdout)
+        self.assertTrue(actual['untouched'])
+        self.assertTrue(actual['validationUnchanged'])
+        self.assertEqual([r['text'] for r in actual['raw']['pretrain_train']],
+                         [r['text'] for r in self.groups['pretrain_train']])
+        records = [{**self.groups['pretrain_train'][0], 'text': '早上，小丁喜欢黄色的香蕉。'},
+                   {**self.groups['sft_train'][0], 'answer': '黄色的香蕉。'}]
+        for index, builder in enumerate((make_pretrain_batch, make_sft_batch)):
+            ids, targets = builder([records[index]], self.tokenizer, 32)
+            self.assertEqual(actual['edited'][index]['ids'], ids[0].tolist())
+            self.assertEqual(actual['edited'][index]['targets'], targets[0].tolist())
+
+    @unittest.skipUnless(shutil.which('node'), '样本边界检查需要 Node.js')
+    def test_browser_sample_edits_reject_unknown_chars_truncation_and_validation_leaks(self):
+        script = '''
+import {readableSamples, applySampleEdits} from %s;
+let input='';for await(const chunk of process.stdin)input+=chunk;
+const data=JSON.parse(input), raw=readableSamples(data), base={group:'pretrain_train',record_id:raw.pretrain_train[0].record_id};
+const cases=[{...base,text:'唐'},{...base,text:'早'.repeat(32)},{...base,text:''},
+{...base,text:raw.pretrain_val[0].text},{...base,group:'pretrain_val',record_id:raw.pretrain_val[0].record_id,text:'早'},
+{group:'sft_train',record_id:raw.sft_train[0].record_id,prompt:raw.sft_val[0].prompt,answer:'红色的苹果。'},
+{...base,text:raw.sft_val[0].prompt+raw.sft_val[0].answer},
+{group:'sft_train',record_id:raw.sft_train[0].record_id,prompt:'问：',answer:raw.pretrain_val[0].text}];
+process.stdout.write(JSON.stringify(cases.map(edit=>{try{applySampleEdits(data,[edit],32);return 'accepted'}catch(e){return e.sampleError?.code}})));
+''' % json.dumps((CODE / 'visuals/reading_site/training-engine.mjs').as_uri())
+        result = subprocess.run([shutil.which('node'), '--input-type=module', '-e', script],
+                                input=json.dumps(self.data), text=True, capture_output=True, check=True)
+        self.assertEqual(json.loads(result.stdout), ['UNKNOWN_CHARACTER', 'TOO_LONG', 'EMPTY_SAMPLE',
+                                                     'VALIDATION_OVERLAP', 'READ_ONLY_GROUP', 'VALIDATION_OVERLAP',
+                                                     'VALIDATION_OVERLAP', 'VALIDATION_OVERLAP'])
+
+    @unittest.skipUnless(shutil.which('node'), '生成边界检查需要 Node.js')
+    def test_browser_generation_can_finish_long_answers_and_score_eos_at_context_limit(self):
+        script = '''
+import {TrainingEngine} from %s;
+let input='';for await(const chunk of process.stdin)input+=chunk;
+const {data,manifest}=JSON.parse(input);
+async function generate(prompt,answer){
+ const engine=new TrainingEngine(null,manifest,data,null,null,null,null), expected=Array.from(answer);
+ let calls=0;
+ engine.calculate=async(_session,batch)=>{
+  const row=Array.from(batch.ids.slice(0,manifest.sequence_length));
+  const padding=row.indexOf(0n),length=padding<0?row.length:padding;
+  const logits=new Float32Array(manifest.batch_size*manifest.sequence_length*data.tokens.length).fill(-10);
+  const next=calls<expected.length?data.tokens.indexOf(expected[calls]):2;
+  logits[(length-1)*data.tokens.length+next]=10;calls++;
+  return {logits:{data:logits,dispose(){}},loss:{data:[0],dispose(){}}};
+ };
+ return {...await engine.generate(prompt,expected.length+1),calls};
+}
+const raw=data.groups.sft_train[0];
+process.stdout.write(JSON.stringify(await Promise.all([generate(raw.prompt,'香蕉，它是黄色的。'),generate('早'.repeat(30),'上')])));
+''' % json.dumps((CODE / 'visuals/reading_site/training-engine.mjs').as_uri())
+        result = subprocess.run([shutil.which('node'), '--input-type=module', '-e', script],
+                                input=json.dumps({'data': self.data, 'manifest': self.manifest}),
+                                text=True, capture_output=True, check=True)
+        outputs = json.loads(result.stdout)
+        self.assertEqual([(row['text'], row['stop'], row['calls']) for row in outputs],
+                         [('香蕉，它是黄色的。', 'eos', 10), ('上', 'eos', 2)])
+
     def test_course_defaults_and_all_initial_parameters_match(self):
         optimizer, presets = training_recipe(train)
         self.assertEqual(json.loads(json.dumps(optimizer)), self.manifest['optimizer'])

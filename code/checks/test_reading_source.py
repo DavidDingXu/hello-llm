@@ -112,16 +112,24 @@ class ReadingSourceChecks(unittest.TestCase):
             self.assertIn('assets/social-preview.png', page)
             self.assertIn('class="copy-page-link js-only"', page)
 
-    def test_home_starts_with_the_opening_and_keeps_downloads_and_training_visible(self):
-        page = reading.build_index(reading.article_paths())
-        href = re.search(r'id="continue-learning" href="([^"]+)"', page).group(1)
-        self.assertEqual('course/00.html', href)
-        hero = page.split('class="hero-actions"', 1)[1].split('</div>', 1)[0]
-        self.assertEqual(hero.count('<a '), 2)
-        self.assertIn('href="#downloads"', hero)
-        experiments = page.split('id="experiments"', 1)[1].split('id="videos"', 1)[0]
-        self.assertIn('course/20.html#training-lab', experiments)
-        self.assertLess(page.index('id="experiments"'), page.index('id="curriculum"'))
+    def test_home_offers_training_and_a_clear_learning_start_before_optional_resources(self):
+        paths = reading.article_paths()
+        for language, suffix in (('zh', ''), ('en', '.en')):
+            with self.subTest(language=language):
+                context = reading.build_context(paths, language)
+                page = reading.build_index(paths, context)
+                hero = page.split('class="hero-actions"', 1)[1].split('</div>', 1)[0]
+                self.assertEqual(hero.count('<a '), 2)
+                self.assertIn(f'href="course/20{suffix}.html#training-lab"', hero)
+                self.assertIn(f'id="continue-learning" href="course/01{suffix}.html"', hero)
+                self.assertNotIn('href="#downloads"', hero)
+                self.assertIn('id="downloads"', page)
+                self.assertLess(page.index('id="curriculum"'), page.index('id="experiments"'))
+                self.assertLess(page.index('id="curriculum"'), page.index('id="videos"'))
+                # Existing deep links still reach their resources, but extras start folded.
+                self.assertRegex(page, r'<details[^>]*id="videos"[^>]*>')
+                self.assertNotRegex(page, r'<details[^>]*id="videos"[^>]*\bopen\b')
+                self.assertNotIn('class="model-pipeline"', page)
 
     def test_feedback_links_carry_the_current_chapter_and_public_location(self):
         for language in ('zh', 'en'):

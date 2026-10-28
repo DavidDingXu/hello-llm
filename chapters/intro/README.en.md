@@ -63,7 +63,7 @@ By the end, you should be able to:
 
 ## Who is this course for?
 
-No prior study of Python, machine learning, neural networks, or calculus is required to begin. Start with the figures, run the browser examples, and change one number to observe the result. To modify the complete model independently, gradually learn functions, loops, arrays, and basic classes using the accompanying code and comments.
+No deep learning or calculus background is required. Even without Python experience, you can start with the diagrams and browser examples, then change one number to observe the result. The coding work requires functions, loops, lists, and basic classes. PyTorch begins in lesson 06; prepare the local environment using the setup guide before continuing with the code.
 
 The course uses Python and PyTorch. Necessary syntax and mathematical notation are explained when they first appear. You first observe how an error changes when you move one parameter slightly, then meet the derivative. You first combine three positions using proportions, then meet the notation used in attention.
 

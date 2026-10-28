@@ -81,7 +81,7 @@ Spend a few minutes in each lesson changing one number: predict the result, then
 Download and extract the [companion code](https://github.com/DavidDingXu/hello-llm). Open a terminal in the directory containing `tiny_lm`, `lessons`, and `requirements.txt`, then run:
 
 ```bash
-# 第一次只运行一个神经元的算例，无需安装第三方包。
+# Start with one neuron example; no third-party packages are needed.
 python -m lessons.l01
 ```
 

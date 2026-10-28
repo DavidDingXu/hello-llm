@@ -1,14 +1,14 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
-<meta name="source-sha256" content="a1536ccddfb2460511097f4415e52e4b02664254a6f2cb127d2b187d9d9ee193"><meta name="description" content="Six visible characters require seven choices. Feed each selected character back into the input and trace the growing prefix, sampling, and the final EOS."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/18.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="18 | Generation: How Many Choices Does One Sentence Take? · Hello LLM"><meta property="og:description" content="Six visible characters require seven choices. Feed each selected character back into the input and trace the growing prefix, sampling, and the final EOS."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/18.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>18 | Generation: How Many Choices Does One Sentence Take? · Hello LLM</title>
+<meta name="source-sha256" content="6c355893ee668a38ac724d43b5ec89e48429ec63d2ad7b2405996d280d0e319c"><meta name="description" content="Six visible characters require seven choices. Feed each selected character back into the input and trace the growing prefix, sampling, and the final EOS."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/18.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="18 | Generation: How Many Choices Does One Sentence Take? · Hello LLM"><meta property="og:description" content="Six visible characters require seven choices. Feed each selected character back into the input and trace the growing prefix, sampling, and the final EOS."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/18.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>18 | Generation: How Many Choices Does One Sentence Take? · Hello LLM</title>
 <link rel="icon" href="../assets/favicon.png" type="image/png">
 <script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
-<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
-<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
-<script defer src="../code/visuals/reading_site/search-index.en.js?v=11db81a4dd60"></script>
-<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
-<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
-<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="18" data-alternate-sections="[&quot;第一次前向要取哪一行&quot;, &quot;选概率最大的还是按概率抽一个&quot;, &quot;选出一个字就把它带回去&quot;, &quot;回看这七次选择&quot;, &quot;这期间模型有没有继续学习&quot;, &quot;两道预测题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=0a8bea167aca">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=0a8bea167aca">
+<script defer src="../code/visuals/reading_site/search-index.en.js?v=97f9a5a6b415"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=0a8bea167aca"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=0a8bea167aca"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=0a8bea167aca"></script></head><body class="article-page" data-root="../" data-page="18" data-alternate-sections="[&quot;第一次前向要取哪一行&quot;, &quot;选概率最大的还是按概率抽一个&quot;, &quot;选出一个字就把它带回去&quot;, &quot;回看这七次选择&quot;, &quot;这期间模型有没有继续学习&quot;, &quot;两道预测题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
 <header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="Open course contents" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></path></svg></button>
 <a class="brand" href="../index.en.html" aria-label="Hello LLM · 学习站首页">
 <img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>Build a Small Model, Understand Large Models</small></span></a>
@@ -39,12 +39,12 @@
 <pre><code class="language-python">import torch
 from tiny_lm.checkpoint import load_checkpoint
 
-# 加载预训练参数、词表与配置；后续前向使用这份保存的参数。
+# Load pretrained parameters, vocabulary, and configuration; later forward passes use these saved parameters.
 model, tokenizer, _ = load_checkpoint(&quot;artifacts/first_run/pretrain.pt&quot;)
-# 一个样本，BOS 加七个提示字符，形成 [1,8] 的已知前文。
+# One sample: BOS plus seven prompt characters gives known context of shape [1,8].
 inputs = torch.tensor([tokenizer.encode(&quot;早上，小丁喜欢&quot;, add_bos=True)])
-# 模型输出 [1,8,79]，只取最后位置预测尚未出现的下一项。
-next_logits = model(inputs)[0, -1]  # 79 项分数
+# The model returns [1,8,79]; use only the final position to predict the next unseen item.
+next_logits = model(inputs)[0, -1]  # 79 scores
 print(next_logits.shape)  # torch.Size([79])
 </code></pre>
 <p>This loads the author's supplied <code>first_run/pretrain.pt</code>, allowing you to verify the seven-step values in this lesson. If you have completed Lesson 17's training, replace the path with <code>artifacts/my_run/pretrain.pt</code> to use your own weights. The checkpoint restores its vocabulary and configuration as well. Check the step count in your <code>pretrain_log.json</code> before comparing generation results.</p>
@@ -64,37 +64,37 @@ print(next_logits.shape)  # torch.Size([79])
 <pre><code class="language-python">@torch.no_grad()
 def continue_text(model, tokenizer, prompt, max_new_tokens=8,
                   greedy=False, temperature=.8, seed=42):
-    &quot;&quot;&quot;固定权重逐项生成，返回可见续写与停止原因；每次重算完整前缀，无 KV cache。&quot;&quot;&quot;
+    &quot;&quot;&quot;Generate token by token with fixed weights; return visible text and the stop reason, recomputing the full prefix without a KV cache.&quot;&quot;&quot;
     if max_new_tokens &lt; 0 or (not greedy and temperature &lt;= 0):
         raise ValueError(&quot;新增长度不能为负，采样温度必须为正&quot;)
-    tokens = [1] + tokenizer.encode(prompt)  # BOS 也占一个上下文位置。
+    tokens = [1] + tokenizer.encode(prompt)  # BOS also occupies one context position.
     if 3 in tokens or len(tokens) &gt; model.config.max_seq_len:
         raise ValueError(&quot;提示词含未知字符或超过上下文长度&quot;)
     device = next(model.parameters()).device
-    # 随机数只用于采样，不修改模型权重；固定种子便于对照。
+    # Randomness is only for sampling, not weight updates; fix the seed for comparison.
     rng = torch.Generator(device=device).manual_seed(seed)
     generated, reason = [], &quot;max_new_tokens&quot;
-    model.eval()  # 切换评估模式；不建立反向记录由上面的 no_grad 装饰器负责。
+    model.eval()  # Switch to evaluation mode; the no_grad decorator above disables gradient tracking.
     for _ in range(max_new_tokens):
-        # 达到本模型的 32 项限制就停止，不裁掉旧字符继续写。
+        # Stop at this model's 32-item limit; do not discard old characters to continue generation.
         if len(tokens) &gt;= model.config.max_seq_len:
             reason = &quot;context_limit&quot;
             break
-        # 当前全部前文 [1,T] 重新前向，取最后位置的 [V] 候选分数。
+        # Recompute the full current prefix [1,T] and take the last position's [V] candidate scores.
         inputs = torch.tensor([tokens], dtype=torch.long, device=device)
         logits = model(inputs)[0, -1].clone()
-        # 禁止输出 PAD/BOS/UNK，保留 EOS；归一化后被禁项概率为 0。
+        # Disallow PAD/BOS/UNK but retain EOS; forbidden items have probability 0 after normalization.
         logits[[0, 1, 3]] = float(&quot;-inf&quot;)
-        # 贪心不使用温度，采样才先除以 temperature；最后沿候选轴 Softmax。
+        # Greedy selection ignores temperature; sampling divides by temperature before Softmax over candidates.
         probabilities = (logits if greedy else logits / temperature).softmax(-1)
         if greedy:
             selected = int(probabilities.argmax())
         else:
             selected = int(torch.multinomial(probabilities, 1, generator=rng).item())
-        # 选择结果接回输入，下一次前向才知道刚才选了哪个字。
+        # Append the selected item to the input so the next forward pass can use it.
         tokens.append(selected)
         if selected == 2:
-            # EOS 也消耗一次选择，但不加入返回的可见文本。
+            # EOS also consumes a selection step but is excluded from the returned visible text.
             reason = &quot;eos&quot;
             break
         generated.append(selected)
@@ -174,7 +174,7 @@ print(continue_text(model, tokenizer, &quot;早上，小丁喜欢&quot;, greedy=
 <pre><code class="language-python">from tiny_lm.trace import parameter_digest
 from tiny_lm.generate import generate
 
-# 比较生成前后的参数值；输入会增长，参数应保持同一份。
+# Compare parameter values before and after generation; inputs grow, but parameters should remain unchanged.
 before = parameter_digest(model)
 result = generate(model, tokenizer, &quot;早上，小丁喜欢&quot;, greedy=True)
 assert parameter_digest(model) == before
@@ -183,13 +183,13 @@ print(result[&quot;generated_text&quot;], result[&quot;stop_reason&quot;])
 <p>The vocabulary, configuration, and parameters saved in a checkpoint must be loaded together. Pairing weights with an arbitrary character-ID table may change which character each ID represents, even when the shapes match.</p>
 <p>Run the supplied entry point from the <code>code</code> companion code directory.</p>
 <p>If you completed Lesson 17's training, generate with your own weights:</p>
-<pre><code class="language-bash"># 使用第17讲亲手训练并保存的权重。
+<pre><code class="language-bash"># Use the weights you trained and saved in Lesson 17.
 python -m lessons.l18 --checkpoint artifacts/my_run/pretrain.pt --prompt '早上，小丁喜欢' --greedy
 </code></pre>
 <p>To verify the record in this lesson, run the following two commands with the author's weights, using greedy selection and random sampling respectively:</p>
-<pre><code class="language-bash"># 加载指定权重并生成文字；本命令不更新参数。
+<pre><code class="language-bash"># Load the specified weights and generate text; this command does not update parameters.
 python -m lessons.l18 --checkpoint artifacts/first_run/pretrain.pt --prompt '早上，小丁喜欢' --greedy
-# 加载指定权重并生成文字；本命令不更新参数。
+# Load the specified weights and generate text; this command does not update parameters.
 python -m lessons.l18 --checkpoint artifacts/first_run/pretrain.pt --prompt '早上，小丁喜欢' --temperature 0.8
 </code></pre>
 <details class="optional">

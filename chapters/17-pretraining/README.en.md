@@ -61,20 +61,20 @@ import torch
 from tiny_lm.losses import token_loss
 
 def one_update(model, x, y, optimizer):
-    """用一批 x/y [B,T] 更新参数一次，返回损失值与裁剪前的梯度长度。"""
-    # train 切换模型模式，本身不更新参数；先清掉上次留下的梯度。
+    """Update parameters once using a batch of x/y [B,T]; return the loss and gradient norm before clipping."""
+    # train switches model mode without updating parameters; clear the previous gradients first.
     model.train()
     optimizer.zero_grad(set_to_none=True)
-    # logits 为 [B,T,V]；损失取下一字标签，忽略值为 -100 的填充位置。
+    # logits are [B,T,V]; score next-token targets, ignoring padded positions labeled -100.
     logits = model(x)
     loss = token_loss(logits, y)
-    # 反向仅计算梯度，接着按所有参数梯度的总长度做统一比例裁剪。
+    # Backpropagation only computes gradients; then clip all gradients by a shared factor based on their total norm.
     loss.backward()
     norm_before_clip = torch.nn.utils.clip_grad_norm_(
         model.parameters(), max_norm=1.0)
-    # 真正修改参数的语句；AdamW 还会使用自己保存的梯度历史。
+    # This actually changes parameters; AdamW also uses its stored gradient history.
     optimizer.step()
-    # loss 来自更新前的这次前向，detach 只为记录数值而脱离计算图。
+    # loss comes from the forward pass before the update; detach removes gradient tracking for logging.
     return float(loss.detach()), float(norm_before_clip)
 ```
 
@@ -98,29 +98,29 @@ from tiny_lm.data import make_pretrain_batch
 from tiny_lm.train import evaluate
 
 def fit(model, tokenizer, train_records, val_records, steps=1000):
-    """更新传入的模型，返回各检查步的训练/留出损失；留出记录不参与更新。"""
-    # 固定抽样顺序；模型的初始参数应在调用此函数前建立。
+    """Update the supplied model and return training/held-out losses at checkpoints; held-out records never enter updates."""
+    # Fix the sampling order; initialize model parameters before calling this function.
     sampler = random.Random(42)
     optimizer = torch.optim.AdamW(
         model.parameters(), lr=.003, betas=(.9, .99),
         eps=1e-8, weight_decay=.01)
 
     def batches(records):
-        """按最多 16 条分批；每批包含错位标签、EOS 与右侧填充。"""
+        """Make batches of at most 16 records, with shifted targets, EOS, and right padding."""
         return [make_pretrain_batch(records[i:i + 16], tokenizer)
                 for i in range(0, len(records), 16)]
 
     train_batches, val_batches = batches(train_records), batches(val_records)
-    # 第 0 步先评分。evaluate 关闭梯度记录且不调用优化器，参数不会改变。
+    # Evaluate at step 0. evaluate disables gradient tracking and never calls the optimizer, so parameters stay unchanged.
     history = [(0, evaluate(model, train_batches),
                 evaluate(model, val_batches))]
     for step in range(1, steps + 1):
-        # 仅从训练组抽题；一步指一次更新，不是完整遍历一遍所有记录。
+        # Sample only training records; one step is one update, not a full pass through all records.
         selected = sampler.sample(train_records, min(16, len(train_records)))
         x, y = make_pretrain_batch(selected, tokenizer)
         one_update(model, x, y, optimizer)
         if step % 50 == 0 or step == steps:
-            # 两组都只评分；完整数据损失由 evaluate 按有效标签数加权。
+            # Score both groups without updating; evaluate weights full-dataset loss by valid target counts.
             history.append((step, evaluate(model, train_batches),
                             evaluate(model, val_batches)))
     return history
@@ -179,20 +179,20 @@ This run took place on 2026-10-23 and used Python 3.12.14, PyTorch 2.9.1, macOS 
 To inspect these results from the `code` companion code directory:
 
 ```bash
-# 查看已保存的实验记录，不重新训练模型。
+# Inspect the saved experiment without retraining the model.
 python -m lessons.l17 --inspect
 ```
 
 To retrain from random parameters and write your own output to a new path:
 
 ```bash
-# 从随机参数开始预训练，将自己的结果保存到指定目录。
+# Pretrain from random parameters and save your results in the specified directory.
 python -m lessons.l17 --out artifacts/my_run --pretrain-steps 1000
 ```
 
 The program saves the initial and pretrained models, vocabulary, configuration, and logs in the chosen directory, along with the four datasets actually used in that run under its `data/` subdirectory. Later inspection or replay can verify this snapshot. Retraining does not overwrite the original data at the repository root. The current weight files do not store AdamW's optimizer state. They support subsequent generation and starting a new fine-tuning run, but cannot resume an interrupted AdamW run step for step.
 
-On macOS, you can use `python3`; on Windows, use Python from the appropriate virtual environment. See the [companion instructions](https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md) for installation commands. The results in this chapter were recorded on the macOS environment above. A Windows retraining record for this data version is not provided. See the [experiment record](https://github.com/DavidDingXu/hello-llm/blob/main/code/EXPERIMENTS.md) for the scope of those runs.
+Use the same virtual-environment interpreter that installed the dependencies. Replace `python` above with `.venv/bin/python` on macOS/Linux, or `.\.venv\Scripts\python.exe` in Windows PowerShell. See the [companion instructions](https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md) for installation commands. The results in this chapter were recorded on the macOS environment above. A Windows retraining record for this data version is not provided. See the [experiment record](https://github.com/DavidDingXu/hello-llm/blob/main/code/EXPERIMENTS.md) for the scope of those runs.
 
 <details class="optional" markdown="1">
 <summary>Optional: what does AdamW remember beyond SGD?</summary>

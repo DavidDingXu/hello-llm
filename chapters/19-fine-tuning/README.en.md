@@ -62,19 +62,19 @@ import torch
 from tiny_lm.tokenizer import CharTokenizer
 
 def make_sft_example(prompt, answer, tokenizer, max_len=32):
-    """把一条问答变成 [1,max_len] 输入和标签；只给答案字符及 EOS 计分。"""
-    # L=len(prefix) 包括 BOS 与整个问题，本例最后一项是答后冒号。
+    """Convert one question-answer record to [1,max_len] inputs and targets; score only answer characters and EOS."""
+    # L=len(prefix) includes BOS and the full prompt; its last item here is the colon after “答”.
     prefix = [1] + tokenizer.encode(prompt)
     tokens = prefix + tokenizer.encode(answer) + [2]
-    # 仍是下一项预测：输入去末项，目标去首项，EOS 留在最后有效目标中。
+    # This still predicts the next item: drop the final input and initial target, keeping EOS as the last valid target.
     inputs = tokens[:-1]
     targets = tokens[1:]
-    # 只忽略 0..L-2；索引 L-1 由冒号预测首个答案字，必须保留。
+    # Ignore only 0..L-2; retain index L-1, where the colon predicts the first answer character.
     targets[:len(prefix) - 1] = [-100] * (len(prefix) - 1)
     if len(inputs) > max_len:
         raise ValueError("样本超过最大长度，不截断答案")
     padding = max_len - len(inputs)
-    # 0 是输入的 PAD 编号；-100 仅供损失函数忽略，不送进 Embedding。
+    # 0 is the input PAD ID; -100 only tells the loss to ignore a target and never enters Embedding.
     inputs += [0] * padding
     targets += [-100] * padding
     return torch.tensor([inputs]), torch.tensor([targets])
@@ -83,7 +83,7 @@ tokenizer = CharTokenizer.for_course()
 prompt = "问：小丁喜欢什么水果？\n答："
 answer = "红色的苹果。"
 x, y = make_sft_example(prompt, answer, tokenizer)
-# 本例首答案在标签索引 14，最后有效标签为 EOS；其余位置不直接评分。
+# The first answer target is at index 14 and the last valid target is EOS; other positions are not scored directly.
 valid = (y[0] != -100).nonzero().flatten().tolist()
 print(valid)  # [14, 15, 16, 17, 18, 19, 20]
 print([tokenizer.itos[int(y[0, i])] for i in valid])
@@ -110,15 +110,15 @@ We can also inspect “问” (“question”), a character that appears only in
 from tiny_lm.checkpoint import load_checkpoint
 from tiny_lm.losses import token_loss
 
-# 从预训练权重出发；本段只检查反向路径，没有优化器更新。
+# Start from pretrained weights; check backward paths without an optimizer update.
 model, tokenizer, _ = load_checkpoint("artifacts/first_run/pretrain.pt")
 model.zero_grad(set_to_none=True)
 loss = token_loss(model(x), y)
 loss.backward()
-# “问”仅出现在问题中；答案损失仍可能经过注意力上下文传到这一行参数。
+# “问” occurs only in the prompt; answer loss can still reach this parameter row through attention to the context.
 question_row = tokenizer.stoi["问"]
 gradient_size = model.embedding.weight.grad[question_row].abs().sum()
-print(float(gradient_size) > 0)  # 本例为 True
+print(float(gradient_size) > 0)  # True in this example
 ```
 
 Although “问” is absent from this answer, its Embedding row still has a nonzero gradient: answer loss affects those parameters through the context path.
@@ -151,17 +151,17 @@ from tiny_lm.data import make_sft_batch
 from tiny_lm.train import train_step
 
 def fine_tune(model, tokenizer, records, steps=300):
-    """让已加载的预训练模型继续学习 SFT 训练记录，原模型的全部参数参与更新。"""
+    """Continue training the loaded pretrained model on SFT records, updating all of its parameters."""
     sampler = random.Random(42)
-    # 继承模型权重，重新建立本阶段的优化器状态，不另造一套问答模型。
+    # Keep the model weights and create fresh optimizer state for this stage, rather than a separate question-answer model.
     optimizer = torch.optim.AdamW(
         model.parameters(), lr=.001, betas=(.9, .99),
         eps=1e-8, weight_decay=.01)
     for _ in range(steps):
-        # records 应传训练组；make_sft_batch 保留问题输入，仅给答案与 EOS 计分。
+        # Pass training records; make_sft_batch retains prompt inputs and scores only the answer and EOS.
         selected = sampler.sample(records, min(16, len(records)))
         x, y = make_sft_batch(selected, tokenizer)
-        # train_step 内部清梯度、前向、反向、裁剪，最后调用 optimizer.step 更新。
+        # train_step clears gradients, runs forward and backward, clips gradients, and finally updates with optimizer.step.
         train_step(model, x, y, optimizer, clip_norm=1.)
 ```
 
@@ -219,13 +219,13 @@ from tiny_lm.data import make_pretrain_batch
 
 def mixed_update(model, tokenizer, qa_records, text_records,
                  qa_sampler, text_sampler, optimizer):
-    """一次更新仍用16条数据；答案目标与完整正文目标共同约束同一模型。"""
+    """Use 16 records per update; answer targets and full-text targets train the same model together."""
     qa = qa_sampler.sample(qa_records, 12)
     old_text = text_sampler.sample(text_records, 4)
-    # 问答仍只给答案/EOS计分；原正文则给每个有效下一项计分。
+    # Question-answer records score only answers/EOS; original text scores every valid next-token target.
     qx, qy = make_sft_batch(qa, tokenizer)
     tx, ty = make_pretrain_batch(old_text, tokenizer)
-    # 两类张量均补齐到32项，沿样本轴合批；模型结构与优化器不换。
+    # Both tensor groups are padded to 32 positions; concatenate along the sample axis without changing the model or optimizer.
     x = torch.cat((qx, tx), dim=0)
     y = torch.cat((qy, ty), dim=0)
     return train_step(model, x, y, optimizer, clip_norm=1.)
@@ -257,9 +257,9 @@ This investigation leaves four things: fixed evaluation questions, comparisons f
 The complete script reuses the earlier `train_step`, both label builders, and the generation function. Inspect the nine recorded runs, or rerun them and save separately:
 
 ```bash
-# 只读作者保存的逐组结果。
+# Inspect the author's saved results for each experimental group.
 python -m lessons.retention_experiment --inspect
-# 从同一预训练权重重跑三种方法、三个种子；原权重与日志保持原样。
+# Rerun three methods with three seeds from the same pretrained weights; keep the original weights and logs intact.
 python -m lessons.retention_experiment --out artifacts/my_retention.json
 ```
 
@@ -270,14 +270,14 @@ The [experiment source](https://github.com/DavidDingXu/hello-llm/blob/main/code/
 From the `code` companion code directory, inspect the existing records:
 
 ```bash
-# 查看已保存的实验记录，不重新训练模型。
+# Inspect the saved experiment without retraining the model.
 python -m lessons.l19 --inspect
 ```
 
 If you created your own `artifacts/my_run/pretrain.pt` in Lesson 17, continue with fine-tuning:
 
 ```bash
-# 加载预训练权重继续微调，将新的权重和记录另存。
+# Continue fine-tuning from pretrained weights and save the new weights and records separately.
 python -m lessons.l19 --checkpoint artifacts/my_run/pretrain.pt --out artifacts/my_run --sft-steps 300
 ```
 

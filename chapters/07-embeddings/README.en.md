@@ -37,18 +37,18 @@ The same “小” must always map to 27, or the saved parameters will read the 
 import json
 from pathlib import Path
 
-# 列表位置就是固定编号；读取课程词表，保证与保存的模型使用同一套地址。
+# List positions are fixed IDs; load the course vocabulary to use the same addresses as the saved model.
 tokens = json.loads(Path("data/vocab.json").read_text(
     encoding="utf-8"))["tokens"]
-# 反向索引便于从字符查编号，编号本身不是要训练的浮点参数。
+# This reverse index maps characters to IDs; the IDs are not trainable floating-point parameters.
 to_id = {token: i for i, token in enumerate(tokens)}
 
 def encode(text):
-    """逐字符编码成整数地址；查不到的字符使用 UNK 编号 3。"""
+    """Encode characters as integer addresses; use UNK ID 3 for unknown characters."""
     return [to_id.get(char, 3) for char in text]
 
 def decode(ids):
-    """按编号取回普通字符，跳过 0—3 四个特殊项；不能恢复未知原字。"""
+    """Look up ordinary characters by ID, skipping special IDs 0—3; unknown original characters cannot be recovered."""
     return "".join(tokens[i] for i in ids if i >= 4)
 
 text = "小丁喜欢苹果。"
@@ -56,7 +56,7 @@ ids = encode(text)
 print(len(tokens), ids)
 print(decode(ids))
 assert len(tokens) == 79
-# 本例字符都在词表中，所以编码、解码后应回到原句。
+# Every character here is in the vocabulary, so encoding and decoding should recover the original text.
 assert decode(ids) == text
 ```
 
@@ -134,17 +134,17 @@ The following standalone code checks row selection, gradient accumulation, and t
 ```python
 import torch
 
-# 独立的四项演示表：0—3 在这里都是普通地址，不沿用课程特殊项含义。
-# 表内浮点数可求梯度，行号只是选行的整数。
+# A separate four-entry example table: 0—3 are ordinary addresses here, not the course's special tokens.
+# The table's floating-point values can receive gradients; integer row indices only select rows.
 table = torch.tensor([[1., 0.], [0., 1.],
                       [1., 1.], [-1., 2.]],
                      requires_grad=True)
 indices = torch.tensor([2, 1, 2], dtype=torch.long)
-# 按位置依次取行，得到 [3,2]；编号 2 的两次读取共享同一行参数。
+# Look up a row for each position to get [3,2]; both occurrences of ID 2 share one parameter row.
 vectors = table[indices]
-# 用求和作演示损失，使每个输出坐标收到的梯度都为 1。
+# Use a sum as the demonstration loss so each output coordinate receives gradient 1.
 loss = vectors.sum()
-# 两次读取的贡献加回第 2 行；这里只算梯度，还没有修改表内数值。
+# Both lookups contribute to row 2; this computes gradients without changing the table's values.
 loss.backward()
 
 print(vectors)
@@ -152,16 +152,16 @@ print(table.grad)
 assert table.grad.tolist() == [[0., 0.], [1., 1.],
                                [2., 2.], [0., 0.]]
 
-# 两条序列仍查同一张表；三根轴依次选择样本、位置、向量坐标。
+# Both sequences use the same table; the three axes select sample, position, and vector coordinate.
 batch_ids = torch.tensor([[2, 1, 2], [1, 2, 1]])
 batch_vectors = table[batch_ids]
 assert list(batch_vectors.shape) == [2, 3, 2]
 assert batch_vectors[1, 2, 0].item() == 0.0
 
-# 全部梯度算好后，再按学习率0.1更新；赋值过程不建立新的求导记录。
+# After all gradients are ready, update with learning rate 0.1; do not track these assignments for gradients.
 with torch.no_grad():
     table -= 0.1 * table.grad
-print("更新后的第2行：", table[2])  # 约 [0.8, 0.8]
+print("Row 2 after the update:", table[2])  # Approximately [0.8, 0.8]
 assert torch.allclose(table[2], torch.tensor([0.8, 0.8]))
 ```
 
@@ -199,7 +199,7 @@ For the third, the output shape is `[2,4,2]`. The middle, position axis changes;
 From the companion code directory, run this using the course environment with PyTorch installed:
 
 ```bash
-# 在配套代码目录运行本讲实验，核对正文中的结果。
+# Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l07
 ```
 

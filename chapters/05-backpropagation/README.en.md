@@ -148,31 +148,31 @@ from tiny_lm.manual_mlp import forward, hand_example, step
 
 
 def backward(cache, target, params):
-    """读取旧前向的缓存与参数，返回同形状的参数梯度，不更新参数。"""
-    # 先求平方损失对最终预测的导数，供前面的各条路径共用。
+    """Read the cached forward values and original parameters; return matching parameter gradients without updating them."""
+    # First differentiate the squared loss with respect to the prediction; earlier paths share this result.
     d_output = 2 * (cache["prediction"] - target)
-    # 传回隐藏值时，分别乘上连接它们的输出权重。
+    # To propagate to each hidden value, multiply by its corresponding output weight.
     d_hidden = [d_output * weight for weight in params["W2"][0]]
-    # ReLU 的局部导数：正区间传回原梯度，负区间与本实现的零点传回 0。
+    # ReLU passes the gradient through for positive inputs and returns 0 for negative inputs and, here, zero.
     d_z = [g if z > 0 else 0.0
            for g, z in zip(d_hidden, cache["z"])]
     return {
-        # 权重梯度 = 该单元收到的梯度 × 这条权重所乘的输入。
+        # Weight gradient = gradient received by the unit × input multiplied by that weight.
         "W2": [[d_output * value for value in cache["h"]]],
-        # 偏置直接相加，局部导数为 1，因此保留该单元收到的梯度。
+        # The bias is added directly, so its local derivative is 1 and its gradient equals the unit's incoming gradient.
         "b2": [d_output],
         "W1": [[g * value for value in cache["x"]] for g in d_z],
         "b1": d_z,
     }
 
 
-# 固定一条训练题；hand_example 提供正文列出的那组初始参数。
+# Fix one training example; hand_example supplies the initial parameters listed in the chapter.
 x, target = [1.0, 2.0], 1.0
 params = hand_example()
 prediction, cache = forward(x, params)
 gradients = backward(cache, target, params)
-print("预测与损失：", prediction, (prediction - target) ** 2)
-print("梯度：", gradients)
+print("Prediction and loss:", prediction, (prediction - target) ** 2)
+print("Gradients:", gradients)
 ```
 
 The `d_` prefix is a naming convention; here it means the derivative of loss with respect to that quantity. `d_hidden` multiplies the output gradient by the corresponding weight. `d_z` uses the forward value `z` to decide whether the gradient passes through ReLU. Finally, each layer's weight gradients are “the gradient received by this layer × this layer's input.”
@@ -184,25 +184,25 @@ The `d_` prefix is a naming convention; here it means the derivative of loss wit
 Finite differences are slow, but they provide an independent check of the backward code. First, check only the path we traced, `W1[0][1]`, while keeping the other parameters fixed:
 
 ```python
-# 接着上一段，x、target、params、gradients 仍对应同一次旧前向。
+# Continue from above; x, target, params, and gradients still refer to the same original forward pass.
 epsilon = 1e-5
 old_value = params["W1"][0][1]
-# 只试改第一行第二列的权重，其余参数保持原值。
+# Perturb only the weight in the first row, second column; keep every other parameter unchanged.
 params["W1"][0][1] = old_value + epsilon
 plus = (forward(x, params)[0] - target) ** 2
 params["W1"][0][1] = old_value - epsilon
 minus = (forward(x, params)[0] - target) ** 2
-# 先恢复原值，再把差分导数与反向得到的同一项梯度比较。
+# Restore the original value, then compare its finite-difference derivative with its backpropagation gradient.
 params["W1"][0][1] = old_value
 numerical = (plus - minus) / (2 * epsilon)
-print("差分与反向：", numerical, gradients["W1"][0][1])
+print("Finite difference and backpropagation:", numerical, gradients["W1"][0][1])
 assert abs(numerical - gradients["W1"][0][1]) < 1e-7
 
-# 全部梯度都来自旧参数；统一更新后，重新前向，不能沿用旧隐藏值。
+# All gradients come from the original parameters; update them together, then recompute the forward pass and hidden values.
 step(params, gradients, learning_rate=0.01)
 new_prediction, _ = forward(x, params)
-print("更新后：", new_prediction, (new_prediction - target) ** 2)
-# 约为 -0.2896、1.66306816
+print("After the update:", new_prediction, (new_prediction - target) ** 2)
+# Approximately -0.2896 and 1.66306816
 ```
 
 Increase the value slightly, decrease it slightly, and restore it after the calculations. Only then run `step`. Both gradient results are close to −8. The companion program keeps a complete check of all 9 parameters using the same principle.
@@ -230,7 +230,7 @@ In the next lesson, we will switch to PyTorch, first check these hand calculatio
 Run this from the `code` directory:
 
 ```bash
-# 在配套代码目录运行本讲实验，核对正文中的结果。
+# Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l05
 ```
 

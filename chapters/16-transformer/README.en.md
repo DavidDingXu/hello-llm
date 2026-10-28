@@ -60,12 +60,12 @@ from tiny_lm.layers import RMSNorm, TransformerBlock
 from tiny_lm.tokenizer import CharTokenizer
 
 class TinyLM(nn.Module):
-    """将整数编号 [B,T] 转为原始候选分数 [B,T,V]，不在前向内选字。"""
+    """Turn integer IDs [B,T] into raw candidate scores [B,T,V]; do not select a token in the forward pass."""
     def __init__(self, config):
         super().__init__()
         self.config = config
         self.embedding = nn.Embedding(config.vocab_size, config.d_model)
-        # ModuleList 注册各块的独立参数，模型的优化器才能找到它们。
+        # ModuleList registers each block's independent parameters so the model's optimizer can find them.
         self.blocks = nn.ModuleList([
             TransformerBlock(config) for _ in range(config.n_layers)])
         self.final_norm = RMSNorm(config.d_model, config.norm_eps)
@@ -75,24 +75,24 @@ class TinyLM(nn.Module):
 
     @staticmethod
     def _initialize(module):
-        # 随机填写 Linear/Embedding；RMSNorm 的缩放参数保留初值 1。
+        # Randomly initialize Linear/Embedding weights; RMSNorm scale parameters keep their initial value of 1.
         if isinstance(module, (nn.Linear, nn.Embedding)):
             nn.init.normal_(module.weight, mean=0., std=.02)
 
     def forward(self, ids):
-        # 这里只接受一批编号，不把标签或损失计算混进模型前向。
+        # Accept only a batch of IDs; keep targets and loss computation outside the model's forward pass.
         if ids.ndim != 2 or not 0 < ids.shape[1] <= self.config.max_seq_len:
             raise ValueError("需要 [B,T]，且 1 <= T <= 32")
-        x = self.embedding(ids)  # [B,T] → [B,T,D]，按编号读取参数表行。
-        # 各块改写位置表示，保留 [B,T,D] 的轴与宽度。
+        x = self.embedding(ids)  # [B,T] → [B,T,D], looking up parameter rows by ID.
+        # Each block transforms position representations while preserving the [B,T,D] axes and width.
         for block in self.blocks:
             x = block(x)
-        # 最后归一后，将 D 项内部坐标映射成 V 个候选分数；此处没有 Softmax。
+        # After final normalization, map D internal coordinates to V candidate scores; there is no Softmax here.
         return self.output(self.final_norm(x))
 
 torch.manual_seed(42)
 tokenizer = CharTokenizer.for_course()
-# 这是一份新建的随机模型，尚未训练；不要与下段的预训练记录混为一份参数。
+# This new random model is untrained; its parameters differ from those behind the pretrained record below.
 random_model = TinyLM(ModelConfig(vocab_size=tokenizer.vocab_size))
 text = "早上，小丁喜欢红色的苹果。"
 ids = torch.tensor([tokenizer.encode(text, add_bos=True)])
@@ -140,26 +140,26 @@ To repeat the two-name comparison, load the saved weights directly. We name this
 from tiny_lm.checkpoint import load_checkpoint
 from tiny_lm.trace import parameter_digest
 
-# 加载同一份预训练权重；本段没有标签、反向或优化器更新。
+# Load the same pretrained weights; there are no targets, backward passes, or optimizer updates here.
 context_model, context_tokenizer, _ = load_checkpoint(
     "artifacts/first_run/pretrain.pt")
 before_digest = parameter_digest(context_model)
 embeddings, representations = [], []
 for prefix in ["早上，小丁喜欢", "早上，小周喜欢"]:
-    # 两个前缀都以“欢”结尾，只在前面的人名处差一个字。
+    # Both prefixes end in “欢” and differ only by one earlier character in the name.
     prefix_ids = torch.tensor([context_tokenizer.encode(prefix, add_bos=True)])
     with torch.no_grad():
         scores, detail = context_model(prefix_ids, return_trace=True)
     embeddings.append(detail["embedding"][0, -1])
     representations.append(detail["blocks"][-1]["block_output"][0, -1])
-    # 对最后位置的完整79项归一化，再查看“红”和“黄”，不单独重分这两项。
+    # Normalize over all 79 candidates at the last position, then inspect “红” and “黄”; do not renormalize just those two.
     probabilities = scores[0, -1].softmax(-1)
     print(prefix, {c: float(probabilities[context_tokenizer.stoi[c]])
                    for c in ["红", "黄"]})
 
-assert torch.equal(embeddings[0], embeddings[1])  # 当前字符相同，查表结果完全相同。
+assert torch.equal(embeddings[0], embeddings[1])  # Identical current characters give identical embedding lookups.
 assert not torch.allclose(representations[0], representations[1])
-assert parameter_digest(context_model) == before_digest  # 比较期间参数没有改变。
+assert parameter_digest(context_model) == before_digest  # Parameters stayed unchanged during the comparison.
 ```
 
 </details>
@@ -180,17 +180,17 @@ Read the original record directly with the following code, without retraining:
 import json
 from pathlib import Path
 
-# JSON 保存已训练模型的一次前向结果；读取它不会给 random_model 加载权重。
+# The JSON stores a trained model's forward-pass results; reading it does not load weights into random_model.
 pretrain_record = json.loads(Path(
     "artifacts/first_run/forward_trace.json").read_text(encoding="utf-8"))
 pretrain_trace = pretrain_record["trace"]
 assert pretrain_record["stage"] == "pretrain"
 position = 7
-# 取样本 0 的位置 7（欢），只显示前四个坐标，其余坐标仍参与原计算。
+# Select sample 0, position 7 (“欢”); display only four coordinates, though all participated in the original computation.
 print(pretrain_trace["embedding"][0][position][:4])
 print(pretrain_trace["blocks"][0]["block_output"][0][position][:4])
 scores = torch.tensor(pretrain_trace["logits"][0][position])
-# red 索引的是词表候选轴，不是 64 维表示中的某个坐标。
+# red indexes the vocabulary candidate axis, not a coordinate of the 64-dimensional representation.
 red = tokenizer.stoi["红"]
 print(float(scores[red]), float(scores.softmax(-1)[red]))
 ```
@@ -226,13 +226,13 @@ Return to the `random_model` we built earlier. Supply targets shifted by one pos
 ```python
 from tiny_lm.losses import token_loss
 
-# 输入为 BOS+原文；标签向后错一格，成为原文+EOS，两者同为 [1,14]。
-targets = torch.tensor([tokenizer.encode(text) + [2]])  # 末尾是 EOS
-# 回到前面新建的随机模型，只检查它的全部参数是否接到了损失。
+# Inputs are BOS + text; targets shift by one to text + EOS. Both have shape [1,14].
+targets = torch.tensor([tokenizer.encode(text) + [2]])  # Ends with EOS
+# Return to the new random model and check that all its parameters connect to the loss.
 random_model.zero_grad(set_to_none=True)
 loss = token_loss(random_model(ids), targets)
 loss.backward()
-# backward 只填写梯度；这里没有优化器 step，随机参数仍未更新。
+# backward only fills gradients; without an optimizer step, the random parameters remain unchanged.
 assert all(p.grad is not None and torch.isfinite(p.grad).all()
            for p in random_model.parameters())
 print(float(loss.detach()))
@@ -272,7 +272,7 @@ Before training, give your model two ID sequences of length 5. Write down the ex
 Run this from the `code` companion code directory:
 
 ```bash
-# 在配套代码目录运行本讲实验，核对正文中的结果。
+# Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l16
 ```
 

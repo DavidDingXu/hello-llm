@@ -1,14 +1,14 @@
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
-<meta name="source-sha256" content="71e12d72bc12ad9bfa186b7a336d92cbf9c62abee25cc2e9ebea3722e8d01ae7"><meta name="description" content="训练损失一路降低，留出损失却上升。先看两组题差了什么，再沿一批数据走完一次真实参数更新。"><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/17.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="17｜预训练：训练题熟了，新题为什么更差？ · Hello LLM"><meta property="og:description" content="训练损失一路降低，留出损失却上升。先看两组题差了什么，再沿一批数据走完一次真实参数更新。"><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/17.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>17｜预训练：训练题熟了，新题为什么更差？ · Hello LLM</title>
+<meta name="source-sha256" content="fd5f7abbbb67bfc4f5f308fc3084623420c5daab12207c0e53fdaec7d3f3b6a5"><meta name="description" content="训练损失一路降低，留出损失却上升。先看两组题差了什么，再沿一批数据走完一次真实参数更新。"><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/17.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="17｜预训练：训练题熟了，新题为什么更差？ · Hello LLM"><meta property="og:description" content="训练损失一路降低，留出损失却上升。先看两组题差了什么，再沿一批数据走完一次真实参数更新。"><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/17.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>17｜预训练：训练题熟了，新题为什么更差？ · Hello LLM</title>
 <link rel="icon" href="../assets/favicon.png" type="image/png">
 <script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
-<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
-<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
-<script defer src="../code/visuals/reading_site/search-index.js?v=ea96857fef58"></script>
-<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
-<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
-<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="17" data-alternate-sections="[&quot;first-check-how-the-two-sets-differ&quot;, &quot;first-confirm-that-the-parameters-can-learn&quot;, &quot;how-one-batch-updates-the-parameters&quot;, &quot;every-50-steps-evaluate-the-same-two-full-sets-again&quot;, &quot;after-step-50-the-curves-diverge&quot;, &quot;now-inspect-what-it-actually-continues-with&quot;, &quot;run-the-experiment-yourself&quot;, &quot;two-prediction-questions&quot;]"><a class="skip-link" href="#main-content">跳到正文</a>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=0a8bea167aca">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=0a8bea167aca">
+<script defer src="../code/visuals/reading_site/search-index.js?v=b5ca43c00d17"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=0a8bea167aca"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=0a8bea167aca"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=0a8bea167aca"></script></head><body class="article-page" data-root="../" data-page="17" data-alternate-sections="[&quot;first-check-how-the-two-sets-differ&quot;, &quot;first-confirm-that-the-parameters-can-learn&quot;, &quot;how-one-batch-updates-the-parameters&quot;, &quot;every-50-steps-evaluate-the-same-two-full-sets-again&quot;, &quot;after-step-50-the-curves-diverge&quot;, &quot;now-inspect-what-it-actually-continues-with&quot;, &quot;run-the-experiment-yourself&quot;, &quot;two-prediction-questions&quot;]"><a class="skip-link" href="#main-content">跳到正文</a>
 <header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="打开课程目录" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
 <a class="brand" href="../index.html" aria-label="Hello LLM · 学习站首页">
 <img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>手写小模型，看懂大模型</small></span></a>
@@ -211,23 +211,43 @@ def fit(model, tokenizer, train_records, val_records, steps=1000):
 </table></div>
 <p>它能接出熟悉的颜色水果句子，换到“问：……答：”却又继续写起“我爱吃……”。训练后的参数还不能正确处理这些问答前缀。</p>
 <section class="training-lab" id="training-lab" data-default-mode="pretrain" data-presets="{&quot;pretrain&quot;: {&quot;steps&quot;: 1000, &quot;seed&quot;: 42, &quot;batch_size&quot;: 16, &quot;learning_rate&quot;: 0.003}, &quot;sft&quot;: {&quot;steps&quot;: 300, &quot;seed&quot;: 42, &quot;batch_size&quot;: 16, &quot;learning_rate&quot;: 0.001}, &quot;quick&quot;: {&quot;steps&quot;: 100, &quot;seed&quot;: 42, &quot;batch_size&quot;: 4, &quot;learning_rate&quot;: 0.003}}" data-counts="{&quot;pretrain_train&quot;: 256, &quot;pretrain_val&quot;: 64, &quot;sft_train&quot;: 24, &quot;sft_val&quot;: 8}" aria-labelledby="training-lab-title">
-<div class="lab-heading"><span>动手验证 · 真实训练</span><h3 id="training-lab-title">就在这里，把模型训练一遍</h3></div>
+<div class="lab-heading"><span>浏览器实验</span><h3 id="training-lab-title">用这些样本训练模型</h3></div>
 <p class="training-question">先预测：训练到 1000 步，训练集和验证集的损失都会变好吗？观察两条曲线从哪里开始分开。</p>
-<label class="training-mode-label" for="training-mode">实验<select id="training-mode"><option value="pretrain" selected>预训练 · 全部数据</option><option value="sft" >问答微调 · 全部数据</option><option value="pipeline" >完整流程 · 预训练 → 微调</option><option value="quick" >快速实验 · 4 条样本</option></select></label>
+<label class="training-mode-label" for="training-mode">实验<select id="training-mode"><option value="pretrain" selected>预训练 · 学习短句</option><option value="sft" >问答微调 · 学习回答</option><option value="pipeline" >完整流程 · 预训练 → 微调</option><option value="quick" >快速实验 · 4 条样本</option></select></label>
 <p class="training-recipe" id="training-recipe"></p>
+<section class="training-samples" aria-labelledby="training-samples-title">
+<h4 id="training-samples-title">模型要学哪些内容？</h4>
+<p class="training-data-summary">课程已提供：256 条训练短句、64 条验证短句。验证题不参与参数更新。</p>
+<div class="sample-previews"><div data-preview="pretrain" ><span>预训练短句，例如：</span><p>早上，小丁喜欢红色的苹果。</p></div>
+<div data-preview="sft" hidden><span>微调问答，例如：</span><p>问：小丁喜欢什么水果？
+答：红色的苹果。</p></div></div>
+<details class="sample-editor"><summary>查看全部样本，或改一条试试</summary>
+<p class="sample-help">可以修改现有训练样本；验证题只用于检查效果，不能在这里改。修改只用于本页实验，刷新页面会恢复课程样本。</p>
+<div class="sample-selects"><label for="sample-group">数据组<select id="sample-group" disabled></select></label><label for="sample-record">选择一条<select id="sample-record" disabled></select></label></div>
+<label class="sample-text-field" for="sample-text">短句<textarea id="sample-text" rows="2" disabled spellcheck="false"></textarea></label>
+<label class="sample-prompt-field" for="sample-prompt" hidden>问题（保留“问：”和“答：”格式）<textarea id="sample-prompt" rows="2" disabled spellcheck="false"></textarea></label>
+<label class="sample-answer-field" for="sample-answer" hidden>期望回答<textarea id="sample-answer" rows="2" disabled spellcheck="false"></textarea></label>
+<p class="sample-editor-status" role="status">展开后读取课程样本。</p>
+<p class="sample-help">每条最多 31 个字符，问题与答案合计。一次只改一条，先猜结果再训练；其他样本仍会影响模型的回答。</p>
+<details class="sample-vocab"><summary>查看可用的字和标点</summary><p></p></details>
+<div class="sample-tools"><button class="button sample-restore" type="button" disabled>恢复课程样本</button><button class="button sample-retry" type="button" hidden>重新读取</button></div>
+</details><p class="sample-change-note" role="status"></p>
+</section>
 <details class="training-settings"><summary>调整训练参数</summary><div class="training-fields">
 <label><span class="primary-steps-label">训练步数</span><input id="training-steps" type="number" min="1" max="1000" step="1" value="1000" required></label>
 <label><span class="primary-lr-label">学习率</span><input id="training-lr" type="number" min="0.000001" max="0.1" step="any" value="0.003" required></label>
 <label class="pipeline-field" hidden>微调步数<input id="training-sft-steps" type="number" min="1" max="1000" step="1" value="300" required></label>
 <label class="pipeline-field" hidden>微调学习率<input id="training-sft-lr" type="number" min="0.000001" max="0.1" step="any" value="0.001" required></label>
-</div><p class="training-change-note">先只改一个变量，再与默认结果比较。</p></details>
-<div class="training-actions"><button class="button primary training-start" type="button" disabled>开始训练</button><button class="button training-stop" type="button" disabled>停止</button><button class="button training-reset" type="button" disabled>重置</button><button class="button training-download" type="button" disabled>下载实验记录</button></div>
+</div><p class="training-change-note">步数是参数更新的次数，学习率决定每次更新的幅度。第一次用默认值即可；之后一次只改一项，方便比较结果。</p></details>
+<div class="training-actions"><button class="button primary training-start" type="button" disabled>开始训练</button><button class="button training-stop" type="button" disabled>停止</button><button class="button training-reset" type="button" disabled>重置参数与结果</button><button class="button training-download" type="button" disabled>下载实验记录</button></div>
 <p class="training-status" role="status">选择实验，点击开始训练。</p>
 <progress class="training-progress" value="0" max="100" aria-label="训练进度" hidden></progress>
-<div class="training-results" hidden><div class="training-chart-tabs" role="group" aria-label="查看训练阶段"></div>
-<figure class="training-plot"><svg class="training-chart" viewBox="0 0 520 230" role="img" aria-label="训练与验证损失曲线"></svg><figcaption><span class="train-key">训练集</span><span class="validation-key">验证集</span><span class="training-metrics"></span></figcaption></figure>
-<p class="training-answer-scores" hidden></p><div class="training-generations"></div>
+<div class="training-results" hidden><h4>训练前后的回答</h4><p class="training-answer-scores" hidden></p><div class="training-generations"></div>
+<details class="training-edited" hidden><summary>你改过的样本（训练题）</summary><p class="training-change-note">每个阶段最多展示前三条修改。这里检查的是训练题，答对还不代表能处理新问法。</p><div class="training-edited-generations"></div></details>
 <details class="training-more"><summary>再检查：未训练的问法与另一种旧续写</summary><div class="training-extra-generations"></div></details>
+<div class="training-chart-tabs" role="group" aria-label="查看训练阶段"></div>
+<figure class="training-plot"><svg class="training-chart" viewBox="0 0 520 230" role="img" aria-label="训练与验证损失曲线"></svg><figcaption><span class="train-key">训练集</span><span class="validation-key">验证集</span><span class="training-metrics"></span></figcaption></figure>
+<p class="training-change-note">损失越低，表示模型对这组题的预测更接近答案。验证题没有参与参数更新，要和实际生成的文字一起看。</p>
 <p class="training-observation"></p><details class="training-explanation"><summary>实验说明</summary><p class="training-run-note">重新训练的数值和措辞可能与正文不同，请结合曲线与输出判断。</p></details>
 <details class="training-comparison" hidden><summary>与上一次训练比较</summary><div></div></details></div>
 <noscript>启用 JavaScript 后可以在这里训练模型；配套代码也可以在本地运行。</noscript>
@@ -242,7 +262,7 @@ python -m lessons.l17 --inspect
 python -m lessons.l17 --out artifacts/my_run --pretrain-steps 1000
 </code></pre>
 <p>程序在指定目录保存初值与预训练模型、词表、配置和日志，并把本次实际使用的四组数据保存到该目录的<code>data/</code>。之后查看或回放这次实验，可以核对这份快照；重新训练不会覆盖仓库根目录的原始数据。当前权重文件没有保存 AdamW 的优化器状态，适合后面的生成与另起一轮微调，不能据此逐步恢复被中断的同一次 AdamW 训练。</p>
-<p>macOS 可用 <code>python3</code>，Windows 可用对应虚拟环境的 Python，安装命令见<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md">配套说明</a>。本节的训练数值来自上述 macOS 环境；尚未提供同版实验在 Windows 上的重训记录。具体运行范围见<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/EXPERIMENTS.md">实验记录</a>。</p>
+<p>上面的 <code>python</code> 指安装依赖时使用的虚拟环境解释器：macOS / Linux 替换为 <code>.venv/bin/python</code>，Windows PowerShell 替换为 <code>.\.venv\Scripts\python.exe</code>。安装命令见<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md">配套说明</a>。本节的训练数值来自上述 macOS 环境；尚未提供同版实验在 Windows 上的重训记录。具体运行范围见<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/EXPERIMENTS.md">实验记录</a>。</p>
 <details class="optional">
 <summary>选读：AdamW比SGD多记了什么</summary>
 <p>每个参数坐标有两份记录：<code>m</code> 平滑记录梯度，<code>v</code> 平滑记录梯度的平方。本实验的比例为：</p>

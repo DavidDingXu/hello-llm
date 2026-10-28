@@ -10,7 +10,7 @@ You can also [edit Python in the browser](https://daviddingxu.github.io/hello-ll
 
 ```bash
 git clone https://github.com/DavidDingXu/hello-llm.git
-cd hello-llm/配套代码
+cd hello-llm/code
 python -m lessons.l01
 ```
 
@@ -51,17 +51,17 @@ macOS/Linux:
 
 ```bash
 .venv/bin/python -m lessons.l18 --checkpoint artifacts/first_run/pretrain.pt --prompt "早上，小丁喜欢" --greedy
-.venv/bin/python -m tiny_lm.train --out artifacts/my_run
+.venv/bin/python -m tiny_lm.train --out artifacts/quickstart_run
 ```
 
 Windows PowerShell:
 
 ```powershell
 .\.venv\Scripts\python.exe -m lessons.l18 --checkpoint artifacts/first_run/pretrain.pt --prompt "早上，小丁喜欢" --greedy
-.\.venv\Scripts\python.exe -m tiny_lm.train --out artifacts/my_run
+.\.venv\Scripts\python.exe -m tiny_lm.train --out artifacts/quickstart_run
 ```
 
-The first command uses the supplied pretrained weights and continues with **“红色的苹果。”**. The second starts from random weights, runs pretraining and fine-tuning, then saves checkpoints, logs, data snapshots and output comparisons. Use a new output directory for another run. The English chapters retain the original Chinese training strings so you can reproduce the same examples.
+The first command uses the supplied pretrained weights and continues with **“红色的苹果。”**. The second starts from random weights, runs pretraining and fine-tuning, then saves checkpoints, logs, data snapshots and output comparisons. This quick start uses `artifacts/quickstart_run`; lessons 17–19 use `artifacts/my_run` separately. Use a new output directory for each repeated run. The English chapters retain the original Chinese training strings so you can reproduce the same examples.
 
 ## If you get stuck
 

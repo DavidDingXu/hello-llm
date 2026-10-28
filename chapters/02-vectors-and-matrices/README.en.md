@@ -89,7 +89,7 @@ The following code uses only standard Python features. Copy it into a file and r
 
 ```python
 def dot(left, right):
-    """两个等长向量逐项相乘并求和，返回一个标量。"""
+    """Multiply two equal-length vectors element by element and sum to return a scalar."""
     if not left or len(left) != len(right):
         raise ValueError("点积的两组数必须非空且等长")
     total = 0.0
@@ -99,17 +99,17 @@ def dot(left, right):
 
 
 def linear(inputs, weights, biases):
-    """[D] 输入配 [O,D] 权重与 [O] 偏置，返回 [O] 输出。"""
+    """Combine a [D] input with [O,D] weights and [O] biases to return an [O] output."""
     if not weights or len(weights) != len(biases):
         raise ValueError("每个输出需要一行权重和一个偏置")
     outputs = []
-    # 每行参数都读取完整的同一份输入，输出之间不串联。
+    # Each parameter row reads the same complete input; outputs do not feed into one another.
     for row, bias in zip(weights, biases):
         outputs.append(dot(inputs, row) + bias)
     return outputs
 
 
-# W 每行对应一个输出，每列对应一项输入；b 按输出配对。
+# Each row of W corresponds to an output, each column to an input; b matches the outputs.
 x = [2, 1]
 W = [[1, 2], [3, 4]]
 b = [1, -1]
@@ -126,7 +126,7 @@ The printed result is still `[5, 9]`. To add a third output later, add only a we
 We just added outputs. Now consider a different request: process one more input, `[0, 1]`, using the original parameters. Predict its result before running:
 
 ```python
-# 沿用前段的 linear、W、b；每行是一份样本，两份样本共用参数。
+# Reuse linear, W, and b from above; each row is a sample, and both samples share parameters.
 samples = [[2, 1], [0, 1]]
 outputs = [linear(sample, W, b) for sample in samples]
 print(outputs)  # [[5.0, 9.0], [3.0, 3.0]]
@@ -175,7 +175,7 @@ In the next lesson, we will use the four XOR rules to test what a multiply-and-a
 Run this from the `code` directory:
 
 ```bash
-# 在配套代码目录运行本讲实验，核对正文中的结果。
+# Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l02
 ```
 

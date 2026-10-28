@@ -546,15 +546,17 @@ def build_document(path, paths=None, context=None):
 
 
 def model_preview(context):
-    by_id = {row['id']: row for row in context['records']}
-    def url(lesson):
-        return html.escape(by_id[lesson]['url']) if lesson in by_id else '#curriculum'
-    return f'''<div class="model-preview" aria-label="文字经过模型的路径"><div class="model-caption"><span>从文字，到下一个字</span><span class="model-label">TinyLM</span></div>
-<div class="token-line" aria-label="输入：早上，小丁喜欢">{''.join('<span>'+c+'</span>' for c in '早上，小丁喜欢')}<span class="next-token">?</span></div>
-<div class="model-pipeline"><a href="{url('07')}" class="pipeline-row"><span class="pipeline-dot blue"></span><span>字符变成向量<small>Embedding</small></span><span class="pipeline-lesson">07</span>{icon('arrow')}</a>
-<a href="{url('16')}" class="pipeline-row middle"><span class="pipeline-dot purple"></span><span>读取前文，逐层计算<small>Transformer</small></span><span class="pipeline-lesson">10—16</span>{icon('arrow')}</a>
-<a href="{url('18')}" class="pipeline-row"><span class="pipeline-dot teal"></span><span>选择下一个字<small>Softmax & sampling</small></span><span class="pipeline-lesson">18</span>{icon('arrow')}</a></div>
-<div class="model-loop"><svg viewBox="0 0 50 24" aria-hidden="true"><path d="M1 1v10c0 6 4 9 10 9h34m-5-5 5 5-5 4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg><span>把新字接回输入，再算一次</span></div></div>'''
+    comparison = json.loads((COLUMN / 'code/artifacts/first_run/generation_comparison.json').read_text(encoding='utf-8'))
+    prompt = '问：小丁喜欢什么水果？\n答：'
+    outputs = {stage: next(row['generated_text'] for row in comparison[stage]['outputs']
+                           if row['prompt'] == prompt) for stage in ('pretrain', 'sft')}
+    return f'''<aside class="learning-example" aria-label="同一道题，微调前后的实际回答">
+<p class="example-label">同一个模型 · 课程实测</p><h2>会续写，为什么还答错？</h2>
+<p class="example-question">小丁喜欢什么水果？</p>
+<dl class="example-answers"><div><dt>预训练后</dt><dd>{html.escape(outputs['pretrain'])}</dd></div>
+<div><dt>问答微调后</dt><dd>{html.escape(outputs['sft'])}</dd></div></dl>
+<p class="example-note">继续学习 24 条问答，答案变了。<a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/artifacts/first_run/generation_comparison.json">查看这次记录{icon('external')}</a></p>
+</aside>'''
 
 
 def reader_feedback(record, context):
@@ -574,9 +576,7 @@ def build_index(paths, context=None):
     context = context or build_context(paths)
     records = context['records']
     by_id = {row['id']: row for row in records}
-    start_url = by_id.get('00', records[0])['url']
-    first_demo = by_id['01']['demos'][0]['url']
-    first_python = by_id['01']['url'] + '#python-lab'
+    start_url = by_id['01']['url']
     full_training = by_id['20']['url'] + '#training-lab'
     stage_nav = ''.join(f'<a href="#stage-{i}"><span>{start:02d}—{end:02d}</span><strong>{title}</strong>{icon("arrow")}</a>' for i, (start, end, title, *_) in enumerate(STAGES, 1))
     catalog = ''
@@ -588,35 +588,27 @@ def build_index(paths, context=None):
         catalog += f'''<section class="catalog-stage" id="stage-{i}"><header><span class="stage-marker">第{"一二三四"[i-1]}部分</span><div><h3>{title}</h3><p>{description}</p></div><span class="lesson-range">{start:02d}—{end:02d}</span></header><ol class="course-rows">{lesson_rows}</ol><p class="stage-outcome">{icon('check')}阶段目标：{outcome}</p></section>'''
     guides = ''.join(f'<a href="{html.escape(row["url"])}">{label}{icon("arrow")}</a>' for key, label in (('intro', '专栏介绍'), ('00', '开篇导学')) if (row := by_id.get(key)))
     ending = (f'<a href="{html.escape(by_id["end"]["url"])}">结束篇{icon("arrow")}</a>' if 'end' in by_id else '')
-    before_reading = f'<section class="guide-stage"><h3>先从这里开始</h3><p>认识这门课，再给成品模型出两道题。</p><div>{guides}</div></section>'
     after_reading = f'<section class="guide-stage ending-stage"><h3>走完 20 讲之后</h3><p>回看起点，梳理你已经能解释的模型行为。</p><div>{ending}</div></section>'
-    featured = []
-    other_demos = []
+    demos = []
     for row in records:
         for demo in row['demos']:
-            is_model = row['id'] == '16' and ('lab3d' in demo['url'] or
-                       (demo['label'] == '模型解剖台' and not any('lab3d' in d['url'] for d in row['demos'])))
-            if (row['id'], demo['label']) == ('01', '逐步演示') or is_model:
-                featured.append((row, demo))
-            else:
-                other_demos.append((row, demo))
-    featured.append((by_id['20'], {'label': '训练完整小模型', 'url': full_training}))
-    descriptions = {'01': '改变输入和参数，逐步核对一次神经元计算。', '16': '沿着真实张量，拆开模型的一次前向计算。', '20': '亲手训练，对照损失曲线与生成结果。'}
-    demo_list = ''.join(f'''<a class="experiment-feature" href="{html.escape(demo['url'])}"><span class="experiment-number">{row['id']}</span><div><h3>{'神经元逐步演示' if row['id'] == '01' else demo['label']}</h3><p>{descriptions[row['id']]}</p><span class="text-link">打开实验 {icon('arrow')}</span></div></a>''' for row, demo in featured)
-    more_demos = ''.join(f'<a href="{html.escape(demo["url"])}"><span>{row["id"]}</span>{html.escape(row["topic"])} · {html.escape(demo["label"])}{icon("arrow")}</a>' for row, demo in other_demos)
-    video_cards = ''
+            demos.append((row, demo))
+    demos.append((by_id['20'], {'label': '训练完整小模型', 'url': full_training}))
+    demo_list = ''.join(f'<a href="{html.escape(demo["url"])}"><span>{row["id"]}</span>{html.escape(row["topic"])} · {html.escape(demo["label"])}{icon("arrow")}</a>' for row, demo in demos)
+    video_links = ''
     for key in ('intro', '01', '20'):
         row = by_id[key]
         if row['video'].get('status') != 'ready':
             continue
         seconds = round(row['video']['duration_seconds'])
-        video_cards += f'<a class="video-card" href="{html.escape(row["url"])}#lesson-video"><img src="{html.escape(row["video"]["poster"])}" alt="" width="1280" height="720" loading="lazy"><span><strong>{html.escape(row["topic"])}</strong><small>{seconds // 60}:{seconds % 60:02d} · 打开本篇视频</small></span></a>'
-    video_section = ('<section class="videos-section page-width" id="videos"><div class="section-heading"><div><h2>视频讲解</h2><p>从原理到源码，再到运行结果。</p></div><span class="section-count">23 支视频 · 约 110 分钟</span></div><div class="video-cards">' + video_cards + '</div></section>') if video_cards else ''
+        video_links += f'<a href="{html.escape(row["url"])}#lesson-video">{html.escape(row["topic"])}<small>{seconds // 60}:{seconds % 60:02d}</small>{icon("arrow")}</a>'
+    video_section = ('<details class="resource-list" id="videos"><summary>视频讲解 · 23 支中文视频</summary><div>' + video_links + '</div><p><a href="https://github.com/DavidDingXu/hello-llm/blob/main/docs/VIDEOS.md">完整视频目录' + icon('external') + '</a></p></details>') if video_links else ''
     document = (page_head(TITLE, context, './') + '<body class="home-page" data-root="./" data-page="home">'
-            + page_header('./', context, alternate='index.html' if context['language'] == 'en' else 'index.en.html') + f'''<main id="main-content"><div class="hero-band"><section class="home-hero page-width"><div class="hero-copy"><p class="book-eyebrow">HELLO LLM · 免费学习 · 非商业使用</p><h1>手写小模型，<br><em>看懂大模型。</em></h1><p>从一个能手算的神经元开始，<br class="desktop-break">亲手接出能训练、能生成文字的小语言模型。</p><div class="hero-actions"><a class="button primary" id="continue-learning" href="{html.escape(start_url)}"><span>开始阅读</span>{icon('arrow')}</a><a class="button secondary" href="#downloads">下载 PDF / EPUB</a></div><p class="hero-note" id="resume-label">零基础可入门 · 20 讲 · 无需 GPU</p></div>{model_preview(context)}</section></div>
-<section class="experiments-section" id="experiments"><div class="page-width"><div class="section-heading"><div><h2>让原理，在手上走一遍</h2><p>改数、写代码，再亲手训练一个模型。</p></div></div><div class="featured-experiments">{demo_list}</div><details class="more-experiments"><summary>展开其余 {len(other_demos)} 个实验</summary><div>{more_demos}</div></details></div></section>
-{video_section}<section class="curriculum-section page-width" id="curriculum"><div class="section-heading"><div><h2>一步步，把模型造出来</h2><p>沿着同一个项目学习，每个阶段都有可核对的成果。</p></div></div>
-<div class="curriculum-layout"><aside class="path-rail"><div class="guide-links beginning-links">{guides}</div><nav aria-label="四阶段学习路径">{stage_nav}</nav><div class="guide-links">{ending}</div></aside><div class="catalog">{before_reading}{catalog}{after_reading}</div></div></section>
+            + page_header('./', context, alternate='index.html' if context['language'] == 'en' else 'index.en.html') + f'''<main id="main-content"><div class="hero-band"><section class="home-hero page-width"><div class="hero-copy"><p class="book-eyebrow">HELLO LLM · 免费学习 · 非商业使用</p><h1>手写小模型，<br><em>看懂大模型。</em></h1><p>不用 GPU，不用 API Key。<br>在浏览器里，亲手训练一个小语言模型。</p><div class="hero-actions"><a class="button primary" href="{html.escape(full_training)}">直接训练一个模型{icon('arrow')}</a><a class="button secondary" id="continue-learning" href="{html.escape(start_url)}"><span>从第一讲开始</span></a></div><p class="hero-note" id="resume-label">无需安装 · 首次运行需联网 · 20 讲图解与代码</p><a class="hero-download" href="#downloads">下载 PDF / EPUB{icon('arrow')}</a></div>{model_preview(context)}</section></div>
+<section class="curriculum-section page-width" id="curriculum"><div class="section-heading"><div><h2>一步步，把模型造出来</h2><p>先读图解，再改数验证；视频与交互实验按需打开。</p></div></div>
+<p class="learning-prerequisites">不需要深度学习基础。图解与网页实验可直接开始；完整代码实战需熟悉 Python 的函数、循环、列表和基本的类。</p>
+<div class="curriculum-layout"><aside class="path-rail"><div class="guide-links beginning-links">{guides}</div><nav aria-label="四阶段学习路径">{stage_nav}</nav><div class="guide-links">{ending}</div></aside><div class="catalog">{catalog}{after_reading}</div></div></section>
+<section class="home-resources page-width" id="experiments"><div class="section-heading"><div><h2>配套实验与视频</h2><p>每讲正文都提供对应入口，也可以在这里查找。</p></div></div><details class="resource-list"><summary>{len(demos)} 个交互实验</summary><div>{demo_list}</div></details>{video_section}</section>
 
 <section class="downloads-section page-width" id="downloads"><h2>下载电子书</h2><p>PDF 适合打印，EPUB 适合手机和阅读器。</p><div class="download-links"><a class="button primary" href="{RELEASE["repository"]}/releases/download/v{RELEASE["version"]}/{BOOK_STEM}.pdf" data-offline-href="{BOOK_DIR}/{BOOK_STEM}.pdf" download>下载 PDF</a><a class="button secondary" href="{RELEASE["repository"]}/releases/download/v{RELEASE["version"]}/{BOOK_STEM}.epub" data-offline-href="{BOOK_DIR}/{BOOK_STEM}.epub" download>下载 EPUB</a></div><p class="download-note">中文 · v{RELEASE["version"]}</p></section></main>
 <div class="page-width">{community('./')}</div><footer class="site-footer page-width"><span>{BRAND} · v{RELEASE["version"]}</span><span>从神经元到预训练、微调与文字生成</span></footer>'''

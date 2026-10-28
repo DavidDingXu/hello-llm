@@ -108,13 +108,13 @@ from tiny_lm.scalar import linear, relu
 
 
 def forward(inputs, params):
-    """用两层参数计算一份输入，返回预测值和本次的中间结果。"""
-    # 第一层每行权重产生一个 z，再逐项经过 ReLU 得到隐藏值。
+    """Apply two layers to one input and return its prediction and intermediate results."""
+    # Each weight row in the first layer produces one z; apply ReLU to each to get hidden values.
     z = linear(inputs, params["W1"], params["b1"])
     hidden = [relu(value) for value in z]
-    # 输出层读取两个隐藏值；它只做乘加，列表中只有一个结果。
+    # The output layer reads both hidden values and applies a linear transform, returning a one-item list.
     prediction = linear(hidden, params["W2"], params["b2"])[0]
-    # 缓存输入、激活前后数值，后面反向计算会读取它们；这里不改参数。
+    # Cache the input and values before and after activation for backpropagation; parameters stay unchanged.
     cache = {
         "x": list(inputs), "z": z, "h": hidden,
         "prediction": prediction,
@@ -122,14 +122,14 @@ def forward(inputs, params):
     return prediction, cache
 
 
-# 手工指定两条差值分支的参数；W1 的两行对应两个隐藏单元。
+# Set the two difference branches by hand; the two rows of W1 correspond to two hidden units.
 params = {
     "W1": [[1, -1], [-1, 1]], "b1": [0, 0],
     "W2": [[1, 1]], "b2": [0],
 }
 samples = [[0, 0], [0, 1], [1, 0], [1, 1]]
 for x in samples:
-    # 四份输入复用同一组参数，分别查看 z、ReLU 后的 h 与最终输出。
+    # All four inputs share parameters; inspect z, h after ReLU, and the final output for each.
     prediction, cache = forward(x, params)
     print(x, cache["z"], cache["h"], prediction)
 ```
@@ -161,7 +161,7 @@ Answers: For the first exercise, `z=[−0.5, 0.5]`, `h=[0, 0.5]`, and the output
 Run this from the `code` directory:
 
 ```bash
-# 在配套代码目录运行本讲实验，核对正文中的结果。
+# Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l03
 ```
 

@@ -1,14 +1,14 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
-<meta name="source-sha256" content="fc78587a57bd2d637538d7f270780d291d9db6e2d587c2fc2973e22c52990215"><meta name="description" content="Reconnect inputs, labels, parameters, and saved weights across the full workflow. Swap facts and retrain, then add Xiaotang and tangerines yourself to verify your implementation and explain missing words in a new sentence pattern."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/20.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="20 | The Full Workflow: Connect Pretraining, Fine-Tuning, and Generation · Hello LLM"><meta property="og:description" content="Reconnect inputs, labels, parameters, and saved weights across the full workflow. Swap facts and retrain, then add Xiaotang and tangerines yourself to verify your implementation and explain missing words in a new sentence pattern."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/20.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>20 | The Full Workflow: Connect Pretraining, Fine-Tuning, and Generation · Hello LLM</title>
+<meta name="source-sha256" content="1f2111104c07765f4cd8fe8c9fc5ae7cfe385bd01096070fa5ff72bd64462973"><meta name="description" content="Reconnect inputs, labels, parameters, and saved weights across the full workflow. Swap facts and retrain, then add Xiaotang and tangerines yourself to verify your implementation and explain missing words in a new sentence pattern."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/20.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="20 | The Full Workflow: Connect Pretraining, Fine-Tuning, and Generation · Hello LLM"><meta property="og:description" content="Reconnect inputs, labels, parameters, and saved weights across the full workflow. Swap facts and retrain, then add Xiaotang and tangerines yourself to verify your implementation and explain missing words in a new sentence pattern."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/20.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>20 | The Full Workflow: Connect Pretraining, Fine-Tuning, and Generation · Hello LLM</title>
 <link rel="icon" href="../assets/favicon.png" type="image/png">
 <script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
-<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
-<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
-<script defer src="../code/visuals/reading_site/search-index.en.js?v=11db81a4dd60"></script>
-<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
-<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
-<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="20" data-alternate-sections="[&quot;先看两次训练怎样接上&quot;, &quot;再把一次计算拆开&quot;, &quot;未来的字改了前面为什么不动&quot;, &quot;少一个标签损失为什么反而升了&quot;, &quot;参数多了就能自由聊天&quot;, &quot;怎样判断这20讲学到了什么&quot;, &quot;结课实战换一份事实模型会怎样变&quot;, &quot;独立任务让小唐和橘子进入模型&quot;, &quot;对不上时先从哪一步查&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=0a8bea167aca">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=0a8bea167aca">
+<script defer src="../code/visuals/reading_site/search-index.en.js?v=97f9a5a6b415"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=0a8bea167aca"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=0a8bea167aca"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=0a8bea167aca"></script></head><body class="article-page" data-root="../" data-page="20" data-alternate-sections="[&quot;先看两次训练怎样接上&quot;, &quot;再把一次计算拆开&quot;, &quot;未来的字改了前面为什么不动&quot;, &quot;少一个标签损失为什么反而升了&quot;, &quot;参数多了就能自由聊天&quot;, &quot;怎样判断这20讲学到了什么&quot;, &quot;结课实战换一份事实模型会怎样变&quot;, &quot;独立任务让小唐和橘子进入模型&quot;, &quot;对不上时先从哪一步查&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
 <header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="Open course contents" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></path></svg></button>
 <a class="brand" href="../index.en.html" aria-label="Hello LLM · 学习站首页">
 <img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>Build a Small Model, Understand Large Models</small></span></a>
@@ -75,23 +75,43 @@
 </table></div>
 <p>Evaluation and generation can use identical weights but answer different questions. Evaluation asks, “How much probability do these reference answers receive?” Generation asks, “What does the current selection method actually write?” One fluent continuation cannot replace checking a whole held-out set.</p>
 <section class="training-lab" id="training-lab" data-default-mode="pipeline" data-presets="{&quot;pretrain&quot;: {&quot;steps&quot;: 1000, &quot;seed&quot;: 42, &quot;batch_size&quot;: 16, &quot;learning_rate&quot;: 0.003}, &quot;sft&quot;: {&quot;steps&quot;: 300, &quot;seed&quot;: 42, &quot;batch_size&quot;: 16, &quot;learning_rate&quot;: 0.001}, &quot;quick&quot;: {&quot;steps&quot;: 100, &quot;seed&quot;: 42, &quot;batch_size&quot;: 4, &quot;learning_rate&quot;: 0.003}}" data-counts="{&quot;pretrain_train&quot;: 256, &quot;pretrain_val&quot;: 64, &quot;sft_train&quot;: 24, &quot;sft_val&quot;: 8}" aria-labelledby="training-lab-title">
-<div class="lab-heading"><span>TEST THE IDEA · REAL TRAINING</span><h3 id="training-lab-title">Train the model right here</h3></div>
-<p class="training-question">Start from random weights and run pretraining followed by fine-tuning. Compare the same inputs and explain what each stage changes.</p>
-<label class="training-mode-label" for="training-mode">Experiment<select id="training-mode"><option value="pretrain" >Pretraining · full dataset</option><option value="sft" >Fine-tuning · full dataset</option><option value="pipeline" selected>Full pipeline · pretrain → fine-tune</option><option value="quick" >Quick experiment · 4 samples</option></select></label>
+<div class="lab-heading"><span>BROWSER EXPERIMENT</span><h3 id="training-lab-title">Train a model with these examples</h3></div>
+<p class="training-question">Run the course examples first. Then edit a sentence or answer and check the same prompts again. The full pipeline starts from random weights, pretrains, then fine-tunes on questions and answers.</p>
+<label class="training-mode-label" for="training-mode">Experiment<select id="training-mode"><option value="pretrain" >Pretraining · learn from sentences</option><option value="sft" >Fine-tuning · learn to answer</option><option value="pipeline" selected>Full pipeline · pretrain → fine-tune</option><option value="quick" >Quick experiment · 4 samples</option></select></label>
 <p class="training-recipe" id="training-recipe"></p>
+<section class="training-samples" aria-labelledby="training-samples-title">
+<h4 id="training-samples-title">What will the model learn from?</h4>
+<p class="training-data-summary">Included: 256 training sentences and 64 validation sentences; 24 training question–answer examples and 8 validation questions. Validation examples do not update parameters.</p>
+<div class="sample-previews"><div data-preview="pretrain" ><span>A pretraining sentence:</span><p>早上，小丁喜欢红色的苹果。</p></div>
+<div data-preview="sft" ><span>A fine-tuning example:</span><p>问：小丁喜欢什么水果？
+答：红色的苹果。</p></div></div>
+<details class="sample-editor"><summary>Browse the samples or edit one</summary>
+<p class="sample-help">You can edit existing training examples. Validation questions are read-only and used only for evaluation. Edits apply to this page; reloading restores the course examples.</p>
+<div class="sample-selects"><label for="sample-group">Dataset<select id="sample-group" disabled></select></label><label for="sample-record">Choose an example<select id="sample-record" disabled></select></label></div>
+<label class="sample-text-field" for="sample-text">Sentence<textarea id="sample-text" rows="2" disabled spellcheck="false"></textarea></label>
+<label class="sample-prompt-field" for="sample-prompt" hidden>Prompt (keep the 问： and 答： format)<textarea id="sample-prompt" rows="2" disabled spellcheck="false"></textarea></label>
+<label class="sample-answer-field" for="sample-answer" hidden>Expected answer<textarea id="sample-answer" rows="2" disabled spellcheck="false"></textarea></label>
+<p class="sample-editor-status" role="status">Open this section to load the course examples.</p>
+<p class="sample-help">Each example allows up to 31 characters, counting prompt and answer together. Edit one example, predict the outcome, then train. The other examples still influence the answer.</p>
+<details class="sample-vocab"><summary>Available characters and punctuation</summary><p></p></details>
+<div class="sample-tools"><button class="button sample-restore" type="button" disabled>Restore course examples</button><button class="button sample-retry" type="button" hidden>Retry loading</button></div>
+</details><p class="sample-change-note" role="status"></p>
+</section>
 <details class="training-settings"><summary>Adjust training parameters</summary><div class="training-fields">
 <label><span class="primary-steps-label">Training steps</span><input id="training-steps" type="number" min="1" max="1000" step="1" value="1000" required></label>
 <label><span class="primary-lr-label">Learning rate</span><input id="training-lr" type="number" min="0.000001" max="0.1" step="any" value="0.003" required></label>
 <label class="pipeline-field" >Fine-tuning steps<input id="training-sft-steps" type="number" min="1" max="1000" step="1" value="300" required></label>
 <label class="pipeline-field" >Fine-tuning learning rate<input id="training-sft-lr" type="number" min="0.000001" max="0.1" step="any" value="0.001" required></label>
-</div><p class="training-change-note">Change one variable at a time and compare with the default run.</p></details>
-<div class="training-actions"><button class="button primary training-start" type="button" disabled>Start training</button><button class="button training-stop" type="button" disabled>Stop</button><button class="button training-reset" type="button" disabled>Reset</button><button class="button training-download" type="button" disabled>Download results</button></div>
+</div><p class="training-change-note">Steps count parameter updates; the learning rate controls the size of each update. Start with the defaults, then change one setting at a time.</p></details>
+<div class="training-actions"><button class="button primary training-start" type="button" disabled>Start training</button><button class="button training-stop" type="button" disabled>Stop</button><button class="button training-reset" type="button" disabled>Reset settings and results</button><button class="button training-download" type="button" disabled>Download results</button></div>
 <p class="training-status" role="status">Choose an experiment and start training.</p>
 <progress class="training-progress" value="0" max="100" aria-label="Training progress" hidden></progress>
-<div class="training-results" hidden><div class="training-chart-tabs" role="group" aria-label="Choose a training stage"></div>
-<figure class="training-plot"><svg class="training-chart" viewBox="0 0 520 230" role="img" aria-label="Training and validation loss curves"></svg><figcaption><span class="train-key">Training</span><span class="validation-key">Validation</span><span class="training-metrics"></span></figcaption></figure>
-<p class="training-answer-scores" hidden></p><div class="training-generations"></div>
+<div class="training-results" hidden><h4>Answers before and after training</h4><p class="training-answer-scores" hidden></p><div class="training-generations"></div>
+<details class="training-edited" hidden><summary>Your edited examples (training data)</summary><p class="training-change-note">Shows up to three edits per stage. These are training examples; matching them does not establish performance on new questions.</p><div class="training-edited-generations"></div></details>
 <details class="training-more"><summary>Check more: an unseen question and another familiar continuation</summary><div class="training-extra-generations"></div></details>
+<div class="training-chart-tabs" role="group" aria-label="Choose a training stage"></div>
+<figure class="training-plot"><svg class="training-chart" viewBox="0 0 520 230" role="img" aria-label="Training and validation loss curves"></svg><figcaption><span class="train-key">Training</span><span class="validation-key">Validation</span><span class="training-metrics"></span></figcaption></figure>
+<p class="training-change-note">Lower loss means better predictions on these examples. Validation examples do not update parameters; compare their loss with the text the model actually generates.</p>
 <p class="training-observation"></p><details class="training-explanation"><summary>About this experiment</summary><p class="training-run-note">A fresh training run may differ from the recorded values and wording. Compare both curves and outputs.</p></details>
 <details class="training-comparison" hidden><summary>Compare with the previous run</summary><div></div></details></div>
 <noscript>Enable JavaScript to train here, or run the companion code locally.</noscript>
@@ -119,22 +139,22 @@ from tiny_lm.tokenizer import CharTokenizer
 torch.set_num_threads(1)
 torch.manual_seed(42)
 tokenizer = CharTokenizer.for_course()
-# 新建随机模型检查依赖路径，不要求先训练；eval 本身不修改参数。
+# Create a random model to check dependency paths without training; eval itself does not change parameters.
 model = TinyLM(ModelConfig()).eval()
 
-# BOS 加十三个字符得到 [1,14]，输出将是每个位置的 79 项候选分数。
+# BOS plus thirteen characters gives [1,14]; the output has 79 candidate scores at each position.
 ids = torch.tensor([tokenizer.encode(
     &quot;早上，小丁喜欢红色的苹果。&quot;, add_bos=True)])
 changed = ids.clone()
 assert tokenizer.itos[int(ids[0, 8])] == &quot;红&quot;
-# 只改位置 8 的输入编号，词表、参数和更早位置都不改。
+# Change only the input ID at position 8; keep the vocabulary, parameters, and earlier positions fixed.
 changed[0, 8] = tokenizer.stoi[&quot;黄&quot;]
 
-# 两次只做前向，不计算梯度也不更新参数。
+# Run two forward passes without computing gradients or updating parameters.
 with torch.no_grad():
     before = model(ids)
     after = model(changed)
-# :8 对应位置 0—7；最大值覆盖这些位置的全部候选分数。
+# :8 selects positions 0—7; take the maximum over all candidate scores at those positions.
 prefix_difference = (before[:, :8] - after[:, :8]).abs().max()
 suffix_difference = (before[:, 8:] - after[:, 8:]).abs().max()
 print(float(prefix_difference), float(suffix_difference))
@@ -150,21 +170,21 @@ assert torch.allclose(before[:, :8], after[:, :8])
 from tiny_lm.losses import token_loss
 
 record = build_records()[&quot;sft_train&quot;][0]
-# 同一条问答的输入始终不变，只比较两种损失标签。
+# Keep the same question-answer input fixed and compare only two sets of loss targets.
 x, correct = make_sft_batch([record], tokenizer)
-# 首个非 -100 的标签是首答案“红”；复制后只把这一题额外忽略。
+# The first target other than -100 is the first answer character, “红”; copy the labels and additionally ignore only this target.
 first = int((correct[0] != -100).nonzero()[0].item())
 wrong = correct.clone()
 wrong[0, first] = -100
 
 with torch.no_grad():
-    # 前向只运行一次；两种评分共用同一份 [B,T,V] 原始分数。
-    logits = model(x)  # 两种标签共用这一份分数
+    # Run the forward pass once; both scoring methods use the same [B,T,V] raw scores.
+    logits = model(x)  # Both target sets use these same scores
     correct_loss = token_loss(logits, correct)
     wrong_loss = token_loss(logits, wrong)
 
-# 列出实际参与平均的目标与数量，防止把评分内容改变误认成模型变化。
-for name, labels in [(&quot;正确&quot;, correct), (&quot;错后一格&quot;, wrong)]:
+# List the scored targets and their count to distinguish a changed scoring set from a changed model.
+for name, labels in [(&quot;Correct targets&quot;, correct), (&quot;First answer target omitted&quot;, wrong)]:
     indices = (labels[0] != -100).nonzero().flatten().tolist()
     targets = [tokenizer.itos[int(labels[0, i])] for i in indices]
     print(name, len(indices), targets)
@@ -214,7 +234,7 @@ print(float(correct_loss), float(wrong_loss))
 <p>Each entry contains person, color, and fruit in that order. The new facts associate Xiaoding with yellow bananas and Xiaozhou with red apples. Edit this source table. The new training run builds records from it and saves the actual data in <code>data/</code> under the new run directory. Data at the repository root and in the author's original experiment remain as they were.</p>
 <p>Before running, write down your predictions. Will editing these two entries immediately change answers from an already saved model? Will vocabulary size or parameter count change? After retraining, how should Xiaoding's continuation and question answer change?</p>
 <p>Then run this from the code repository root:</p>
-<pre><code class="language-bash"># 从随机参数重新训练，结果写入新目录，便于与原实验比较。
+<pre><code class="language-bash"># Retrain from random parameters and save to a new directory for comparison with the original experiment.
 python -m tiny_lm.train --out artifacts/my_swapped_run
 </code></pre>
 <p>The command performs pretraining, fine-tuning, and the generation comparison in order, saving a snapshot under <code>artifacts/my_swapped_run/data/</code>. The course's fine-tuning entry point uses that pretraining snapshot to prevent the two stages from mixing different facts. After the run, load <code>pretrain.pt</code> and <code>sft.pt</code> from the new directory separately and check these four tasks. In question prompts, <code>\n</code> denotes a newline; the actual input should put “答：” on its own line.</p>
@@ -252,14 +272,14 @@ python -m tiny_lm.train --out artifacts/my_swapped_run
 <p>The continuation prompts mean “In the morning, Xiaoding likes” and “In the evening, Xiaozhou is holding.” The questions ask what fruit each person likes. In both formats, Xiaoding should now get “yellow bananas” and Xiaozhou “red apples.”</p>
 <details class="optional">
 <summary>Expand the verification code: reload weights and print each actual result</summary>
-<p>Save the code below as <code>check_swapped.py</code> at the repository root and run <code>python check_swapped.py</code>. It loads the new weights from disk and generates the four results again.</p>
+<p>Save the code below as <code>check_swapped.py</code> in the code directory, alongside <code>tiny_lm/</code> and <code>artifacts/</code>, and run <code>python check_swapped.py</code> from that directory. It loads the new weights from disk and generates the four results again.</p>
 <pre><code class="language-python">from pathlib import Path
 from tiny_lm.checkpoint import load_checkpoint
 from tiny_lm.generate import generate
 
 def check_swapped_run(run_dir):
-    &quot;&quot;&quot;重载两个阶段的权重，核对四条输出；返回实际结果，便于继续比较。&quot;&quot;&quot;
-    # 每个阶段使用与其训练形式对应的题；字符串中的 \n 是真正的换行。
+    &quot;&quot;&quot;Reload both stages' weights and check four outputs; return the actual results for further comparison.&quot;&quot;&quot;
+    # Use prompts matching each stage's training format; \n in the strings becomes an actual newline.
     cases = {
         &quot;pretrain&quot;: [(&quot;早上，小丁喜欢&quot;, &quot;黄色的香蕉。&quot;),
                      (&quot;晚上，小周拿着&quot;, &quot;红色的苹果。&quot;)],
@@ -268,28 +288,28 @@ def check_swapped_run(run_dir):
     }
     results = []
     for stage, questions in cases.items():
-        # 每份检查点都带着自己的词表和参数，生成不依赖当前 FACTS。
+        # Each checkpoint carries its own vocabulary and parameters; generation does not depend on current FACTS.
         model, tokenizer, _ = load_checkpoint(Path(run_dir) / f&quot;{stage}.pt&quot;)
         count = sum(p.numel() for p in model.parameters())
-        print(stage, &quot;词表：&quot;, model.config.vocab_size, &quot;参数：&quot;, count)
+        print(stage, &quot;Vocabulary size:&quot;, model.config.vocab_size, &quot;Parameters:&quot;, count)
         for prompt, expected in questions:
-            # 固定用最高分选择，避免抽样随机性干扰这次比较。
+            # Always select the highest-scoring item to keep sampling randomness out of this comparison.
             output = generate(model, tokenizer, prompt,
                               max_new_tokens=8, greedy=True)
             actual = output[&quot;generated_text&quot;]
-            # 文字一致还不够：也检查模型是否选到了 EOS。
+            # Matching text is not enough; also check whether the model selected EOS.
             matched = actual == expected and output[&quot;stop_reason&quot;] == &quot;eos&quot;
             results.append({&quot;stage&quot;: stage, &quot;prompt&quot;: prompt,
                             &quot;actual&quot;: actual, &quot;expected&quot;: expected,
                             &quot;matched&quot;: matched})
             print(repr(prompt), &quot;→&quot;, actual,
-                  &quot;符合预期&quot; if matched else &quot;需要检查&quot;,
-                  &quot;停止原因：&quot;, output[&quot;stop_reason&quot;])
-    print(&quot;符合预期：&quot;, sum(row[&quot;matched&quot;] for row in results), &quot;/&quot;, len(results))
+                  &quot;Matches&quot; if matched else &quot;Needs checking&quot;,
+                  &quot;Stop reason:&quot;, output[&quot;stop_reason&quot;])
+    print(&quot;Matches:&quot;, sum(row[&quot;matched&quot;] for row in results), &quot;/&quot;, len(results))
     return results
 
 if __name__ == &quot;__main__&quot;:
-    # 改成 artifacts/first_run，可以重新查看旧模型的答案。
+    # Change this to artifacts/first_run to inspect the original model's answers again.
     check_swapped_run(&quot;artifacts/my_swapped_run&quot;)
 </code></pre>
 </details>
@@ -414,11 +434,11 @@ if __name__ == &quot;__main__&quot;:
 </tbody>
 </table></div>
 <p>Run the two controlled comparisons and this lesson's overview:</p>
-<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+<pre><code class="language-bash"># Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l20
 </code></pre>
 <p>Check numerical behavior, data boundaries, the model, and saving/reloading. The original replay reads <code>first_run/data/</code>, while new runs read their own snapshots, so these checks still work after editing FACTS:</p>
-<pre><code class="language-bash"># 运行项目的正确性检查。
+<pre><code class="language-bash"># Run the project's correctness checks.
 python -m unittest discover -s checks -v
 </code></pre>
 <p>Entry points: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l20.py">Lesson runner</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/EXPERIMENTS.md">Complete run record</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/model.py">Model source</a>.</p>

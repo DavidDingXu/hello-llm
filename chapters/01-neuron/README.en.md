@@ -114,19 +114,19 @@ Multiply corresponding items and accumulate the products, and the same code can 
 
 ```python
 def neuron(inputs, weights, bias=0.0):
-    """输入列表与权重逐项配对，加偏置、做 ReLU，返回一个数。"""
+    """Pair inputs with weights, add the bias, apply ReLU, and return one number."""
     if len(inputs) != len(weights) or not inputs:
         raise ValueError("输入与权重必须非空且等长")
 
     total = 0.0
-    # 同一位置的输入乘自己的权重，再把各项贡献加起来。
+    # Multiply each input by its matching weight, then sum the contributions.
     for value, weight in zip(inputs, weights):
         total += value * weight
     z = total + bias
-    # ReLU 只改变负数；它的规则固定，可调的是 weights 和 bias。
+    # ReLU only changes negative values; its rule is fixed, while weights and bias can change.
     return max(0.0, z)
 
-# 本次输入为 [2, 1]，参数是权重 [1, 3] 和偏置 -1。
+# The input is [2, 1]; the parameters are weights [1, 3] and bias -1.
 print(neuron([2, 1], [1, 3], -1))  # 4.0
 ```
 
@@ -149,9 +149,9 @@ Increasing the second input by 1 increases the output by 3, because that input i
 Pass the first output, 4, back into `neuron`, using a weight of 0.5 and a bias of 1:
 
 ```python
-# 沿用上一段的 neuron；前一个输出成为后一个神经元的输入。
+# Reuse neuron from above; the first output becomes the next neuron's input.
 first = neuron([2, 1], [1, 3], -1)
-# 后一个神经元有自己的权重和偏置，并未修改前一个的参数。
+# The second neuron has its own weights and bias; the first neuron's parameters stay unchanged.
 second = neuron([first], [0.5], 1)
 print(first, second)  # 4.0 3.0
 ```
@@ -188,7 +188,7 @@ Answers: For the first exercise, `z=2×1+1×3−6=−1`, so the output is **0**.
 To have the companion program print this lesson's calculations, run the following from the `code` directory:
 
 ```bash
-# 在配套代码目录运行本讲实验，核对正文中的结果。
+# Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l01
 ```
 

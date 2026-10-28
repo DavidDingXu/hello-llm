@@ -1,6 +1,7 @@
 """双语学习站的正文、搜索定位、子路径链接与独立静态导出回归。"""
 from contextlib import redirect_stdout
 import base64
+import ast
 from html.parser import HTMLParser
 import importlib.util
 import io
@@ -123,13 +124,52 @@ class ReadingSiteChecks(unittest.TestCase):
                         return re.sub(r'\b(?:href|src|srcset|data-src|data-full-figure)="[^"]*"', '', value)
                     self.assertEqual(without_urls(page.article), without_urls(reading.render_body(markdown, source.with_name(f'README{suffix}.md'))))
 
-    def test_translation_preserves_every_fenced_example_verbatim(self):
+    def test_translation_preserves_code_and_training_data_while_explaining_in_english(self):
+        def computational_python(source):
+            tree = ast.parse(source)
+            for node in ast.walk(tree):
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                    if (node.body and isinstance(node.body[0], ast.Expr)
+                            and isinstance(node.body[0].value, ast.Constant)
+                            and isinstance(node.body[0].value.value, str)):
+                        node.body.pop(0)
+                if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == 'print':
+                    for argument in node.args:
+                        if isinstance(argument, ast.Constant) and isinstance(argument.value, str):
+                            argument.value = '<display label>'
+                        elif isinstance(argument, ast.JoinedStr):
+                            for part in argument.values:
+                                if isinstance(part, ast.Constant) and isinstance(part.value, str):
+                                    part.value = '<display label>'
+                        elif isinstance(argument, ast.IfExp):
+                            # Preserve the condition; only its printed status labels translate.
+                            for part in (argument.body, argument.orelse):
+                                if isinstance(part, ast.Constant) and isinstance(part.value, str):
+                                    part.value = '<display label>'
+                # Lesson 20 carries these two display labels beside its target tensors.
+                if (isinstance(node, ast.Tuple) and len(node.elts) == 2
+                        and isinstance(node.elts[0], ast.Constant)
+                        and isinstance(node.elts[1], ast.Name)
+                        and node.elts[1].id in {'correct', 'wrong'}
+                        and node.elts[0].value in {'正确', '错后一格', 'Correct targets', 'First answer target omitted'}):
+                    node.elts[0].value = '<display label>'
+            return ast.dump(tree)
+
         fence = re.compile(r'^```([^\n]*)\n(.*?)^```[ \t]*$', re.M | re.S)
         for source in self.paths:
             with self.subTest(article=source.parent.name):
                 chinese = fence.findall(source.read_text(encoding='utf-8'))
                 english = fence.findall(source.with_name('README.en.md').read_text(encoding='utf-8'))
-                self.assertEqual(english, chinese)
+                self.assertEqual(len(english), len(chinese))
+                for (zh_language, zh), (en_language, en) in zip(chinese, english):
+                    self.assertEqual(zh_language, en_language)
+                    if zh_language == 'python':
+                        self.assertEqual(computational_python(en), computational_python(zh))
+                    elif zh_language in {'bash', 'powershell'}:
+                        commands = lambda text: '\n'.join(line for line in text.splitlines() if not line.lstrip().startswith('#'))
+                        self.assertEqual(commands(en), commands(zh))
+                    else:
+                        self.assertEqual(en, zh)
 
     def test_pending_video_has_no_empty_player(self):
         panel = reading.video_panel({'id': '01', 'video': {'status': 'pending'}}, '../../', 'zh')

@@ -1,14 +1,14 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
-<meta name="source-sha256" content="680f7995f995f0a99a44f72a0ce6052db2dfaeac3db9cb454ac2d0b23949032d"><meta name="description" content="The ID 44 is not the meaning of “欢”. Give characters addresses, then retrieve vector rows from a trainable table to connect text to numerical computation."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/07.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="07 | Embedding: How Does Text Become a Network Input? · Hello LLM"><meta property="og:description" content="The ID 44 is not the meaning of “欢”. Give characters addresses, then retrieve vector rows from a trainable table to connect text to numerical computation."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/07.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>07 | Embedding: How Does Text Become a Network Input? · Hello LLM</title>
+<meta name="source-sha256" content="b04405ba809fe443317974593ae4665f92ecc96889449ab286c6677634740759"><meta name="description" content="The ID 44 is not the meaning of “欢”. Give characters addresses, then retrieve vector rows from a trainable table to connect text to numerical computation."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/07.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="07 | Embedding: How Does Text Become a Network Input? · Hello LLM"><meta property="og:description" content="The ID 44 is not the meaning of “欢”. Give characters addresses, then retrieve vector rows from a trainable table to connect text to numerical computation."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/07.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>07 | Embedding: How Does Text Become a Network Input? · Hello LLM</title>
 <link rel="icon" href="../assets/favicon.png" type="image/png">
 <script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
-<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
-<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
-<script defer src="../code/visuals/reading_site/search-index.en.js?v=11db81a4dd60"></script>
-<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
-<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
-<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="07" data-alternate-sections="[&quot;先保证每个字都能找回来&quot;, &quot;编号能往返了乘加还是没接上&quot;, &quot;两条序列怎样排成三轴张量&quot;, &quot;一个字出现两次会不会更新错行&quot;, &quot;现在的词表从哪里来&quot;, &quot;三道改数题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=0a8bea167aca">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=0a8bea167aca">
+<script defer src="../code/visuals/reading_site/search-index.en.js?v=97f9a5a6b415"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=0a8bea167aca"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=0a8bea167aca"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=0a8bea167aca"></script></head><body class="article-page" data-root="../" data-page="07" data-alternate-sections="[&quot;先保证每个字都能找回来&quot;, &quot;编号能往返了乘加还是没接上&quot;, &quot;两条序列怎样排成三轴张量&quot;, &quot;一个字出现两次会不会更新错行&quot;, &quot;现在的词表从哪里来&quot;, &quot;三道改数题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
 <header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="Open course contents" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></path></svg></button>
 <a class="brand" href="../index.en.html" aria-label="Hello LLM · 学习站首页">
 <img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>Build a Small Model, Understand Large Models</small></span></a>
@@ -100,18 +100,18 @@
 <pre><code class="language-python">import json
 from pathlib import Path
 
-# 列表位置就是固定编号；读取课程词表，保证与保存的模型使用同一套地址。
+# List positions are fixed IDs; load the course vocabulary to use the same addresses as the saved model.
 tokens = json.loads(Path(&quot;data/vocab.json&quot;).read_text(
     encoding=&quot;utf-8&quot;))[&quot;tokens&quot;]
-# 反向索引便于从字符查编号，编号本身不是要训练的浮点参数。
+# This reverse index maps characters to IDs; the IDs are not trainable floating-point parameters.
 to_id = {token: i for i, token in enumerate(tokens)}
 
 def encode(text):
-    &quot;&quot;&quot;逐字符编码成整数地址；查不到的字符使用 UNK 编号 3。&quot;&quot;&quot;
+    &quot;&quot;&quot;Encode characters as integer addresses; use UNK ID 3 for unknown characters.&quot;&quot;&quot;
     return [to_id.get(char, 3) for char in text]
 
 def decode(ids):
-    &quot;&quot;&quot;按编号取回普通字符，跳过 0—3 四个特殊项；不能恢复未知原字。&quot;&quot;&quot;
+    &quot;&quot;&quot;Look up ordinary characters by ID, skipping special IDs 0—3; unknown original characters cannot be recovered.&quot;&quot;&quot;
     return &quot;&quot;.join(tokens[i] for i in ids if i &gt;= 4)
 
 text = &quot;小丁喜欢苹果。&quot;
@@ -119,7 +119,7 @@ ids = encode(text)
 print(len(tokens), ids)
 print(decode(ids))
 assert len(tokens) == 79
-# 本例字符都在词表中，所以编码、解码后应回到原句。
+# Every character here is in the vocabulary, so encoding and decoding should recover the original text.
 assert decode(ids) == text
 </code></pre>
 <p><code>enumerate</code> supplies both list positions and contents. <code>get(char, 3)</code> uses the UNK ID when a character is missing. The decoder above skips special entries by default, so an exact round trip requires every original character to be in the vocabulary. Once an unknown character is encoded as UNK, the original character is lost and cannot be recovered by decoding.</p>
@@ -188,17 +188,17 @@ assert decode(ids) == text
 <p>The following standalone code checks row selection, gradient accumulation, and the update.</p>
 <pre><code class="language-python">import torch
 
-# 独立的四项演示表：0—3 在这里都是普通地址，不沿用课程特殊项含义。
-# 表内浮点数可求梯度，行号只是选行的整数。
+# A separate four-entry example table: 0—3 are ordinary addresses here, not the course's special tokens.
+# The table's floating-point values can receive gradients; integer row indices only select rows.
 table = torch.tensor([[1., 0.], [0., 1.],
                       [1., 1.], [-1., 2.]],
                      requires_grad=True)
 indices = torch.tensor([2, 1, 2], dtype=torch.long)
-# 按位置依次取行，得到 [3,2]；编号 2 的两次读取共享同一行参数。
+# Look up a row for each position to get [3,2]; both occurrences of ID 2 share one parameter row.
 vectors = table[indices]
-# 用求和作演示损失，使每个输出坐标收到的梯度都为 1。
+# Use a sum as the demonstration loss so each output coordinate receives gradient 1.
 loss = vectors.sum()
-# 两次读取的贡献加回第 2 行；这里只算梯度，还没有修改表内数值。
+# Both lookups contribute to row 2; this computes gradients without changing the table's values.
 loss.backward()
 
 print(vectors)
@@ -206,16 +206,16 @@ print(table.grad)
 assert table.grad.tolist() == [[0., 0.], [1., 1.],
                                [2., 2.], [0., 0.]]
 
-# 两条序列仍查同一张表；三根轴依次选择样本、位置、向量坐标。
+# Both sequences use the same table; the three axes select sample, position, and vector coordinate.
 batch_ids = torch.tensor([[2, 1, 2], [1, 2, 1]])
 batch_vectors = table[batch_ids]
 assert list(batch_vectors.shape) == [2, 3, 2]
 assert batch_vectors[1, 2, 0].item() == 0.0
 
-# 全部梯度算好后，再按学习率0.1更新；赋值过程不建立新的求导记录。
+# After all gradients are ready, update with learning rate 0.1; do not track these assignments for gradients.
 with torch.no_grad():
     table -= 0.1 * table.grad
-print(&quot;更新后的第2行：&quot;, table[2])  # 约 [0.8, 0.8]
+print(&quot;Row 2 after the update:&quot;, table[2])  # Approximately [0.8, 0.8]
 assert torch.allclose(table[2], torch.tensor([0.8, 0.8]))
 </code></pre>
 <p><code>long</code> is the integer type used to store IDs. Integer indices themselves do not receive gradients; the floating-point table with <code>requires_grad=True</code> does. <code>table[indices]</code> retrieves several rows, and automatic differentiation still tracks where each came from.</p>
@@ -238,7 +238,7 @@ assert torch.allclose(table[2], torch.tensor([0.8, 0.8]))
 <p>For the third, the output shape is <code>[2,4,2]</code>. The middle, position axis changes; each position still retrieves a vector of 2 numbers. The table's column count is unchanged.</p>
 </details>
 <p>From the companion code directory, run this using the course environment with PyTorch installed:</p>
-<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+<pre><code class="language-bash"># Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l07
 </code></pre>
 <p>Lesson entry point: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l07.py">Entry point</a> · Complete component: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/tokenizer.py">tokenizer.py</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/README.md">Environment setup</a></p>

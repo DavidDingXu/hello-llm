@@ -41,9 +41,9 @@ The slices in the code correspond directly to these two rows:
 from tiny_lm.tokenizer import CharTokenizer
 
 tokenizer = CharTokenizer.for_course()
-# 1 是 BOS，2 是 EOS；先构造完整序列，再从同一序列错开一格。
+# 1 is BOS and 2 is EOS; build the full sequence, then offset its two copies by one position.
 full = [1] + tokenizer.encode("小丁喜欢苹果。") + [2]
-# 输入不含最后的 EOS，目标不含开头的 BOS；x[t] 对应紧邻的下一项 y[t]。
+# Inputs omit the final EOS and targets omit the initial BOS; x[t] is paired with the next item, y[t].
 x_list = full[:-1]
 y_list = full[1:]
 print(x_list)  # [1, 27, 6, 22, 44, 58, 39, 5]
@@ -109,14 +109,14 @@ import torch
 import torch.nn.functional as F
 
 def token_loss(logits, targets):
-    """[B,T,V] 原始分数与 [B,T] 下一项编号，返回有效位置的平均损失。"""
+    """Take [B,T,V] raw scores and [B,T] next-token IDs; return the mean loss over valid positions."""
     if logits.ndim != 3 or targets.shape != logits.shape[:2]:
         raise ValueError("分数应为[B,T,V]，目标应为[B,T]")
-    # -100 只标记“不计分”，不能把它当候选编号；全被忽略就没有均值可算。
+    # -100 means unscored, not a candidate ID; there is no mean if every target is ignored.
     if not (targets != -100).any():
         raise ValueError("没有有效题目，无法计算平均损失")
-    # 合并样本轴与位置轴，把每题排成一行，保留 V 个候选；标签按同序展平。
-    # 接口内部计算对数概率，默认只对非 -100 目标求平均，无需先做 Softmax。
+    # Merge sample and position axes into one row per prediction with V candidates; flatten labels in the same order.
+    # The function computes log probabilities internally and averages losses for targets other than -100; do not apply Softmax first.
     return F.cross_entropy(
         logits.reshape(-1, logits.shape[-1]),
         targets.reshape(-1), ignore_index=-100)
@@ -133,15 +133,15 @@ Check an example that can be calculated exactly by hand. The three scores are `[
 ```python
 import math
 
-# 沿用前段的 torch 与 token_loss：一条样本、一个位置、三个候选。
-# 指数后为 [1,2,3]，第三个候选的概率是 3/6，所以目标编号取 2。
+# Reuse torch and token_loss from above: one sample, one position, and three candidates.
+# Exponentiation gives [1,2,3]; the third candidate has probability 3/6, so the target ID is 2.
 scores = torch.tensor([[[0., math.log(2.), math.log(3.)]]])
 target = torch.tensor([[2]])
 value = token_loss(scores, target)
-print(value.item())  # 约0.693147
+print(value.item())  # Approximately 0.693147
 assert abs(value.item() - math.log(2.)) < 1e-6
 
-# 沿位置轴多添一道填充题；-100 将它同时排除在损失之和与有效题数之外。
+# Add a padded position; -100 excludes it from both the summed loss and the valid target count.
 padded_scores = torch.cat([scores, torch.zeros(1, 1, 3)], dim=1)
 padded_target = torch.tensor([[2, -100]])
 assert torch.allclose(token_loss(padded_scores, padded_target), value)
@@ -150,11 +150,11 @@ assert torch.allclose(token_loss(padded_scores, padded_target), value)
 This scoring also connects to the earlier backward calculations. Let PyTorch track these three scores, then inspect the gradients returned by the loss:
 
 ```python
-# 接着上一段的 scores、target；此处直接查看损失对分数的梯度。
+# Continue with scores and target from above; inspect the loss gradients with respect to the scores.
 scores.requires_grad_()
-# 重新计算损失再反向；只有一个有效目标，三个分数的梯度为 p 减正确项标记。
+# Recompute the loss and backpropagate; with one valid target, each score gradient is p minus the target indicator.
 token_loss(scores, target).backward()
-print(scores.grad)  # 约为 [[[0.166667, 0.333333, -0.5]]]
+print(scores.grad)  # Approximately [[[0.166667, 0.333333, -0.5]]]
 ```
 
 With just one valid problem, the combined Softmax and negative-log gradient is “probability minus the correct-answer indicator.” The first two entries are not the answer, so subtract 0 to get `1/6` and `2/6`. The third is the answer, so subtract 1 to get `3/6−1=−0.5`. Automatic differentiation checks this result in the code.
@@ -169,15 +169,15 @@ Wrap the lookup and output projection in a class, and we can train them using th
 from torch import nn
 
 class CharBaseline(nn.Module):
-    """输入 [B,T] 字符编号，逐位置返回 [B,T,V] 分数，暂不读取前文。"""
+    """Take [B,T] character IDs and return [B,T,V] scores without reading earlier positions."""
     def __init__(self, vocab_size, width=16):
         super().__init__()
-        # 每个编号选一行可训练向量；输出层另有一组参数，对全部候选打分。
+        # Each ID selects a trainable vector; a separate output parameter set scores every candidate.
         self.embedding = nn.Embedding(vocab_size, width)
         self.output = nn.Linear(width, vocab_size, bias=False)
 
     def forward(self, ids):
-        # 各位置只查自己的行再做投影；返回原始分数，交叉熵会接着处理。
+        # Each position looks up its own row and projects it; return raw scores for cross-entropy.
         return self.output(self.embedding(ids))
 ```
 
@@ -188,27 +188,27 @@ Below, only the training split is used for updates. The split was already made b
 ```python
 from tiny_lm.data import build_records, make_pretrain_batch
 
-# 沿用前段的 tokenizer、CharBaseline、token_loss；固定种子以重现参数初值。
+# Reuse tokenizer, CharBaseline, and token_loss from above; fix the seed to reproduce initial parameters.
 torch.manual_seed(42)
 torch.set_num_threads(1)
 groups = build_records()
-# 只拿训练组：x 是补齐后的字符编号，y 已错位，填充标签为 -100。
+# Use only training records: x contains padded IDs, and y contains shifted targets with -100 padding.
 x, y = make_pretrain_batch(groups["pretrain_train"], tokenizer,
                            max_len=32)
 model = CharBaseline(tokenizer.vocab_size, width=16)
 optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
 
-print("更新前", token_loss(model(x), y).item())
+print("Before training", token_loss(model(x), y).item())
 for _ in range(1000):
-    # 清掉上一轮梯度，每次用当前参数重新前向；样本与目标始终不变。
+    # Clear old gradients and run a fresh forward pass with current parameters; samples and targets remain fixed.
     optimizer.zero_grad()
     logits = model(x)
     loss = token_loss(logits, y)
-    # 损失只平均有效标签，梯度传回 Embedding 与输出投影两份参数。
+    # Average loss over valid targets only; gradients reach both the embedding and output projection parameters.
     loss.backward()
-    # 反向只算梯度，这里才用 SGD 修改参数。
+    # Backpropagation only computes gradients; SGD changes parameters here.
     optimizer.step()
-print("更新后", token_loss(model(x), y).item())
+print("After training", token_loss(model(x), y).item())
 ```
 
 The loop still follows Lesson 06's sequence: clear gradients, run forward, calculate loss, run backward, and update. What changes is the meaning of inputs, labels, and loss. The model now adjusts embedding and projection parameters based on errors in predicting the next character in text.
@@ -220,17 +220,17 @@ Held-out loss did not decrease throughout the recorded run: after 500 updates it
 Now feed the two opening prefixes to the trained model and compare the probabilities at the last position:
 
 ```python
-# 接着训练后的 model：两个前缀人名不同，最后一个字符都为“欢”。
+# Use the trained model: the prefixes have different names but both end in “欢”.
 prefixes = torch.tensor([
     [1] + tokenizer.encode("小丁喜欢"),
     [1] + tokenizer.encode("小周喜欢"),
 ])
 with torch.no_grad():
-    # 取各样本最后位置的整行分数，再沿词表候选轴转换成概率。
+    # Take the full score row at each sample's final position, then normalize over vocabulary candidates.
     last_probabilities = torch.softmax(model(prefixes)[:, -1], dim=-1)
-# 逐候选比较两行分布，最大差值为 0 就说明分布完全相同。
+# Compare both distributions candidate by candidate; a maximum difference of 0 means they are identical.
 difference = (last_probabilities[0] - last_probabilities[1]).abs().max()
-print("两个人的最后一行概率差", difference.item())  # 0.0
+print("Difference between the two final-position distributions:", difference.item())  # 0.0
 assert difference.item() == 0.
 ```
 
@@ -257,7 +257,7 @@ Before moving to attention, switch to “小周拿着香蕉。” (“Xiaozhou i
 Run the snippets in order from the companion code directory, or execute directly:
 
 ```bash
-# 在配套代码目录运行本讲实验，核对正文中的结果。
+# Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l09
 ```
 

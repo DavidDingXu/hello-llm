@@ -1,14 +1,14 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
-<meta name="source-sha256" content="7b0c3fb945f7a343728db0711a3090361100d3c2aff0f4969f82c01dd11d3b11"><meta name="description" content="How can two conditions jointly affect one output? Compute multipliers from the current input and observe sign changes, zeroing, shrinking, and amplification."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/14.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="14 | SwiGLU: What Happens After Reading the Prefix? · Hello LLM"><meta property="og:description" content="How can two conditions jointly affect one output? Compute multipliers from the current input and observe sign changes, zeroing, shrinking, and amplification."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/14.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>14 | SwiGLU: What Happens After Reading the Prefix? · Hello LLM</title>
+<meta name="source-sha256" content="b31c72d5d28dcb2c5dd82ea618211d80197067763759d0564dcadcc53ef77013"><meta name="description" content="How can two conditions jointly affect one output? Compute multipliers from the current input and observe sign changes, zeroing, shrinking, and amplification."><link rel="canonical" href="https://daviddingxu.github.io/hello-llm/course/14.en.html"><meta property="og:site_name" content="Hello LLM"><meta property="og:title" content="14 | SwiGLU: What Happens After Reading the Prefix? · Hello LLM"><meta property="og:description" content="How can two conditions jointly affect one output? Compute multipliers from the current input and observe sign changes, zeroing, shrinking, and amplification."><meta property="og:type" content="article"><meta property="og:url" content="https://daviddingxu.github.io/hello-llm/course/14.en.html"><meta property="og:image" content="https://daviddingxu.github.io/hello-llm/assets/social-preview.png"><meta name="twitter:card" content="summary_large_image"><link rel="image_src" href="../assets/social-preview.png"><title>14 | SwiGLU: What Happens After Reading the Prefix? · Hello LLM</title>
 <link rel="icon" href="../assets/favicon.png" type="image/png">
 <script>try{const theme=localStorage.getItem('haohai-tinylm-theme');document.documentElement.dataset.theme=theme==='dark'||(theme!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}</script>
-<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=8d4b6a55eb08">
-<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=8d4b6a55eb08">
-<script defer src="../code/visuals/reading_site/search-index.en.js?v=11db81a4dd60"></script>
-<script defer src="../code/visuals/reading_site/site.js?v=8d4b6a55eb08"></script>
-<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=8d4b6a55eb08"></script>
-<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=8d4b6a55eb08"></script></head><body class="article-page" data-root="../" data-page="14" data-alternate-sections="[&quot;先多算几项为什么还不够&quot;, &quot;第二条支路为每项算一个乘数&quot;, &quot;这次能算出1了吗&quot;, &quot;把两条支路写进代码&quot;, &quot;它有没有又去读别的位置&quot;, &quot;两道改条件的题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
+<link rel="stylesheet" href="../code/visuals/reading_site/site.css?v=0a8bea167aca">
+<link rel="stylesheet" href="../code/visuals/reading_site/code-editor.css?v=0a8bea167aca">
+<script defer src="../code/visuals/reading_site/search-index.en.js?v=97f9a5a6b415"></script>
+<script defer src="../code/visuals/reading_site/site.js?v=0a8bea167aca"></script>
+<script type="module" src="../code/visuals/reading_site/python-lab.mjs?v=0a8bea167aca"></script>
+<script type="module" src="../code/visuals/reading_site/training-lab.mjs?v=0a8bea167aca"></script></head><body class="article-page" data-root="../" data-page="14" data-alternate-sections="[&quot;先多算几项为什么还不够&quot;, &quot;第二条支路为每项算一个乘数&quot;, &quot;这次能算出1了吗&quot;, &quot;把两条支路写进代码&quot;, &quot;它有没有又去读别的位置&quot;, &quot;两道改条件的题&quot;]"><a class="skip-link" href="#main-content">Skip to content</a>
 <header class="site-header"><div class="header-inner"><button class="icon-button menu-toggle js-only" type="button" aria-label="Open course contents" aria-controls="course-sidebar" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></path></svg></button>
 <a class="brand" href="../index.en.html" aria-label="Hello LLM · 学习站首页">
 <img src="../assets/brand-mark.png" alt="" width="36" height="36"><span><strong>Hello LLM</strong><small>Build a Small Model, Understand Large Models</small></span></a>
@@ -167,25 +167,25 @@ from torch import nn
 import torch.nn.functional as F
 
 class SwiGLU(nn.Module):
-    &quot;&quot;&quot;对每个位置独立做 D→F→D 变换，输入与输出的最后一维均为 D。&quot;&quot;&quot;
+    &quot;&quot;&quot;Apply D→F→D independently at each position; the final input and output dimensions are both D.&quot;&quot;&quot;
     def __init__(self, width, expanded):
         super().__init__()
-        # up、gate 是两套独立投影参数；down 将扩宽后的表示送回原宽度。
+        # up and gate have independent projection parameters; down returns the expanded representation to its original width.
         self.up = nn.Linear(width, expanded, bias=False)
         self.gate = nn.Linear(width, expanded, bias=False)
         self.down = nn.Linear(expanded, width, bias=False)
 
     def forward(self, x):
-        # 两条支路读取同一份 x，分别得到 [...,F] 的内容与门控前数值。
+        # Both branches read the same x, producing [...,F] content values and gate preactivations.
         u = self.up(x)
         a = self.gate(x)
-        # g 是逐坐标乘数，可为负或大于 1，不是注意力概率。
-        g = F.silu(a)  # 等价于 a * torch.sigmoid(a)
-        # * 按同一位置、同一坐标相乘；down 再将 F 维投影回 D 维。
+        # g contains per-coordinate multipliers that may be negative or greater than 1; they are not attention probabilities.
+        g = F.silu(a)  # Equivalent to a * torch.sigmoid(a)
+        # * multiplies matching coordinates at each position; down projects F dimensions back to D.
         return self.down(u * g)
 
 ffn = SwiGLU(2, 4)
-# 仅为手算对照写入固定参数，不为这些赋值建立反向记录；参数仍可训练。
+# Write fixed parameters for the hand calculation without tracking the assignments; the parameters remain trainable.
 with torch.no_grad():
     ffn.up.weight.copy_(torch.tensor([
         [1., 0.], [0., 1.], [1., 1.], [1., -1.]]))
@@ -198,8 +198,8 @@ x = torch.tensor([1., 2.])
 u, a = ffn.up(x), ffn.gate(x)
 print(&quot;up:&quot;, u)
 print(&quot;gate:&quot;, F.silu(a))
-print(&quot;相乘:&quot;, u * F.silu(a))
-print(&quot;输出:&quot;, ffn(x))  # 约 [1.924234, -1.761594]
+print(&quot;Product:&quot;, u * F.silu(a))
+print(&quot;Output:&quot;, ffn(x))  # Approximately [1.924234, -1.761594]
 </code></pre>
 <p><code>no_grad()</code> surrounds the manual parameter assignment, so the assignment does not create a backward-computation record. Normal calls to <code>ffn(x)</code> still allow all three parameter groups to receive gradients. Autograd, which we have already studied, handles the derivatives of the activation and multiplication.</p>
 <h2 id="does-it-read-other-positions-again">Does It Read Other Positions Again?</h2>
@@ -207,22 +207,22 @@ print(&quot;输出:&quot;, ffn(x))  # 约 [1.924234, -1.761594]
 <p><code>[B, T, D] → two branches [B, T, F] → elementwise multiplication → [B, T, D]</code></p>
 <p><strong>Different positions share parameters but perform this computation independently.</strong> This FFN layer does not read another position's vector. Its input may already contain prefix information gathered by attention, but that differs from the FFN itself fetching values across positions.</p>
 <p>Run the following comparison, first processing all positions together and then calling the FFN one position at a time:</p>
-<pre><code class="language-python"># [B,T,D]=[1,3,2]；同一套 FFN 参数分别作用于每个位置。
+<pre><code class="language-python"># [B,T,D]=[1,3,2]; the same FFN parameters apply separately at each position.
 sequence = torch.tensor([[[1., 2.], [2., 1.], [-1., 1.]]],
                         requires_grad=True)  # [1,3,2]
 batched = ffn(sequence)
-# 逐位置运行并恢复位置轴，结果应与一次批量运行相同。
+# Run each position separately and restore the position axis; the result should match batched execution.
 one_by_one = torch.stack([
     ffn(sequence[:, t, :]) for t in range(sequence.shape[1])
 ], dim=1)
 assert torch.allclose(batched, one_by_one)
 
-# 只改位置 2；独立 FFN 不读取其他位置，所以位置 0 的输出保持不变。
+# Change only position 2; a standalone FFN does not read other positions, so position 0's output stays unchanged.
 changed = sequence.detach().clone()
 changed[:, 2, :] = torch.tensor([10., -3.])
 assert torch.allclose(ffn(changed)[:, 0], batched[:, 0])
 
-# 用演示标量检查梯度通路；这里没有优化器更新，也不是下一字训练损失。
+# Use a demonstration scalar to check gradient paths; there is no optimizer update or next-token training loss here.
 batched.square().mean().backward()
 assert all(p.grad is not None and torch.isfinite(p.grad).all()
            for p in ffn.parameters())
@@ -242,10 +242,10 @@ print(batched.shape)  # torch.Size([1, 3, 2])
 <p>For question one, the product becomes <code>u=[1, 2, 3, −1]</code>, and down outputs <strong>[4,1]</strong>. If we force <code>g=1</code> for every input, only two bias-free linear projections remain, and they can be combined into one linear transformation. For question two, the first position of the standalone FFN is unchanged. In a complete causal block, the first position cannot read the future third position, so it should also be unaffected. If an earlier position changes and we inspect a later position instead, attention may change the result. This question requires checking both the module boundary and the visibility range; “positions always affect one another” is not an adequate answer.</p>
 </details>
 <p>Run the lesson entry point from the <code>code</code> companion code directory:</p>
-<pre><code class="language-bash"># 在配套代码目录运行本讲实验，核对正文中的结果。
+<pre><code class="language-bash"># Run this lesson from the companion code directory to check the chapter's results.
 python -m lessons.l14
 </code></pre>
-<p>On macOS, you can replace <code>python</code> with <code>python3</code>; on Windows, you can use <code>py</code> from your installed environment. Companion code: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l14.py">Lesson runner</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/layers.py">Feed-forward network source</a>.</p>
+<p>Use the same virtual-environment interpreter that installed the dependencies: <code>.venv/bin/python -m lessons.l14</code> on macOS/Linux, or <code>.\.venv\Scripts\python.exe -m lessons.l14</code> in Windows PowerShell. Companion code: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/lessons/l14.py">Lesson runner</a> · <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/layers.py">Feed-forward network source</a>.</p>
 <p>Source navigation: <a href="https://github.com/DavidDingXu/hello-llm/blob/main/code/tiny_lm/layers.py#L33">layers.py · SwiGLU</a>.</p></article><details class="lesson-video video-ready" id="lesson-video"><summary><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></path></svg>Watch the companion video<span class="video-duration">4:01</span><span class="video-language">Chinese audio</span></summary><div class="bilibili-embed"><iframe data-src="https://player.bilibili.com/player.html?bvid=BV1qJHV6pE7n&amp;p=1&amp;autoplay=0&amp;danmaku=0" title="14 | SwiGLU: What Happens After Reading the Prefix? · B站视频" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><p class="video-actions"><a href="https://www.bilibili.com/video/BV1qJHV6pE7n/?p=1" target="_blank" rel="noopener">Watch in HD on Bilibili ↗</a></p></div></details>
 <div class="reader-feedback"><span>Questions about this chapter?</span><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=question.yml&amp;title=%5B%E5%AD%A6%E4%B9%A0%5D+14+%7C+SwiGLU%3A+What+Happens+After+Reading+the+Prefix%3F&amp;location=14+%7C+SwiGLU%3A+What+Happens+After+Reading+the+Prefix%3F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F14.en.html" target="_blank" rel="noopener">Ask a question</a><a href="https://github.com/DavidDingXu/hello-llm/issues/new?template=content.yml&amp;title=%5B%E5%8B%98%E8%AF%AF%5D+14+%7C+SwiGLU%3A+What+Happens+After+Reading+the+Prefix%3F&amp;location=14+%7C+SwiGLU%3A+What+Happens+After+Reading+the+Prefix%3F+%C2%B7+v0.1.0-rc.1%0Ahttps%3A%2F%2Fdaviddingxu.github.io%2Fhello-llm%2Fcourse%2F14.en.html" target="_blank" rel="noopener">Suggest a correction</a></div><nav class="chapter-nav" aria-label="Previous and next articles"><a href="../course/13.en.html"><span>Previous <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></path></svg></span><strong>13 | RoPE: How Does the Model Know the Order?</strong></a><a href="../course/15.en.html"><span>Next <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></path></svg></span><strong>15 | Residual Connections and RMSNorm: Why Keep a Direct Path?</strong></a></nav><footer class="reader-footer">Hello LLM · Build a Small Model, Understand Large Models<details class="community-mini"><summary>Stay in touch · 好好用 AI</summary><div class="community-section"><div><h2>Stay in touch · 好好用 AI</h2><p>Follow the WeChat account to discuss what you learn and build.</p><p>For bugs and corrections, <a href="https://github.com/DavidDingXu/hello-llm/issues" target="_blank" rel="noopener">open a GitHub issue</a>.</p></div><a class="qr-link" href="../code/assets/wechat-official-account.jpg" target="_blank" rel="noopener" aria-label="Open the 好好用 AI WeChat QR code"><img src="../code/assets/wechat-official-account.jpg" alt="好好用 AI WeChat official account QR code" width="130" height="130" loading="lazy"><p class="qr-caption">Scan in WeChat · Open full image</p></a></div></details></footer></main>
 <aside class="context-sidebar" aria-label="Article navigation and tools"><div class="context-inner"><nav class="reading-route" aria-label="On this page"><details open><summary>On this page</summary><div class="toc">
